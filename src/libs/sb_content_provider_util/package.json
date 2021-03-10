@@ -1,0 +1,11 @@
+{
+  "name": "sb_content_provider_util",
+  "version": "1.0.0",
+  "description": "this package server utility functions needed to communicate with content provider api's",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "author": "Anuj Gupta",
+  "license": "ISC"
+}

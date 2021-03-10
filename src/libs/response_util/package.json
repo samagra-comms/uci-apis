@@ -1,0 +1,14 @@
+{
+    "name": "response_util",
+    "version": "1.0.0",
+    "description": "this package serves as error and success response body",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "anujgupta",
+    "license": "ISC",
+    "dependencies": {
+        "uuid": "^3.0.1"
+    }
+}

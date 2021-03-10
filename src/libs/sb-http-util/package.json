@@ -1,0 +1,14 @@
+{
+  "name": "sb-http-util",
+  "version": "1.0.0",
+  "description": "this package serves as utility file with functions to make http requests",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "loganathan",
+  "license": "ISC",
+  "dependencies": {
+    "request": "^2.81.0"
+  }
+}

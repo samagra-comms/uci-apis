@@ -1,0 +1,15 @@
+{
+  "application": {
+    "feed": {
+      "defaultContentStatus": ["Live"],
+      "defaultNominationStatus": ["Pending"],
+      "defaultFeedDays": 3
+    }
+  },
+  "dataStores": {
+    "redis": {
+      "keyPrefix": "vdn",
+      "feedExpiry": 300
+    }
+  }
+}

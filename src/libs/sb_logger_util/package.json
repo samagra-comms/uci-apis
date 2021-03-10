@@ -1,0 +1,14 @@
+{
+    "name": "sb_logger_util",
+    "version": "1.0.0",
+    "description": "this package serves as log",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "anujkumar",
+    "license": "ISC",
+    "dependencies": {
+        "log4js": "^0.6.29"
+    }
+}

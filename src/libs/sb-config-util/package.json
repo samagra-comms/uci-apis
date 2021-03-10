@@ -1,0 +1,11 @@
+{
+  "name": "sb-config-util",
+  "version": "1.0.0",
+  "description": "this package defines the utility functions to set and serve the configuration parameters",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "author": "Anuj Gupta",
+  "license": "ISC"
+}

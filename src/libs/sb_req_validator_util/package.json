@@ -1,0 +1,14 @@
+{
+    "name": "sb_req_validator_util",
+    "version": "1.0.0",
+    "description": "this package serves as utility function to validate request data",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "anujgupta",
+    "license": "ISC",
+    "dependencies": {
+        "validatorjs": "^3.12.0"
+    }
+}
