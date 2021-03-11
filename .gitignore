@@ -3,3 +3,5 @@ node_modules/
 config/default.json
 pgdata
 *.env
+redis.conf
+redis-data

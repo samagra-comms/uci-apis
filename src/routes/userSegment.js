@@ -1,27 +1,26 @@
 var express = require("express");
-const { buildPDFWithCallback } = require("../service/print/pdf");
 const requestMiddleware = require("../middlewares/request.middleware");
 
 const BASE_URL = "/admin/v1";
-const { Transformer } = require("../models/transformer");
-const { ServiceType } = require("../models/serviceType");
-const { ServiceType } = require("../models/serviceType");
+const { ServiceType } = require("../models/service");
+const { UserSegment } = require("../models/userSegment");
 
 // Refactor this to move to service
 async function getAll(req, res) {
-  const allTransformers = await Transformer.query();
-  res.send({ data: allTransformers });
+  const allSegments = await UserSegment.query();
+  if (allSegments) res.send({ data: allTransformers });
+  else res.send({ data: [] });
 }
 
 async function getByID(req, res) {
-  const transformer = await Transformer.query().findById(req.params.id);
-  res.send({ data: transformer });
+  const transformer = await UserSegment.query().findById(req.params.id);
+  if (transformer) res.send({ data: transformer });
 }
 
 async function update(req, res) {
   const data = req.body.data;
   const isExisting =
-    (await Transformer.query().findById(req.params.id)) !== undefined;
+    (await UserSegment.query().findById(req.params.id)) !== undefined;
 
   if (!isExisting) {
     res.status(400).send({
@@ -36,14 +35,14 @@ async function update(req, res) {
     // TODO: Verify data
 
     await Transformer.query().patch(data);
-    const getAgain = await Transformer.query().findById(req.params.id);
+    const getAgain = await UserSegment.query().findById(req.params.id);
 
     res.send({ data: getAgain });
   }
 }
 
 async function deleteByID(req, res) {
-  const transformer = await Transformer.query().deleteById(req.params.id);
+  const transformer = await UserSegment.query().deleteById(req.params.id);
   res.send({ data: `Number of transformers deleted: ${transformer}` });
 }
 
@@ -55,7 +54,7 @@ async function dryRun(req, res) {
 async function insert(req, res) {
   const data = req.body.data;
   const isExisting =
-    (await (await Transformer.query().where("name", data.name)).length) > 0;
+    (await (await UserSegment.query().where("name", data.name)).length) > 0;
 
   if (isExisting) {
     res.status(400).send({
@@ -69,8 +68,8 @@ async function insert(req, res) {
     data.type = serviceType.id;
     // TODO: Verify data
 
-    const inserted = await Transformer.query().insert(data);
-    const getAgain = await Transformer.query().findById(inserted.id);
+    const inserted = await UserSegment.query().insert(data);
+    const getAgain = await UserSegment.query().findById(inserted.id);
 
     res.send({ data: getAgain });
   }
@@ -78,7 +77,7 @@ async function insert(req, res) {
 
 module.exports = function (app) {
   app
-    .route(BASE_URL + "/transformer/all")
+    .route(BASE_URL + "/userSegment/all")
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
@@ -86,7 +85,7 @@ module.exports = function (app) {
     );
 
   app
-    .route(BASE_URL + "/transformer/create")
+    .route(BASE_URL + "/userSegment/create")
     .post(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
@@ -94,7 +93,7 @@ module.exports = function (app) {
     );
 
   app
-    .route(BASE_URL + "/transformer/get/:id")
+    .route(BASE_URL + "/userSegment/get/:id")
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
@@ -102,7 +101,7 @@ module.exports = function (app) {
     );
 
   app
-    .route(BASE_URL + "/transformer/update/:id")
+    .route(BASE_URL + "/userSegment/update/:id")
     .post(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
@@ -110,7 +109,7 @@ module.exports = function (app) {
     );
 
   app
-    .route(BASE_URL + "/transformer/delete/:id")
+    .route(BASE_URL + "/userSegment/delete/:id")
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
@@ -118,7 +117,7 @@ module.exports = function (app) {
     );
 
   app
-    .route(BASE_URL + "/transformer/dryRun/:id")
+    .route(BASE_URL + "/userSegment/dryRun/:id")
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,

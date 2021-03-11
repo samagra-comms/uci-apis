@@ -9,5 +9,5 @@ class UserSegment extends Model {
 }
 
 module.exports = {
-  Transformer,
+  UserSegment,
 };

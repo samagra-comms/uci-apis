@@ -2,19 +2,19 @@
 
 const { Model } = require("objection");
 
-class Transformer extends Model {
+class Service extends Model {
   static get tableName() {
-    return "transformer";
+    return "service";
   }
   static get relationMappings() {
     const { Service } = require("./service");
     return {
-      sd: {
+      transformer: {
         relation: Model.BelongsToOneRelation,
         modelClass: Service,
         join: {
-          from: "transformer.service",
-          to: "service.id",
+          from: "service.id",
+          to: "transformer.service",
         },
       },
     };
@@ -22,5 +22,5 @@ class Transformer extends Model {
 }
 
 module.exports = {
-  Transformer,
+  Service,
 };

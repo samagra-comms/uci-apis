@@ -13,10 +13,13 @@ const envVariables = {
   OPENSABER_SERVICE_URL:
     process.env.opensaber_service_url ||
     "https://dock.sunbirded.org/content/reg",
-  SUNBIRD_KAFKA_HOST: process.env.sunbird_kafka_host,
-  DOCK_REDIS_HOST: process.env.dock_redis_host,
-  DOCK_REDIS_PORT: process.env.dock_redis_port || 6379,
-  SUNBIRD_AUTO_CREATION_TOPIC: process.env.sunbird_auto_creation_topic,
+  KAFKA_HOST: process.env.KAFKA_HOST,
+  KAFKA_USER: process.env.KAFKA_USER,
+  KAFKA_PASS: process.env.KAFKA_PASS,
+  REDIS_HOST: process.env.REDIS_HOST,
+  REDIS_PORT: process.env.REDIS_PORT || 6379,
+  REDIS_PASS: process.env.REDIS_PASS,
+  AUTO_CREATION_TOPIC: process.env.AUTO_CREATION_TOPIC,
   config: {
     user: process.env.sunbird_program_db_user || "postgres",
     host: process.env.sunbird_program_db_host || "localhost",

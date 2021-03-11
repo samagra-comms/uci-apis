@@ -1,3 +1,4 @@
+const env = require("dotenv").config();
 const createError = require("http-errors");
 const express = require("express");
 path = require("path");
@@ -12,9 +13,9 @@ const telemetryService = require("./service/telemetryService");
 const sb_logger = require("sb_logger_util_v2");
 const logLevel = process.env.sunbird_service_log_level || "info";
 var logFilePath = path.join(__dirname, "./logs/microservice.log");
-require("dotenv").config();
-
+const KafkaService = require("./helpers/kafkaUtil");
 const knexInitializer = require("./models/init");
+const { Transformer } = require("./models/transformer");
 
 const createAppServer = () => {
   const app = express();
@@ -38,6 +39,7 @@ const createAppServer = () => {
   app.use(express.json());
   app.use(bodyParser.urlencoded({ extended: false }));
   require("./routes/transformer")(app);
+  require("./routes/userSegment")(app);
   app.use(cookieParser());
   module.exports = app;
   return app;
@@ -46,8 +48,10 @@ sb_logger.init({
   path: logFilePath,
   logLevel,
 });
+
 const app = createAppServer();
-app.listen(port, () => {
+
+app.listen(port, async () => {
   console.log(
     `program-service is running in test env on port ${port} with ${process.pid} pid`
   );

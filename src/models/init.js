@@ -4,10 +4,11 @@ const Knex = require("knex");
 const { Model } = require("objection");
 
 const { Transformer } = require("./transformer");
+const KafkaService = require("../helpers/kafkaUtil");
 
 const knexConfig = {
   development: {
-    debug: false,
+    debug: true,
     client: "pg",
     useNullAsDefault: true,
     connection: process.env.PSQL_DB_URL_DEV,
@@ -33,16 +34,18 @@ const knexConfig = {
 const knex = Knex(knexConfig.development);
 knex
   .raw("select count(*) from transformer")
-  .then((s) => {
-    console.log("DB Connected");
-
+  .then(async (s) => {
+    console.log("DB Connection ✅");
     Model.knex(knex);
     Transformer.query()
-      .then((ts) => {
+      .then(async (ts) => {
         console.log(
-          "Models Initialized",
-          parseInt(s.rows[0].count) === ts.length
+          `Model Initialization: ${
+            parseInt(s.rows[0].count) === ts.length ? "✅" : "❌"
+          }`
         );
+        const allTransformers = await Transformer.query();
+        KafkaService.refreshSubscribers(allTransformers);
       })
       .catch((e) => {
         console.log(err);
@@ -50,6 +53,7 @@ knex
       });
   })
   .catch((err) => {
-    console.log(err);
+    console.log("DB Connection: ❌");
+    console.error(err);
     process.exit(1);
   });

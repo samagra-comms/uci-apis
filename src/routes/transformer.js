@@ -3,16 +3,22 @@ const requestMiddleware = require("../middlewares/request.middleware");
 
 const BASE_URL = "/admin/v1";
 const { Transformer } = require("../models/transformer");
-const { ServiceType } = require("../models/serviceType");
+const { Service } = require("../models/service");
+
+const { queue } = require("../service/schedulerService");
+const KafkaService = require("../helpers/kafkaUtil");
 
 // Refactor this to move to service
 async function getAll(req, res) {
-  const allTransformers = await Transformer.query();
+  const allTransformers = await Transformer.query().joinRelated("sd");
+  KafkaService.refreshSubscribers(allTransformers);
   res.send({ data: allTransformers });
 }
 
 async function getByID(req, res) {
-  const transformer = await Transformer.query().findById(req.params.id);
+  const transformer = await Transformer.query()
+    .findById(req.params.id)
+    .joinRelated("service");
   res.send({ data: transformer });
 }
 
@@ -26,11 +32,17 @@ async function update(req, res) {
       status: `Transformer does not exists with the id ${req.params.id}`,
     });
   } else {
-    let serviceType = await ServiceType.query().where("name", data.type)[0];
+    console.log("Here");
+    const serviceParams = {
+      type: data.type,
+      config: data.config,
+    };
+    let serviceType = await Service.query().where(serviceParams)[0];
     if (!serviceType)
-      serviceType = await ServiceType.query().insert({ name: data.type });
-
-    data.type = serviceType.id;
+      serviceType = await Service.query()
+        .insert(serviceParams)
+        .catch(console.log);
+    data.service = serviceType.id;
     // TODO: Verify data
 
     await Transformer.query().patch(data);
@@ -60,17 +72,33 @@ async function insert(req, res) {
       status: `Transformer already exists with the name ${data.name}`,
     });
   } else {
-    let serviceType = await ServiceType.query().where("name", data.type)[0];
-    if (!serviceType)
-      serviceType = await ServiceType.query().insert({ name: data.type });
+    let serviceType = await Service.query().where(data.service)[0];
 
-    data.type = serviceType.id;
     // TODO: Verify data
 
-    const inserted = await Transformer.query().insert(data);
-    const getAgain = await Transformer.query().findById(inserted.id);
+    try {
+      const trx = await Transformer.startTransaction();
+      if (!serviceType)
+        serviceType = await Service.query(trx).insert(data.service);
+      data.service = serviceType.id;
 
-    res.send({ data: getAgain });
+      const inserted = await Transformer.query(trx).insert(data);
+
+      const topicCreated = await KafkaService.addTransformer(inserted);
+      if (topicCreated === undefined) {
+        await trx.rollback();
+        res.send({ data: "Transformer could not be registered." });
+      } else {
+        await trx.commit();
+        const transformer = await Transformer.query().findById(inserted.id);
+        KafkaService.refreshSubscribers([transformer]);
+        transformer.service = serviceType;
+        res.send({ data: transformer });
+      }
+    } catch (e) {
+      console.error(e);
+      res.send({ data: "Transformer could not be registered." });
+    }
   }
 }
 

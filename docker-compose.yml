@@ -30,3 +30,14 @@ services:
     depends_on:
       - comms
     restart: always
+
+  scheduler-db:
+    container_name: scheduler-db
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    hostname: redis
+    volumes:
+      - ./redis-data:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf

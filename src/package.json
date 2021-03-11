@@ -13,6 +13,7 @@
     "axios": "^0.19.2",
     "better-config": "^1.2.3",
     "bluebird": "^3.7.2",
+    "bullmq": "^1.14.8",
     "cassandra-driver": "^4.4.0",
     "chai-sorted": "^0.2.0",
     "cheerio": "^1.0.0-rc.5",
@@ -31,6 +32,7 @@
     "jade": "~1.11.0",
     "jsonwebtoken": "^8.5.1",
     "kafka-node": "^3.0.1",
+    "kafkajs": "^1.15.0",
     "knex": "^0.95.1",
     "lodash": "^4.17.15",
     "morgan": "~1.9.1",
@@ -53,7 +55,8 @@
     "sb_telemetry_util": "file:libs/sb_telemetry_util",
     "sequelize": "^5.21.5",
     "underscore": "^1.9.2",
-    "uuid": "^3.2.1"
+    "uuid": "^3.2.1",
+    "xml2js": "^0.4.23"
   },
   "devDependencies": {
     "chai": "^4.2.0",
