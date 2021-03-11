@@ -7,7 +7,7 @@ This is a layer over top of the core engine to
 
 You can see how this is connected to the other repositories below
 
-![Connections](./docs/connections.png)
+![Connections](./docs/conn.png)
 
 ## Contibution Guide
 
