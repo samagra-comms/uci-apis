@@ -9,6 +9,10 @@ You can see how this is connected to the other repositories below
 
 ![Connections](./docs/conn.png)
 
+## API Documentation
+
+[Please use this link](https://documenter.getpostman.com/view/7043186/Tz5p5dHt)
+
 ## Contibution Guide
 
 The template has been taken from Sunbird's program service and extended for our purposed for creating APIs.
