@@ -1,9 +1,13 @@
-# Comms Manager Service
+# Comms Manager
 
-This is a layer over top of the comms service to
+This is a layer over top of the core engine to
 
 - manage bots
 - ensure service level agreement and executing federation jobs
+
+You can see how this is connected to the other repositories below
+
+![Connections](./docs/connections.png)
 
 ## Contibution Guide
 
@@ -31,7 +35,7 @@ KAFKA_PASS=cttsamagra
 KAFKA_PORT=9092
 ```
 
-### Step 2: Setting up Kafka using Lenses dev env
+### Step 2: Setting up the Pipeline using Lenses dev env
 
 The key can be obtained easily form [here](https://lenses.io/lenses-download/)
 
@@ -63,4 +67,4 @@ volumes:
 
 ### Step 3: Setting up the server
 
-`docker-compose up -d` should setup the development environment.
+`docker-compose up -d` should setup the development environment
