@@ -66,13 +66,23 @@ const KafkaService = {
           const service = await Service.query().findById(
             transformer[0].service
           );
-          queue.add(service.type, {
-            transformer,
-            service,
-            data,
-            sendRecord,
-            kafka,
-          });
+          queue.add(
+            service.type,
+            {
+              transformer,
+              service,
+              data,
+              sendRecord,
+              kafka,
+            },
+            {
+              attempts: service.cadence.retries + 1,
+              backoff: {
+                type: "fixed",
+                delay: 1000 * parseInt(service.cadence["retries-interval"]),
+              },
+            }
+          );
           console.log("Scheduled Successfully");
         },
       });
