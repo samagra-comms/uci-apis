@@ -1,12 +1,21 @@
 const fs = require("fs");
 
 class Vault {
-  consttructor() {
+  constructor() {
     const data = require("./vaultDataMock.json");
     this.data = data;
   }
-  getCredentials = (variableName) => {
-    return data[variableName];
+
+  getCredentials = (serviceType, credentials) => {
+    const variableName = credentials.variable;
+    if (serviceType === "gql") {
+      return {
+        uri: this.data[variableName].service,
+        headers: this.data[variableName].headers,
+      };
+    } else {
+      return {};
+    }
   };
 
   // for testing the mock class and nothing else [Will be removed]

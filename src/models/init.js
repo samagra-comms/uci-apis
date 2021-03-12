@@ -8,7 +8,7 @@ const KafkaService = require("../helpers/kafkaUtil");
 
 const knexConfig = {
   development: {
-    debug: true,
+    debug: false,
     client: "pg",
     useNullAsDefault: true,
     connection: process.env.PSQL_DB_URL_DEV,
@@ -18,14 +18,14 @@ const knexConfig = {
     },
   },
 
-  production: {
-    client: "postgresql",
-    connection: {
-      database: "example",
-    },
+  development: {
+    debug: false,
+    client: "pg",
+    useNullAsDefault: true,
+    connection: process.env.PSQL_DB_URL_DEV,
     pool: {
       min: 2,
-      max: 10,
+      max: 5,
     },
   },
 };

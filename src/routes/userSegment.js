@@ -1,8 +1,9 @@
 var express = require("express");
+const { result } = require("lodash");
 const requestMiddleware = require("../middlewares/request.middleware");
 
 const BASE_URL = "/admin/v1";
-const { ServiceType } = require("../models/service");
+const { Service } = require("../models/service");
 const { UserSegment } = require("../models/userSegment");
 
 // Refactor this to move to service
@@ -27,9 +28,9 @@ async function update(req, res) {
       status: `Transformer does not exists with the id ${req.params.id}`,
     });
   } else {
-    let serviceType = await ServiceType.query().where("name", data.type)[0];
+    let serviceType = await Service.query().where("name", data.type)[0];
     if (!serviceType)
-      serviceType = await ServiceType.query().insert({ name: data.type });
+      serviceType = await Service.query().insert({ name: data.type });
 
     data.type = serviceType.id;
     // TODO: Verify data
@@ -58,20 +59,71 @@ async function insert(req, res) {
 
   if (isExisting) {
     res.status(400).send({
-      status: `Transformer already exists with the name ${data.name}`,
+      status: `UserSegment already exists with the name ${data.name}`,
     });
   } else {
-    let serviceType = await ServiceType.query().where("name", data.type)[0];
-    if (!serviceType)
-      serviceType = await ServiceType.query().insert({ name: data.type });
+    let serviceTypeAll = Service.query().where(data.all)[0];
 
-    data.type = serviceType.id;
-    // TODO: Verify data
+    let serviceTypeByPhone = await Service.query().where(data.byPhone)[0];
 
-    const inserted = await UserSegment.query().insert(data);
-    const getAgain = await UserSegment.query().findById(inserted.id);
+    let serviceTypeByID = await Service.query().where(data.byID)[0];
 
-    res.send({ data: getAgain });
+    try {
+      const trx = await UserSegment.startTransaction();
+      if (!serviceTypeAll)
+        serviceTypeAll = await Service.query(trx).insert(data.all);
+
+      if (!serviceTypeByPhone)
+        serviceTypeByPhone = await Service.query(trx).insert(data.byPhone);
+
+      if (!serviceTypeByID)
+        serviceTypeByID = await Service.query(trx).insert(data.byID);
+
+      // TODO: Refactor this to a better solution using ORM.
+      data.all = serviceTypeAll.id;
+      data.byID = serviceTypeByID.id;
+      data.byPhone = serviceTypeByPhone.id;
+
+      const verified = await Promise.all([
+        serviceTypeAll.verify("getAllUsers"),
+        serviceTypeByID.verify("getUserByID"),
+        serviceTypeByPhone.verify("getUserByPhone"),
+      ])
+        .then((result) => {
+          const reducer = (accumulator, currentValue) =>
+            accumulator + (currentValue.status === "Verified" ? 1 : 0);
+          console.log(result.reduce(reducer, 0));
+          if (result.reduce(reducer, 0) === 3) return true;
+          else return false;
+        })
+        .catch((e) => {
+          trx.rollback();
+          console.error(e);
+          res.send({ data: "UserSegment could not be verified." });
+        });
+      if (verified) {
+        try {
+          const inserted = await UserSegment.query(trx).insert(data);
+          trx.commit();
+          const getAgain = await UserSegment.query().findById(inserted.id);
+          getAgain.all = data.all;
+          getAgain.byID = data.byID;
+          getAgain.byPhone = data.byPhone;
+          res.send({ data: getAgain });
+        } catch (e) {
+          console.log("Here");
+        }
+      } else {
+        trx.rollback();
+        res.send({
+          data: "UserSegment could not be registered. Services down.",
+        });
+      }
+    } catch (e) {
+      trx.rollback();
+      console.error(e);
+      res.send({ data: "UserSegment could not be registered." });
+    }
   }
 }
 

@@ -53,10 +53,6 @@ const worker = new Worker(
         };
         const timeoutInSeconds = service.cadence.timeout;
         const controller = new AbortController();
-        const timeoutId = setTimeout(
-          () => controller.abort(),
-          timeoutInSeconds * 1000
-        );
 
         var requestOptions = {
           method: "POST",
