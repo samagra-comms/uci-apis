@@ -5,3 +5,4 @@ pgdata
 *.env
 redis.conf
 redis-data
+*Mock.js*
