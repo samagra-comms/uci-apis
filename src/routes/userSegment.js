@@ -102,17 +102,13 @@ async function insert(req, res) {
           res.send({ data: "UserSegment could not be verified." });
         });
       if (verified) {
-        try {
-          const inserted = await UserSegment.query(trx).insert(data);
-          trx.commit();
-          const getAgain = await UserSegment.query().findById(inserted.id);
-          getAgain.all = data.all;
-          getAgain.byID = data.byID;
-          getAgain.byPhone = data.byPhone;
-          res.send({ data: getAgain });
-        } catch (e) {
-          console.log("Here");
-        }
+        const inserted = await UserSegment.query(trx).insert(data);
+        trx.commit();
+        const getAgain = await UserSegment.query().findById(inserted.id);
+        getAgain.all = data.all;
+        getAgain.byID = data.byID;
+        getAgain.byPhone = data.byPhone;
+        res.send({ data: getAgain });
       } else {
         trx.rollback();
         res.send({

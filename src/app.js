@@ -40,6 +40,7 @@ const createAppServer = () => {
   app.use(bodyParser.urlencoded({ extended: false }));
   require("./routes/transformer")(app);
   require("./routes/userSegment")(app);
+  require("./routes/adapter")(app);
   app.use(cookieParser());
   module.exports = app;
   return app;
