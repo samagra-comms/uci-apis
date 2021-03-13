@@ -9,11 +9,11 @@ class Transformer extends Model {
   static get relationMappings() {
     const { Service } = require("./service");
     return {
-      sd: {
+      service: {
         relation: Model.BelongsToOneRelation,
         modelClass: Service,
         join: {
-          from: "transformer.service",
+          from: "transformer.service_id",
           to: "service.id",
         },
       },

@@ -10,7 +10,7 @@ const KafkaService = require("../helpers/kafkaUtil");
 
 // Refactor this to move to service
 async function getAll(req, res) {
-  const allTransformers = await Transformer.query().joinRelated("sd");
+  const allTransformers = await Transformer.query().withGraphFetched("service");
   KafkaService.refreshSubscribers(allTransformers);
   res.send({ data: allTransformers });
 }
@@ -18,7 +18,7 @@ async function getAll(req, res) {
 async function getByID(req, res) {
   const transformer = await Transformer.query()
     .findById(req.params.id)
-    .joinRelated("service");
+    .withGraphFetched("service");
   res.send({ data: transformer });
 }
 
