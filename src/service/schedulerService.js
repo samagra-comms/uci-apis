@@ -1,4 +1,5 @@
 const { Queue, Worker } = require("bullmq");
+const { setQueues, BullMQAdapter, BullAdapter } = require("bull-board");
 const fetch = require("node-fetch");
 var xml2js = require("xml2js");
 const Redis = require("ioredis");
@@ -29,6 +30,8 @@ const queueConfig = {
 const queueID = "queue";
 const queue = new Queue(queueID, queueConfig);
 const resultQueue = new Queue("resultQueue", queueConfig);
+
+setQueues([new BullAdapter(queue), new BullAdapter(resultQueue)]);
 
 const fetchTimeout = (url, ms, { signal, ...options } = {}) => {
   const controller = new AbortController();

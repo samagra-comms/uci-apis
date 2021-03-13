@@ -16,6 +16,7 @@
     "axios": "^0.19.2",
     "better-config": "^1.2.3",
     "bluebird": "^3.7.2",
+    "bull-board": "^1.4.2",
     "bullmq": "^1.14.8",
     "cassandra-driver": "^4.4.0",
     "chai-sorted": "^0.2.0",

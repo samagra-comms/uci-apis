@@ -16,6 +16,7 @@ var logFilePath = path.join(__dirname, "./logs/microservice.log");
 const KafkaService = require("./helpers/kafkaUtil");
 const knexInitializer = require("./models/init");
 const { Transformer } = require("./models/transformer");
+const { router } = require("bull-board");
 
 const createAppServer = () => {
   const app = express();
@@ -38,6 +39,7 @@ const createAppServer = () => {
   app.use(logger("dev"));
   app.use(express.json());
   app.use(bodyParser.urlencoded({ extended: false }));
+  app.use("/admin/queues", router);
   require("./routes/transformer")(app);
   require("./routes/userSegment")(app);
   require("./routes/adapter")(app);
