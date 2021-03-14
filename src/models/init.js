@@ -44,7 +44,9 @@ knex
             parseInt(s.rows[0].count) === ts.length ? "✅" : "❌"
           }`
         );
-        const allTransformers = await Transformer.query();
+        const allTransformers = await Transformer.query().withGraphFetched(
+          "service"
+        );
         KafkaService.refreshSubscribers(allTransformers);
       })
       .catch((e) => {

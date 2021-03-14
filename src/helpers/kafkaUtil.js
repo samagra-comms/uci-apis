@@ -1,3 +1,4 @@
+const { ConsumerGroupStream } = require("kafka-node");
 const { Kafka } = require("kafkajs");
 const kafka = new Kafka({
   clientId: "api",
@@ -33,14 +34,14 @@ const sendRecord = async (data, callback) => {
 const KafkaService = {
   sendRecord: sendRecord,
 
-  addTransformer: async (transformer) => {
+  addTransformer: async (transformer, service) => {
     const admin = kafka.admin();
     await admin.connect();
 
     try {
       const topicsToCreate = [
         {
-          topic: transformer.name,
+          topic: `com.${service.type}.${transformer.name}`,
         },
       ];
       return await admin.createTopics({
@@ -54,7 +55,8 @@ const KafkaService = {
 
   refreshSubscribers: async (transformers) => {
     for (let i = 0; i < transformers.length; i++) {
-      let topic = transformers[i].name;
+      let topic = `com.${transformers[i].service.type}.${transformers[i].name}`;
+      await consumer.stop();
       await consumer.subscribe({ topic, fromBeginning: true });
       await consumer.run({
         eachMessage: async ({ topic, partition, message }) => {

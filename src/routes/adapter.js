@@ -5,6 +5,7 @@ const requestMiddleware = require("../middlewares/request.middleware");
 const BASE_URL = "/admin/v1";
 const { Service } = require("../models/service");
 const { Adapter } = require("../models/adapter");
+const { Vault } = require("../helpers/vault");
 
 // Refactor this to move to service
 async function getAll(req, res) {
@@ -59,6 +60,18 @@ async function insert(req, res) {
   }
 }
 
+async function getCredentials(req, res) {
+  const id = req.params.id;
+  const adapter = await Adapter.query().findById(id);
+  const vault = new Vault();
+  const credentials = vault.getCredentials(
+    "Gupshup-Whatsapp",
+    adapter.config.credentials
+  );
+
+  res.send(credentials);
+}
+
 module.exports = function (app) {
   app
     .route(BASE_URL + "/adapter/all")
@@ -106,5 +119,13 @@ module.exports = function (app) {
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
       dryRun
+    );
+
+  app
+    .route(BASE_URL + "/adapter/getCredentials/:id")
+    .get(
+      requestMiddleware.gzipCompression(),
+      requestMiddleware.createAndValidateRequestBody,
+      getCredentials
     );
 };

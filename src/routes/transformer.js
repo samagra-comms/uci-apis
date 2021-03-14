@@ -11,6 +11,7 @@ const KafkaService = require("../helpers/kafkaUtil");
 // Refactor this to move to service
 async function getAll(req, res) {
   const allTransformers = await Transformer.query().withGraphFetched("service");
+  console.log({ allTransformers });
   KafkaService.refreshSubscribers(allTransformers);
   res.send({ data: allTransformers });
 }
@@ -42,7 +43,8 @@ async function update(req, res) {
       serviceType = await Service.query()
         .insert(serviceParams)
         .catch(console.log);
-    data.service = serviceType.id;
+    data.service_id = serviceType.id;
+    delete data.service;
     // TODO: Verify data
 
     await Transformer.query().patch(data);
@@ -80,17 +82,22 @@ async function insert(req, res) {
       const trx = await Transformer.startTransaction();
       if (!serviceType)
         serviceType = await Service.query(trx).insert(data.service);
-      data.service = serviceType.id;
+      data.service_id = serviceType.id;
 
       const inserted = await Transformer.query(trx).insert(data);
-
-      const topicCreated = await KafkaService.addTransformer(inserted);
+      const topicCreated = await KafkaService.addTransformer(
+        inserted,
+        serviceType
+      );
       if (topicCreated === undefined) {
         await trx.rollback();
         res.send({ data: "Transformer could not be registered." });
       } else {
         await trx.commit();
-        const transformer = await Transformer.query().findById(inserted.id);
+        const transformer = await Transformer.query()
+          .findById(inserted.id)
+          .withGraphFetched("service");
+        console.log({ transformer });
         KafkaService.refreshSubscribers([transformer]);
         transformer.service = serviceType;
         res.send({ data: transformer });

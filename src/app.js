@@ -40,9 +40,11 @@ const createAppServer = () => {
   app.use(express.json());
   app.use(bodyParser.urlencoded({ extended: false }));
   app.use("/admin/queues", router);
+  app.use("/", indexRouter);
   require("./routes/transformer")(app);
   require("./routes/userSegment")(app);
   require("./routes/adapter")(app);
+  require("./routes/conversationLogic")(app);
   app.use(cookieParser());
   module.exports = app;
   return app;

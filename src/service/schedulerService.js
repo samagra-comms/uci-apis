@@ -47,6 +47,11 @@ const worker = new Worker(
     if (job.name === "test") console.log("Scheduler Status: ✅");
     else {
       if (job.name === "rest-service") {
+        // Rest Service Resolver
+        // User Service Resolver {getAllUsers, getUserByID, getUserByPhone}
+        // GraphQL resolver
+        // FusionAuth resolver
+
         const r = job.data.data.trim().substring(1, job.data.data.length - 1);
         const service = job.data.service;
         const serviceHeaders = service.config.credentials.headers;

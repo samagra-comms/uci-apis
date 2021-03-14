@@ -14,7 +14,7 @@ class Vault {
         headers: this.data[variableName].headers,
       };
     } else {
-      return {};
+      return this.data[variableName];
     }
   };
 
