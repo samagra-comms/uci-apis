@@ -11,7 +11,7 @@ You can see how this is connected to the other repositories below
 
 ## API Documentation
 
-[Please use this link](https://documenter.getpostman.com/view/7043186/Tz5p5dHt)
+[Please use this link](https://documenter.getpostman.com/view/7043186/Tz5qaxaN)
 
 ## Contibution Guide
 
