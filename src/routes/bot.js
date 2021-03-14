@@ -23,17 +23,33 @@ async function getByID(req, res) {
 async function getByParam(req, res) {
   if (req.query.name) {
     const bot = (await Bot.query().where("name", req.query.name))[0];
-    if (bot instanceof Bot) res.send({ data: bot });
-    else res.status(400).send({ status: "Bot not found with the given name." });
+    if (bot instanceof Bot) {
+      // Add logic
+      const logic = [];
+      for (let i = 0; i < bot.logic.length; i++) {
+        logic.push(await ConversationLogic.query().findById(bot.logic[i]));
+      }
+      bot.logic = logic;
+      res.send({ data: bot });
+    } else
+      res.status(400).send({ status: "Bot not found with the given name." });
   } else if (req.query.startingMessage) {
     const bot = (
       await Bot.query().where("startingMessage", req.query.startingMessage)
     )[0];
-    if (bot instanceof Bot) res.send({ data: bot });
-    else
+    if (bot instanceof Bot) {
+      // Add logic
+      const logic = [];
+      for (let i = 0; i < bot.logic.length; i++) {
+        logic.push(await ConversationLogic.query().findById(bot.logic[i]));
+      }
+      bot.logic = logic;
+      res.send({ data: bot });
+    } else {
       res
         .status(400)
         .send({ status: "Bot not found with the given startingMessage." });
+    }
   } else {
     req.status(400).send({ status: "Invalid query param" });
   }

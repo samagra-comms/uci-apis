@@ -63,8 +63,15 @@ const KafkaService = {
           const { Transformer } = require("../models/transformer");
           const { Service } = require("../models/service");
           const data = message.value.toString();
-          const transformer = await Transformer.query().where("name", topic);
-          console.log({ transformer });
+
+          const transformerServiceType = topic.split(".")[1];
+          if (transformerServiceType === "odk") return; //Ignore ODK messages.
+
+          const transformerName = topic.split(".")[2];
+          const transformer = await Transformer.query().where(
+            "name",
+            transformerName
+          );
           const service = await Service.query().findById(
             transformer[0].service
           );
