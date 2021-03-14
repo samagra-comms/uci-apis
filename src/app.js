@@ -45,6 +45,7 @@ const createAppServer = () => {
   require("./routes/userSegment")(app);
   require("./routes/adapter")(app);
   require("./routes/conversationLogic")(app);
+  require("./routes/bot")(app);
   app.use(cookieParser());
   module.exports = app;
   return app;
