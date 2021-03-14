@@ -20,6 +20,25 @@ async function getByID(req, res) {
   if (conversationLogic) res.send({ data: conversationLogic });
 }
 
+async function getByParam(req, res) {
+  if (req.query.name) {
+    const bot = (await Bot.query().where("name", req.query.name))[0];
+    if (bot instanceof Bot) res.send({ data: bot });
+    else res.status(400).send({ status: "Bot not found with the given name." });
+  } else if (req.query.startingMessage) {
+    const bot = (
+      await Bot.query().where("startingMessage", req.query.startingMessage)
+    )[0];
+    if (bot instanceof Bot) res.send({ data: bot });
+    else
+      res
+        .status(400)
+        .send({ status: "Bot not found with the given startingMessage." });
+  } else {
+    req.status(400).send({ status: "Invalid query param" });
+  }
+}
+
 async function update(req, res) {
   const data = req.body.data;
   const isExisting = (await Bot.query().findById(req.params.id)) !== undefined;
@@ -157,5 +176,13 @@ module.exports = function (app) {
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
       deleteByID
+    );
+
+  app
+    .route(BASE_URL + "/bot/get/")
+    .get(
+      requestMiddleware.gzipCompression(),
+      requestMiddleware.createAndValidateRequestBody,
+      getByParam
     );
 };
