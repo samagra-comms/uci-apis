@@ -4,11 +4,11 @@
 
  - [Overview](https://github.com/Samagra-Development/UCI#overview)
  - [Functional Blocks](https://github.com/Samagra-Development/UCI#functional-blocks)  
- - [Technical Architecture](https://github.com/Samagra-Development/UCI#techarch)
- - [Core Features](https://github.com/Samagra-Development/UCI#coref)
- - [Core Concepts](https://github.com/Samagra-Development/UCI#corec)
- - [API Documentation](https://github.com/Samagra-Development/UCI#apidocs)
- - [Contribution Guide](https://github.com/Samagra-Development/UCI#contri)
+ - [Technical Architecture](https://github.com/Samagra-Development/UCI#technical-architecture)
+ - [Core Features](https://github.com/Samagra-Development/UCI#core-features)
+ - [Core Concepts](https://github.com/Samagra-Development/UCI#core-concepts)
+ - [API Documentation](https://github.com/Samagra-Development/UCI#api-documentation)
+ - [Contribution Guide](https://github.com/Samagra-Development/UCI#contibution-guide)
 
 ## [](https://github.com/Samagra-Development/UCI#overview)Overview
 
@@ -22,13 +22,13 @@ The block diagram below outlines the various components that come together to fo
 
 ![](https://github.com/Samagra-Development/comms-manager/blob/master/docs/funcblocks.png)
 
-## [](https://github.com/Samagra-Development/UCI#techarch)Technical Architecture 
+## [](https://github.com/Samagra-Development/UCI#technical-architecture)Technical Architecture 
 
 The flow diagram below provides a brief overview of the technology design. See [Wiki](https://github.com/Samagra-Development/UCI/wiki) for the detailed **technical architecture diagram**.
 
 ![](https://github.com/Samagra-Development/comms-manager/blob/master/docs/techover.png)
 
-## [](https://github.com/Samagra-Development/UCI#coref)Core Features
+## [](https://github.com/Samagra-Development/UCI#core-features)Core Features
 - Ability to connect to any communication channel through any service provider without doing custom changes in the core logic UCI.
 - UCI ecosystem is  independent of external variables like communication channel and service provider powered by XMessage standard.
 - Ability to have a configurable conversation logic for the bot
@@ -36,7 +36,7 @@ The flow diagram below provides a brief overview of the technology design. See [
 - Ability to include value added services in the bot interaction flow through Microservices (Internal or External) 
 - Ability to create tools on top of UCI APIs to manage Bot configuration, conversations and visualization
 
-## [](https://github.com/Samagra-Development/UCI#corec)Core Concepts
+## [](https://github.com/Samagra-Development/UCI#core-concepts)Core Concepts
 Every interaction with the conversation bot has the following core elements:
 1. **Bot** - A bot orchestrates a conversation with a specific conversation logic assigned to a set of users. A bot remembers the state of a conversation for a particular user. A bot object references user segment(s) and conversation logic(s).
 2. **User Segment** - User segment contains user data including mechanism to fetch them from a federated user registry.
@@ -44,11 +44,11 @@ Every interaction with the conversation bot has the following core elements:
 4. **Conversation Logic** - Conversation logic defines the control flow for a specific conversation. A conversation logic object references a sequence of transformers that will be applied to arrive at the final response at a specific point in the conversation, and the associated adapter config for this conversation logic. (e.g. XForm logic, translation into Hindi - both associated with a Whatsapp-Gupshup adapter).
 5. **Transformer** - A transformer is a stateless processing object that takes inputs and converts the input into a processed response. Transformers  may in turn call external services if needed.
 
-## [](https://github.com/Samagra-Development/UCI#apidocs)API Documentation
+## [](https://github.com/Samagra-Development/UCI#api-documentation)API Documentation
 
 View the API documentation [here](https://documenter.getpostman.com/view/7043186/Tz5qaxaN)
 
-## [](https://github.com/Samagra-Development/UCI#contri)Contibution Guide
+## [](https://github.com/Samagra-Development/UCI#contibution-guide)Contibution Guide
 
 The template has been taken from Sunbird's program service and extended for our purposed for creating APIs.
 
