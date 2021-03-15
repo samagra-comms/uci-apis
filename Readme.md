@@ -3,7 +3,7 @@
 [![Open Source Love](https://camo.githubusercontent.com/d41b9884bd102b525c8fb9a8c3c8d3bbed2b67f0/68747470733a2f2f6261646765732e66726170736f66742e636f6d2f6f732f76312f6f70656e2d736f757263652e7376673f763d313033)](https://opensource.org/licenses/MIT)  [![License: MIT](https://camo.githubusercontent.com/3ccf4c50a1576b0dd30b286717451fa56b783512/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f4c6963656e73652d4d49542d79656c6c6f772e737667)](https://opensource.org/licenses/MIT) 
 
  - [Overview](https://github.com/Samagra-Development/UCI#overview)
- - [Functional Blocks](https://github.com/Samagra-Development/UCI#funcblock)  
+ - [Functional Blocks](https://github.com/Samagra-Development/UCI#functional-blocks)  
  - [Technical Architecture](https://github.com/Samagra-Development/UCI#techarch)
  - [Core Features](https://github.com/Samagra-Development/UCI#coref)
  - [Core Concepts](https://github.com/Samagra-Development/UCI#corec)
@@ -16,7 +16,7 @@ Unified Communications Interface (UCI) is a system that powers governments to cr
 
 With the onset of Covid19 in 2020, the need for proactive engagement accelerated across all governments. UCI was designed after understanding diverse governance use cases that were emerging across different departments of multiples state governments. 
 
-## [](https://github.com/Samagra-Development/UCI#funcblock)Functional Blocks
+## [](https://github.com/Samagra-Development/UCI#functional-blocks)Functional Blocks
 
 The block diagram below outlines the various components that come together to form the Unified Communications Interface. 
 
