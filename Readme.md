@@ -1,11 +1,11 @@
-# Comms Manager
+# Unified Communications Interface (UCI)
 
 This is a layer over top of the core engine to
 
 - manage bots
 - ensure service level agreement and executing federation jobs
 
-See [Wiki](https://github.com/Samagra-Development/comms-manager/wiki) for the architecture diagram.
+See [Wiki](https://github.com/Samagra-Development/UCI/wiki) for the architecture diagram.
 
 ## API Documentation
 
@@ -15,4 +15,4 @@ See [Wiki](https://github.com/Samagra-Development/comms-manager/wiki) for the ar
 
 The template has been taken from Sunbird's program service and extended for our purposed for creating APIs.
 
-See [Wiki](https://github.com/Samagra-Development/comms-manager/wiki) for installation instruction and Contribution Guide.
+See [Wiki](https://github.com/Samagra-Development/UCI/wiki) for installation instruction and Contribution Guide.
