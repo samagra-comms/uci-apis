@@ -4,7 +4,7 @@
 
  - [Overview](https://github.com/Samagra-Development/UCI#overview)
  - [Functional Blocks](https://github.com/Samagra-Development/UCI#functionalblocks)  
- - [Technology Architecture](https://github.com/Samagra-Development/UCI#techarchitecture)
+ - [Technical Architecture](https://github.com/Samagra-Development/UCI#techarchitecture)
  - [Core Features](https://github.com/Samagra-Development/UCI#corefeatures)
  - [Core Concepts](https://github.com/Samagra-Development/UCI#coreconcepts)
  - [API Documentation](https://github.com/Samagra-Development/UCI#apidocs)
@@ -22,14 +22,11 @@ The block diagram below outlines the various components that come together to fo
 
 ![](https://github.com/Samagra-Development/comms-manager/blob/master/docs/funcblocks.png)
 
-## [](https://github.com/Samagra-Development/UCI#techarchitecture)Technology Architecture 
+## [](https://github.com/Samagra-Development/UCI#techarchitecture)Technical Architecture 
 
-The flow diagram below explains the technology overview of UCI
+The flow diagram below provides a brief overview of the technology design. See [Wiki](https://github.com/Samagra-Development/UCI/wiki) for the detailed **technical architecture diagram**.
 
 ![](https://github.com/Samagra-Development/comms-manager/blob/master/docs/techover.png)
-
-See [Wiki](https://github.com/Samagra-Development/UCI/wiki) for the architecture diagram.
-
 
 ## [](https://github.com/Samagra-Development/UCI#corefeatures)Core Features
 - Ability to connect to any communication channel through any service provider without doing custom changes in the core logic UCI.
