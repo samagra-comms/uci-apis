@@ -35,7 +35,7 @@ async function update(req, res) {
     data.type = serviceType.id;
     // TODO: Verify data
 
-    await Transformer.query().patch(data);
+    await Transformer.query().patch(data).findById(req.params.id);
     const getAgain = await UserSegment.query().findById(req.params.id);
 
     res.send({ data: getAgain });

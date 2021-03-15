@@ -28,7 +28,7 @@ async function update(req, res) {
       status: `Adapter does not exists with the id ${req.params.id}`,
     });
   } else {
-    await Adapter.query().patch(data);
+    await Adapter.query().patch(data).findById(req.params.id);
     const getAgain = await Adapter.query().findById(req.params.id);
 
     res.send({ data: getAgain });

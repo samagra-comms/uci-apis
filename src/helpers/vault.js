@@ -7,12 +7,15 @@ class Vault {
   }
 
   getCredentials = (serviceType, credentials) => {
+    console.log({ credentials });
     const variableName = credentials.variable;
     if (serviceType === "gql") {
       return {
         uri: this.data[variableName].service,
         headers: this.data[variableName].headers,
       };
+    } else if (serviceType === "odk") {
+      return this.data[variableName];
     } else {
       return this.data[variableName];
     }

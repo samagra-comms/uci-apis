@@ -31,15 +31,19 @@ async function update(req, res) {
       status: `ConversationLogic does not exists with the id ${req.params.id}`,
     });
   } else {
-    let adapter = await Adapter.query().findById(data.adapter)[0];
-    if (!adapter)
-      res.status(400).send({
-        status: "Error",
-        error: "Adapter with the given ID does not exist",
-      });
+    if (data.adapter) {
+      let adapter = await Adapter.query().findById(data.adapter)[0];
+      if (!adapter)
+        res.status(400).send({
+          status: "Error",
+          error: "Adapter with the given ID does not exist",
+        });
+      return;
+    }
+
+    const trx = await ConversationLogic.startTransaction();
 
     try {
-      const trx = await ConversationLogic.startTransaction();
       // Loop over transformers to verify if they exist or not.
       const transformers = data.transformers;
       let isValid = true;
@@ -50,9 +54,11 @@ async function update(req, res) {
             Transformer;
       }
       if (isValid) {
-        const inserted = await ConversationLogic.query(trx).insert(data);
+        const inserted = await ConversationLogic.query(trx)
+          .patch({ transformers: JSON.stringify(data.transformers) })
+          .findById(req.params.id);
         await trx.commit();
-        res.send({ data: inserted });
+        res.send({ data: "Patched" });
       } else {
         await trx.rollback();
         res

@@ -7,6 +7,7 @@ const { Service } = require("../models/service");
 
 const { queue } = require("../service/schedulerService");
 const KafkaService = require("../helpers/kafkaUtil");
+const { Vault } = require("../helpers/vault");
 
 // Refactor this to move to service
 async function getAll(req, res) {
@@ -47,7 +48,7 @@ async function update(req, res) {
     delete data.service;
     // TODO: Verify data
 
-    await Transformer.query().patch(data);
+    await Transformer.query().patch(data).findById(req.params.id);
     const getAgain = await Transformer.query().findById(req.params.id);
 
     res.send({ data: getAgain });
@@ -109,6 +110,55 @@ async function insert(req, res) {
   }
 }
 
+async function getForms(req, res) {
+  const transformer = await Transformer.query()
+    .findById(req.params.id)
+    .withGraphFetched("service");
+
+  if (transformer.service.type === "odk") {
+    const util = require("util");
+    const { parseString } = require("xml2js");
+    const DigestFetch = require("digest-fetch");
+
+    const getODKForms = async (credentials) => {
+      const client = new DigestFetch(
+        credentials.username,
+        credentials.password,
+        {
+          logger: console,
+        }
+      );
+
+      return client
+        .fetch(`${credentials.uri}/formList`)
+        .then((resp) => resp.text())
+        .then(async (data) => {
+          data = await util.promisify(parseString)(data);
+          let flatForms = [];
+          if (data && data.forms && data.forms.form) {
+            flatForms = data.forms.form.map((f) => {
+              return { name: f._, id: `${f.$ && f.$.url.split("=")[1]}` };
+            });
+          }
+          return flatForms;
+        })
+        .catch((e) => console.log("DIGEST FETCH", e));
+    };
+
+    const vault = new Vault();
+    const credentials = vault.getCredentials(
+      "odk",
+      transformer.service.config.credentials
+    );
+    const forms = await getODKForms(credentials);
+    res.send({ data: forms });
+  } else {
+    res
+      .status(400)
+      .send({ status: "Error", error: "Transformer is not of ODK type" });
+  }
+}
+
 module.exports = function (app) {
   app
     .route(BASE_URL + "/transformer/all")
@@ -156,5 +206,13 @@ module.exports = function (app) {
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
       dryRun
+    );
+
+  app
+    .route(BASE_URL + "/transformer/getForms/:id")
+    .get(
+      requestMiddleware.gzipCompression(),
+      requestMiddleware.createAndValidateRequestBody,
+      getForms
     );
 };
