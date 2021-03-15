@@ -10,25 +10,25 @@
  - [API Documentation](https://github.com/Samagra-Development/UCI#apidocs)
  - [Contribution Guide](https://github.com/Samagra-Development/UCI#contri)
 
-## [Overview](https://github.com/Samagra-Development/UCI#overview)Overview
+## [](https://github.com/Samagra-Development/UCI#overview)Overview
 
 Unified Communications Interface (UCI) is a system that powers governments to create and manage conversations with citizens and with its own officials. Through UCI governments can seamlessly setup simple and complex conversations using a multi-channel approach. UCI aims to democratize the use of different communication channels such as WhatsApp, Telegram, SMS, email for governance use cases through a standard configurable manner that is reusable and scalable across all governance use cases.
 
 With the onset of Covid19 in 2020, the need for proactive engagement accelerated across all governments. UCI was designed after understanding diverse governance use cases that were emerging across different departments of multiples state governments. 
 
-## [Functional Blocks](https://github.com/Samagra-Development/UCI#funcblock)Functional Blocks
+## [](https://github.com/Samagra-Development/UCI#funcblock)Functional Blocks
 
 The block diagram below outlines the various components that come together to form the Unified Communications Interface. 
 
 ![](https://github.com/Samagra-Development/comms-manager/blob/master/docs/funcblocks.png)
 
-## [Technical Architecture](https://github.com/Samagra-Development/UCI#techarch)Technical Architecture 
+## [](https://github.com/Samagra-Development/UCI#techarch)Technical Architecture 
 
 The flow diagram below provides a brief overview of the technology design. See [Wiki](https://github.com/Samagra-Development/UCI/wiki) for the detailed **technical architecture diagram**.
 
 ![](https://github.com/Samagra-Development/comms-manager/blob/master/docs/techover.png)
 
-## [Core Features](https://github.com/Samagra-Development/UCI#coref)Core Features
+## [](https://github.com/Samagra-Development/UCI#coref)Core Features
 - Ability to connect to any communication channel through any service provider without doing custom changes in the core logic UCI.
 - UCI ecosystem is  independent of external variables like communication channel and service provider powered by XMessage standard.
 - Ability to have a configurable conversation logic for the bot
@@ -36,7 +36,7 @@ The flow diagram below provides a brief overview of the technology design. See [
 - Ability to include value added services in the bot interaction flow through Microservices (Internal or External) 
 - Ability to create tools on top of UCI APIs to manage Bot configuration, conversations and visualization
 
-## [Core Concepts](https://github.com/Samagra-Development/UCI#corec)Core Concepts
+## [](https://github.com/Samagra-Development/UCI#corec)Core Concepts
 Every interaction with the conversation bot has the following core elements:
 1. **Bot** - A bot orchestrates a conversation with a specific conversation logic assigned to a set of users. A bot remembers the state of a conversation for a particular user. A bot object references user segment(s) and conversation logic(s).
 2. **User Segment** - User segment contains user data including mechanism to fetch them from a federated user registry.
@@ -44,11 +44,11 @@ Every interaction with the conversation bot has the following core elements:
 4. **Conversation Logic** - Conversation logic defines the control flow for a specific conversation. A conversation logic object references a sequence of transformers that will be applied to arrive at the final response at a specific point in the conversation, and the associated adapter config for this conversation logic. (e.g. XForm logic, translation into Hindi - both associated with a Whatsapp-Gupshup adapter).
 5. **Transformer** - A transformer is a stateless processing object that takes inputs and converts the input into a processed response. Transformers  may in turn call external services if needed.
 
-## [API Documentation](https://github.com/Samagra-Development/UCI#apidocs)API Documentation
+## [](https://github.com/Samagra-Development/UCI#apidocs)API Documentation
 
 View the API documentation [here](https://documenter.getpostman.com/view/7043186/Tz5qaxaN)
 
-## [Contribution Guide](https://github.com/Samagra-Development/UCI#contri)Contibution Guide
+## [](https://github.com/Samagra-Development/UCI#contri)Contibution Guide
 
 The template has been taken from Sunbird's program service and extended for our purposed for creating APIs.
 
