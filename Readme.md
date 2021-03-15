@@ -19,8 +19,27 @@ With the onset of Covid19 in 2020, the need for proactive engagement accelerated
 ## [](https://github.com/Samagra-Development/UCI#functional-blocks)Functional Blocks
 
 The block diagram below outlines the various components that come together to form the Unified Communications Interface. 
-
 ![](https://github.com/Samagra-Development/comms-manager/blob/master/docs/funcblocks.png)
+
+A glossary of the terms used in the UCI design are available below:
+1. **Adapter** - An adapter translates between messages received from communication channels on specific providers and the internal XMessage format. *A new adapter is created for every combination of communication channel and service provider (e.g. - WhatsApp + Gupshup; WhatsApp + NetCore; WhatsApp + Twilio). An adapter config references the communication channel, service provider and associated metadata such as specific business account phone number.*
+2. **Admin Console** - An application that is built to consume UCI APIs, to enable bot configuration and visualizations on top of UCI configuration and conversation data.
+3. **Bot** - A bot orchestrates a conversation with a specific conversation logic assigned to a set of users. A bot remembers the state of a conversation for a particular user. A bot object references user segment(s) and conversation logic(s). 
+4. **Communication Channel** - Any application or channel that allows users to connect with each other to exchange information. Examples of communication channels include (but not limited to), WhatsApp, SMS, Email, Slack, IVRS, Telegram.
+5. **Conversation** - Any exchange of recorded messages between two parties (users or systems) is called a conversation. 
+6. **Conversation Data** - All the data that is generated as a result of the communication on the bot. User input data as well as bot responses are called as conversation data.
+7. **Conversation Logic** - Conversation logic defines the control flow for a specific conversation. A conversation logic object references a sequence of transformers that will be applied to arrive at the final response at a specific point in the conversation, and the associated adapter config for this conversation logic. (e.g. XForm logic, translation into Hindi - both associated with a Whatsapp-Gupshup adapter)
+8. **Logs** - All the inbound and outbound interactions that happen with the bot are captured and stored.
+9. **Register a bot** - An API that allows users to register for a new bot.  
+10. **Remote Data Repositories** - Any remote repositories (e.g. user db, content db or others) required in a conversation logic can be to be accessed.
+11. **Role Based Access Control** - Role-based access control or role-based security is an approach to restricting system access to authorized users. Amongst other functions this restricts bot usage only to an authorized group of users.
+12. **Service Provider** - Any public or private organization that provides the service of gathering the response from the Communication Application and transmits the same over standard API’s to this Unified Communications Interface. Examples of service providers include (but not limited to) Gupshup, Twillo, Infobip, Netcore. 
+13. **Standards** - These are set of standards that are defined in this Unified Communication Interfaces. These standards are the guardians and helpers to ensure basic functioning and to some extent modularity.
+14. **Transformer** - A transformer is a stateless processing object that takes inputs and converts the input into a processed response. Transformers may in turn call external services if needed.  For example - Open Data Kit (ODK) 
+15. **User** - Any person or system that interacts with the bot.
+16. **User Registry (Local, Federated)** - A place (index, directory or registry) where users profile data is stored, this can be a local storage as part of the Communication bot or a federated storage at different databases.
+17. **XForms** - XForms is an XML markup for a new generation of forms and form-like applications on the Web.
+18. **XMPP | XMessage** - This is a standard defined for the UCI ecosystem. Key objective of this is to make the internal functioning UCI, independent of external factors viz. Communication channel and service provider.
 
 ## [](https://github.com/Samagra-Development/UCI#technical-architecture)Technical Architecture 
 
