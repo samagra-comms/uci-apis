@@ -14,7 +14,7 @@
 
 Unified Communications Interface (UCI) is a system that powers governments to create and manage conversations with citizens and with its own officials. Through UCI governments can seamlessly setup simple and complex conversations using a multi-channel approach. UCI aims to democratize the use of different communication channels such as WhatsApp, Telegram, SMS, email for governance use cases through a standard configurable manner that is reusable and scalable across all governance use cases.
 
-With the onset of Covid19 in 2020, the need for proactive engagement accelerated across all governments. UCI was designed after understanding diverse governance use cases that were emerging across different departments of multiples state governments. 
+With the onset of Covid19 in 2020, the need for proactive engagement accelerated across all governments. UCI was designed after understanding diverse governance use cases that were emerging across different departments of multiple state governments. 
 
 ## [](https://github.com/Samagra-Development/UCI#functional-blocks)Functional Blocks
 
