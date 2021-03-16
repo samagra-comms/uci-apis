@@ -18,7 +18,7 @@ const knexConfig = {
     },
   },
 
-  development: {
+  production: {
     debug: false,
     client: "pg",
     useNullAsDefault: true,
