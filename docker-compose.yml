@@ -6,6 +6,8 @@ services:
     image: federation-service
     container_name: federation-service
     restart: unless-stopped
+    networks: 
+      - deployments_core
     env_file:
       - src/.env
     ports:
@@ -14,6 +16,8 @@ services:
   comms:
     container_name: comms
     image: postgres:12
+    networks: 
+      - deployments_core
     env_file:
       - src/.env
     ports:
@@ -23,16 +27,20 @@ services:
 
   gql:
     image: hasura/graphql-engine:v2.0.0-alpha.1
+    networks: 
+      - deployments_core
     env_file:
       - src/.env
     ports:
-      - "15002:8080"
+      - "15003:8080"
     depends_on:
       - comms
     restart: always
 
   scheduler-db:
     container_name: scheduler-db
+    networks: 
+      - deployments_core
     image: redis:latest
     ports:
       - "6379:6379"
@@ -41,3 +49,7 @@ services:
     volumes:
       - ./redis-data:/data
       - ./redis.conf:/usr/local/etc/redis/redis.conf
+
+networks:
+  deployments_core:
+    external: true

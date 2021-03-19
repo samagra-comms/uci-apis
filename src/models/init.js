@@ -57,5 +57,5 @@ knex
   .catch((err) => {
     console.log("DB Connection: ❌");
     console.error(err);
-    process.exit(1);
+    // process.exit(1);
   });

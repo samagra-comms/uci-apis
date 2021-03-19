@@ -2,7 +2,7 @@ const { ConsumerGroupStream } = require("kafka-node");
 const { Kafka } = require("kafkajs");
 const kafka = new Kafka({
   clientId: "api",
-  brokers: ["127.0.0.1:9092"],
+  brokers: ["lenses:9092"],
 });
 const _ = require("lodash");
 var logger = require("sb_logger_util_v2");
@@ -75,6 +75,7 @@ const KafkaService = {
           const service = await Service.query().findById(
             transformer[0].service
           );
+          console.log("Here");
           queue.add(
             service.type,
             {
