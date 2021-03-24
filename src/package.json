@@ -9,8 +9,8 @@
     "test-with-coverage": "nyc --reporter=lcov --reporter=text-lcov mocha test/**/*.js --exit --timeout 20000"
   },
   "dependencies": {
-    "graphql": "^14.5.8",
     "@project-sunbird/telemetry-sdk": "0.0.24",
+    "abort-controller": "^3.0.0",
     "apollo-cache-inmemory": "^1.6.6",
     "apollo-client": "^2.6.10",
     "apollo-link-http": "^1.5.17",
@@ -33,6 +33,7 @@
     "express-cassandra": "^2.3.2",
     "express-cluster": "0.0.5",
     "express-validator": "^6.6.1",
+    "graphql": "^14.5.8",
     "graphql-tag": "^2.11.0",
     "helmet": "^3.23.1",
     "http-errors": "^1.6.3",

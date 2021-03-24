@@ -1,16 +1,29 @@
 const { ConsumerGroupStream } = require("kafka-node");
 const { Kafka } = require("kafkajs");
-const kafka = new Kafka({
-  clientId: "api",
-  brokers: ["lenses:9092"],
-});
+
+let kafka;
+if (process.env.ENV === "dev") {
+  kafka = new Kafka({
+    clientId: "api",
+    brokers: [`${process.env.KAFKA_HOST}`],
+    sasl: {
+      mechanism: "plain",
+      username: process.env.KAFKA_USER,
+      password: process.env.KAFKA_PASS,
+    },
+  });
+} else {
+  kafka = new Kafka({
+    clientId: "api",
+    brokers: [`${process.env.KAFKA_HOST}`],
+  });
+}
+
 const _ = require("lodash");
 var logger = require("sb_logger_util_v2");
 const envVariables = require("../envVariables");
 const consumer = kafka.consumer({ groupId: "api-group" });
 consumer.connect();
-
-const { queue } = require("../service/schedulerService");
 
 const sendRecord = async (data, callback) => {
   if (_.isEmpty(data)) {
@@ -54,6 +67,7 @@ const KafkaService = {
   },
 
   refreshSubscribers: async (transformers) => {
+    const { queue } = require("../service/schedulerService");
     for (let i = 0; i < transformers.length; i++) {
       let topic = `com.${transformers[i].service.type}.${transformers[i].name}`;
       await consumer.stop();

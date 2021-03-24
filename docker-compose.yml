@@ -8,6 +8,7 @@ services:
     restart: unless-stopped
     networks: 
       - deployments_core
+      - kafka_broker
     env_file:
       - src/.env
     ports:
@@ -21,7 +22,7 @@ services:
     env_file:
       - src/.env
     ports:
-      - "5432"
+      - "5432:5432"
     volumes:
       - ./pgdata:/var/lib/postgresql/data
 
@@ -52,4 +53,6 @@ services:
 
 networks:
   deployments_core:
+    external: true
+  kafka_broker:
     external: true

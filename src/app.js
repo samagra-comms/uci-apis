@@ -1,5 +1,3 @@
-console.log = console.trace;
-// console.error = console.trace;
 try {
   const env = require("dotenv").config();
   const createError = require("http-errors");
