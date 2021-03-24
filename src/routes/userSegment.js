@@ -8,8 +8,19 @@ const { UserSegment } = require("../models/userSegment");
 
 // Refactor this to move to service
 async function getAll(req, res) {
-  const allSegments = await UserSegment.query();
-  if (allSegments) res.send({ data: allTransformers });
+  const allSegments = await UserSegment.query().withGraphFetched(
+    "[allService, byIDService, byPhoneService]"
+  );
+  const modifiedData = allSegments.map((s) => {
+    s.all = s.allService;
+    s.byID = s.byIDService;
+    s.byPhone = s.byPhoneService;
+    delete s.allService;
+    delete s.byIDService;
+    delete s.byPhoneService;
+    return s;
+  });
+  if (allSegments) res.send({ data: modifiedData });
   else res.send({ data: [] });
 }
 
