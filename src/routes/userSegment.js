@@ -79,8 +79,8 @@ async function insert(req, res) {
 
     let serviceTypeByID = await Service.query().where(data.byID)[0];
 
+    const trx = await UserSegment.startTransaction();
     try {
-      const trx = await UserSegment.startTransaction();
       if (!serviceTypeAll)
         serviceTypeAll = await Service.query(trx).insert(data.all);
 
@@ -115,10 +115,15 @@ async function insert(req, res) {
       if (verified) {
         const inserted = await UserSegment.query(trx).insert(data);
         trx.commit();
-        const getAgain = await UserSegment.query().findById(inserted.id);
-        getAgain.all = data.all;
-        getAgain.byID = data.byID;
-        getAgain.byPhone = data.byPhone;
+        const getAgain = await UserSegment.query()
+          .findById(inserted.id)
+          .withGraphFetched("[allService, byIDService, byPhoneService]");
+        getAgain.all = getAgain.allService;
+        getAgain.byID = getAgain.byIDService;
+        getAgain.byPhone = getAgain.byPhoneService;
+        delete getAgain.allService;
+        delete getAgain.byIDService;
+        delete getAgain.byPhoneService;
         res.send({ data: getAgain });
       } else {
         trx.rollback();
@@ -127,8 +132,8 @@ async function insert(req, res) {
         });
       }
     } catch (e) {
-      trx.rollback();
       console.error(e);
+      trx.rollback();
       res.send({ data: "UserSegment could not be registered." });
     }
   }
