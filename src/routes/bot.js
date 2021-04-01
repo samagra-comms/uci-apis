@@ -51,7 +51,7 @@ async function getByParam(req, res) {
         .send({ status: "Bot not found with the given startingMessage." });
     }
   } else {
-    req.status(400).send({ status: "Invalid query param" });
+    res.status(400).send({ status: "Invalid query param" });
   }
 }
 
