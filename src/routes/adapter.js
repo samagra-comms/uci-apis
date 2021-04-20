@@ -64,6 +64,7 @@ async function getCredentials(req, res) {
   const id = req.params.id;
   const adapter = await Adapter.query().findById(id);
   const vault = new Vault();
+
   const credentials = vault.getCredentials(
     "Gupshup-Whatsapp",
     adapter.config.credentials

@@ -34,10 +34,9 @@ async function update(req, res) {
       status: `Transformer does not exists with the id ${req.params.id}`,
     });
   } else {
-    console.log("Here");
     const serviceParams = {
-      type: data.type,
-      config: data.config,
+      type: data.service.type,
+      config: data.service.config,
     };
     let serviceType = await Service.query().where(serviceParams)[0];
     if (!serviceType)
@@ -146,6 +145,7 @@ async function getForms(req, res) {
     };
 
     const vault = new Vault();
+
     const credentials = vault.getCredentials(
       "odk",
       transformer.service.config.credentials
