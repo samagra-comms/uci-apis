@@ -86,7 +86,6 @@ async function insert(req, res) {
             status: `ConversationLogic already exists with the name ${data.name}`,
         });
     } else {
-        console.log(data.adapter);
         let adapter = await Adapter.query().findById(data.adapter);
         if (!(adapter instanceof Adapter))
             res.status(400).send({
@@ -106,10 +105,8 @@ async function insert(req, res) {
                         (await Transformer.query().findById(transformers[i].id)) instanceof
                         Transformer;
                 }
-                console.log({isValid});
-                if (isValid) {
-                    console.log({data});
-                    const inserted = await ConversationLogic.query(trx).insert({
+                 if (isValid) {
+                     const inserted = await ConversationLogic.query(trx).insert({
                         transformers: JSON.stringify(data.transformers),
                         adapter: data.adapter,
                         name: data.name,

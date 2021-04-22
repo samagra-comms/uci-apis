@@ -182,7 +182,7 @@ async function update(req, res) {
                 return res.send({data: "UserSegment could not be verified."});
             });
         if (verified) {
-            const patched = await UserSegment.query().patch({name: data.name}).findById(req.params.id);
+            const patched = await UserSegment.query(trx).patch({name: data.name}).findById(req.params.id);
             const d = await trx.commit();
             const getAgain = await UserSegment.query()
                 .findById(req.params.id)
@@ -194,7 +194,6 @@ async function update(req, res) {
             delete getAgain.byIDService;
             delete getAgain.byPhoneService;
             return res.send({data: getAgain});
-
         } else {
             await trx.rollback();
             return res.send({
