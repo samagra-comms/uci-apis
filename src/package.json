@@ -48,6 +48,7 @@
     "objection": "^2.2.14",
     "pdfmake": "^0.1.70",
     "pg": "^8.5.1",
+    "portfinder": "^1.0.28",
     "redis": "^3.0.2",
     "response_util": "file:libs/response_util",
     "rewire": "^5.0.0",

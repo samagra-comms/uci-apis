@@ -7,3 +7,4 @@ redis.conf
 redis-data
 *Mock.js*
 .DS_Store
+**/pgdata.zip

@@ -19,6 +19,10 @@ try {
   const { Transformer } = require("./models/transformer");
   const { router } = require("bull-board");
 
+  if (env.error) {
+    throw env.error;
+  }
+
   const createAppServer = () => {
     const app = express();
 
@@ -58,12 +62,30 @@ try {
 
   const app = createAppServer();
 
+  if (process.env.ENV === "dev") {
+    const portfinder = require("portfinder");
+    portfinder.basePort = 9999;
+    portfinder.highestPort = 10010;
+    portfinder
+      .getPortPromise()
+      .then((devPort) => {
+        startServer(app, telemetryService, devPort);
+      })
+      .catch((err) => {
+        console.log(err.stack);
+      });
+  } else {
+    startServer(app, telemetryService, port);
+  }
+} catch (e) {
+  console.log(e.stack);
+}
+
+function startServer(app, telemetryService, port) {
   app.listen(port, async () => {
     console.log(
-      `program-service is running in test env on port ${port} with ${process.pid} pid`
+      `Server running in ${process.env.ENV} env on port ${port} with ${process.pid} pid ✅`
     );
     telemetryService.initializeTelemetryService();
   });
-} catch (e) {
-  console.log(e.stack);
 }

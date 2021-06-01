@@ -3,12 +3,13 @@ const {result} = require("lodash");
 const requestMiddleware = require("../middlewares/request.middleware");
 
 const BASE_URL = "/admin/v1";
-const {Vault} = require("../helpers/vault");
 const {Bot} = require("../models/bot");
-const {Transformer} = require("../models/transformer");
 const {ConversationLogic} = require("../models/conversationLogic");
 const {UserSegment} = require("../models/userSegment");
-const {Adapter} = require("../models/adapter");
+const { Bot } = require("../models/bot");
+const { ConversationLogic } = require("../models/conversationLogic");
+const { UserSegment } = require("../models/userSegment");
+const fetch = require("node-fetch");
 
 // Refactor this to move to service
 async function getAll(req, res) {
@@ -19,6 +20,32 @@ async function getAll(req, res) {
 async function getByID(req, res) {
     const conversationLogic = await Bot.query().findById(req.params.id);
     if (conversationLogic) res.send({data: conversationLogic});
+}
+
+async function startByID(req, res) {
+  const id = req.params.id;
+  fetch(`http://comms-prod18.ngrok.samagra.io/campaign/start?campaignId=${id}`)
+    .then((s) => {
+      res.statu(200).send({ status: "Bot Triggered" });
+    })
+    .catch((e) => {
+      res
+        .statu(400)
+        .send({ status: "Exception in triggering Bot", error: e.message });
+    });
+}
+
+async function pauseByID(req, res) {
+  const id = req.params.id;
+  fetch(`http://comms-prod18.ngrok.samagra.io/campaign/start?campaignId=${id}`)
+    .then((s) => {
+      res.statu(200).send({ status: "Bot Triggered" });
+    })
+    .catch((e) => {
+      res
+        .statu(400)
+        .send({ status: "Exception in triggering Bot", error: e.message });
+    });
 }
 
 async function getByParam(req, res) {
@@ -155,6 +182,7 @@ async function insert(req, res) {
 }
 
 module.exports = function (app) {
+<<<<<<< Updated upstream
     app
         .route(BASE_URL + "/bot/all")
         .get(
@@ -202,4 +230,69 @@ module.exports = function (app) {
             requestMiddleware.createAndValidateRequestBody,
             getByParam
         );
+=======
+  app
+    .route(BASE_URL + "/bot/all")
+    .get(
+      requestMiddleware.gzipCompression(),
+      requestMiddleware.createAndValidateRequestBody,
+      getAll
+    );
+
+  app
+    .route(BASE_URL + "/bot/create")
+    .post(
+      requestMiddleware.gzipCompression(),
+      requestMiddleware.createAndValidateRequestBody,
+      insert
+    );
+
+  app
+    .route(BASE_URL + "/bot/get/:id")
+    .get(
+      requestMiddleware.gzipCompression(),
+      requestMiddleware.createAndValidateRequestBody,
+      getByID
+    );
+
+  app
+    .route(BASE_URL + "/bot/start/:id")
+    .get(
+      requestMiddleware.gzipCompression(),
+      requestMiddleware.createAndValidateRequestBody,
+      startByID
+    );
+
+  app
+    .route(BASE_URL + "/bot/pause/:id")
+    .get(
+      requestMiddleware.gzipCompression(),
+      requestMiddleware.createAndValidateRequestBody,
+      startByID
+    );
+
+  app
+    .route(BASE_URL + "/bot/update/:id")
+    .post(
+      requestMiddleware.gzipCompression(),
+      requestMiddleware.createAndValidateRequestBody,
+      update
+    );
+
+  app
+    .route(BASE_URL + "/bot/delete/:id")
+    .get(
+      requestMiddleware.gzipCompression(),
+      requestMiddleware.createAndValidateRequestBody,
+      deleteByID
+    );
+
+  app
+    .route(BASE_URL + "/bot/get/")
+    .get(
+      requestMiddleware.gzipCompression(),
+      requestMiddleware.createAndValidateRequestBody,
+      getByParam
+    );
+>>>>>>> Stashed changes
 };

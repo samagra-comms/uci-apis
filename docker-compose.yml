@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 services:
   federation-service:
@@ -20,8 +20,9 @@ services:
       - deployments_core
     env_file:
       - src/.env
+    command: "postgres -c max_connections=1000 -c shared_buffers=300MB"
     ports:
-      - "5432:5432"
+      - "15432:5432"
     volumes:
       - ./pgdata:/var/lib/postgresql/data
 
@@ -52,4 +53,4 @@ services:
 
 networks:
   deployments_core:
-    external: false
+    external: true
