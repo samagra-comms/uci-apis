@@ -6,18 +6,17 @@ services:
     image: federation-service
     container_name: federation-service
     restart: unless-stopped
-    networks: 
+    networks:
       - deployments_core
-      - kafka_broker
     env_file:
       - src/.env
     ports:
       - 9999:9999
-  
+
   comms:
     container_name: comms
     image: postgres:12
-    networks: 
+    networks:
       - deployments_core
     env_file:
       - src/.env
@@ -28,7 +27,7 @@ services:
 
   gql:
     image: hasura/graphql-engine:v2.0.0-alpha.1
-    networks: 
+    networks:
       - deployments_core
     env_file:
       - src/.env
@@ -40,7 +39,7 @@ services:
 
   scheduler-db:
     container_name: scheduler-db
-    networks: 
+    networks:
       - deployments_core
     image: redis:latest
     ports:
@@ -53,6 +52,4 @@ services:
 
 networks:
   deployments_core:
-    external: true
-  kafka_broker:
-    external: true
+    external: false

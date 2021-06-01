@@ -7,7 +7,6 @@ class Vault {
   }
 
   getCredentials = (serviceType, credentials) => {
-    console.log({ credentials });
     const variableName = credentials.variable;
     if (serviceType === "gql") {
       return {
