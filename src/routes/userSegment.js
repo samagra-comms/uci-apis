@@ -107,6 +107,16 @@ async function dryRun(req, res) {
   res.send({ data: "Success" });
 }
 
+async function getAllUsers(req, res) {
+  console.log(req.params);
+  const userSegment = await UserSegment.query()
+    .findById(req.params.id)
+    .withGraphFetched("[allService, byIDService, byPhoneService]");
+  console.log({ userSegment });
+  const allUsers = await userSegment.allService.resolve();
+  res.send({ data: allUsers });
+}
+
 async function insert(req, res) {
   const data = req.body.data;
   const isExisting =
@@ -324,5 +334,13 @@ module.exports = function (app) {
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
       dryRun
+    );
+
+  app
+    .route(BASE_URL + "/userSegment/getAllUsers/:id")
+    .get(
+      requestMiddleware.gzipCompression(),
+      requestMiddleware.createAndValidateRequestBody,
+      getAllUsers
     );
 };

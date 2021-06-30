@@ -6,6 +6,7 @@ const BASE_URL = "/admin/v1";
 const { Bot } = require("../models/bot");
 const { ConversationLogic } = require("../models/conversationLogic");
 const { UserSegment } = require("../models/userSegment");
+const { Adapter } = require("../models/adapter");
 const fetch = require("node-fetch");
 
 const UCI_CORE_URL = `http://${process.env.UCI_CORE_BASE_URL}/campaign`;
@@ -22,6 +23,14 @@ async function getByID(req, res) {
     const conversationLogics = await ConversationLogic.query().findByIds(
       bot.logicIDs
     );
+    const userSegments = await UserSegment.query()
+      .findByIds(bot.users)
+      .withGraphFetched("[allService, byIDService, byPhoneService]");
+    for (let j = 0; j < conversationLogics.length; j++) {
+      const adapterID = conversationLogics[j].adapter;
+      conversationLogics[j].adapter = await Adapter.query().findById(adapterID);
+    }
+    bot.userSegments = userSegments;
     bot.logic = conversationLogics;
     res.send({ data: bot });
   } else res.send({ error: `Bot with id ${req.params.id} not found` });
@@ -37,6 +46,10 @@ async function get(req, res) {
     const conversationLogics = await ConversationLogic.query().findByIds(
       bot.logicIDs
     );
+    for (let j = 0; j < conversationLogics.length; j++) {
+      const adapterID = conversationLogics[j].adapter;
+      conversationLogics[j].adapter = await Adapter.query().findById(adapterID);
+    }
     const userSegments = await UserSegment.query().findByIds(bot.users);
     bot.logic = conversationLogics;
     bot.userSegments = userSegments;
@@ -62,13 +75,23 @@ async function pauseByID(req, res) {
   const id = req.params.id;
   fetch(`${UCI_CORE_URL}/start?campaignId=${id}`)
     .then((s) => {
-      res.statu(200).send({ status: "Bot Triggered" });
+      res.status(200).send({ status: "Bot Triggered" });
     })
     .catch((e) => {
       res
         .status(400)
         .send({ status: "Exception in triggering Bot", error: e.message });
     });
+}
+
+async function getAllUsers(req, res) {
+  console.log(req.params);
+  const bot = await Bot.query().findById(req.params.id);
+  const userSegment = await UserSegment.query()
+    .findByIds(bot.users)
+    .withGraphFetched("[allService, byIDService, byPhoneService]");
+  const allUsers = await userSegment[0].allService.resolve();
+  res.send({ data: allUsers });
 }
 
 async function getByParam(req, res) {
@@ -102,17 +125,35 @@ async function getByParam(req, res) {
 
 async function search(req, res) {
   if (req.query.name) {
-    const bots = await Bot.query().where(
-      "name",
-      "ILIKE",
-      `%${req.query.name}%`
+    let bots;
+    if (req.query.match === "true") {
+      console.log("Here");
+      bots = await Bot.query().where("name", req.query.name);
+    } else {
+      bots = await Bot.query().where("name", "ILIKE", `%${req.query.name}%`);
+    }
+
+    const botsModified = await Promise.all(
+      bots.map(async (bot) => {
+        const conversationLogics = await ConversationLogic.query().findByIds(
+          bot.logicIDs
+        );
+        const userSegments = await UserSegment.query()
+          .findByIds(bot.users)
+          .withGraphFetched("[allService, byIDService, byPhoneService]");
+        for (let j = 0; j < conversationLogics.length; j++) {
+          const adapterID = conversationLogics[j].adapter;
+          conversationLogics[j].adapter = await Adapter.query().findById(
+            adapterID
+          );
+        }
+        console.log({ userSegments, conversationLogics });
+        bot.userSegments = userSegments;
+        bot.logic = conversationLogics;
+        return bot;
+      })
     );
-    console.log({ bots });
-    bots.forEach(async (bot) => {
-      let logic = await ConversationLogic.query().findByIds(bot.logicIDs);
-      bot.logic = logic;
-    });
-    res.send({ data: bots });
+    res.send({ data: botsModified });
   } else {
     res.status(400).send({ status: "Invalid query param" });
   }
@@ -267,7 +308,7 @@ module.exports = function (app) {
     );
 
   app
-    .route(BASE_URL + "/bot/get/")
+    .route(BASE_URL + "/bot/getByParam/")
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
@@ -296,5 +337,13 @@ module.exports = function (app) {
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
       pauseByID
+    );
+
+  app
+    .route(BASE_URL + "/bot/getAllUsers/:id")
+    .get(
+      requestMiddleware.gzipCompression(),
+      requestMiddleware.createAndValidateRequestBody,
+      getAllUsers
     );
 };
