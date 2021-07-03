@@ -124,17 +124,23 @@ async function getByParam(req, res) {
 }
 
 async function search(req, res) {
+  const batchSize = req.query.perPage;
+  const page = req.query.page - 1;
   if (req.query.name) {
     let bots;
     if (req.query.match === "true") {
       console.log("Here");
-      bots = await Bot.query().where("name", req.query.name);
+      bots = await Bot.query()
+        .where("name", req.query.name)
+        .page(page, batchSize);
     } else {
-      bots = await Bot.query().where("name", "ILIKE", `%${req.query.name}%`);
+      bots = await Bot.query()
+        .where("name", "ILIKE", `%${req.query.name}%`)
+        .page(page, batchSize);
     }
 
     const botsModified = await Promise.all(
-      bots.map(async (bot) => {
+      bots.results.map(async (bot) => {
         const conversationLogics = await ConversationLogic.query().findByIds(
           bot.logicIDs
         );
@@ -153,7 +159,7 @@ async function search(req, res) {
         return bot;
       })
     );
-    res.send({ data: botsModified });
+    res.send({ data: botsModified, total: bots.total });
   } else {
     res.status(400).send({ status: "Invalid query param" });
   }
@@ -240,6 +246,9 @@ async function insert(req, res) {
           (await ConversationLogic.query().findById(CLs[i])) instanceof
             ConversationLogic;
       }
+
+      data.logicIDs = data.logic;
+      delete data.logic;
       if (isValidUserSegment && isValidCL) {
         const inserted = await Bot.query(trx).insert(data);
         await trx.commit();
