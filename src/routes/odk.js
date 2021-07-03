@@ -6,6 +6,7 @@ const { LocalFileData } = require("get-file-object-from-local-path");
 const fetch = require("node-fetch");
 const fs = require("fs");
 const multer = require("multer");
+var parser = require("xml2json");
 const os = require("os");
 var storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -59,18 +60,31 @@ async function uploadForm(req, res) {
         .then((response) => response.text())
         .then((result) => {
           if (result.includes("Successful form upload.")) {
-            res.send({
-              status: "Successfully Uploaded Form",
+            console.log("Form Uploaded Successfully");
+            fs.readFile(req.file.path, (error, data) => {
+              if (error) {
+                res.status(400).send({
+                  status: "Error in uploading Form - Error in parsing form",
+                });
+              }
+              const formDef = JSON.parse(parser.toJson(data.toString()));
+              res.send({
+                status: "Successfully Uploaded Form",
+                formID: formDef["h:html"]["h:head"].model.instance.data.id,
+              });
+              console.log();
             });
           } else {
-            res.send({
+            console.log("Form Uploaded Failed");
+            console.log(result);
+            res.status(400).send({
               status: "Error in uploading Form - Contact Admin",
             });
           }
         })
         .catch((error) => {
           console.log("error", error);
-          res.send({
+          res.status(400).send({
             status: "Error in uploading Form" + error,
           });
         });

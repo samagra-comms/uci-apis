@@ -311,7 +311,7 @@ const digestAuthRequest = function (method, url, username, password) {
   };
   this.log = function (str) {
     if (self.loggingOn) {
-      console.log("[digestAuthRequest] " + str);
+      // console.log("[digestAuthRequest] " + str);
     }
   };
   this.version = function () {

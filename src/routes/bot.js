@@ -11,6 +11,8 @@ const fetch = require("node-fetch");
 
 const UCI_CORE_URL = `http://${process.env.UCI_CORE_BASE_URL}/campaign`;
 
+// BOT status = "enabled", "disabled", "draft";
+
 // Refactor this to move to service
 async function getAll(req, res) {
   const allCL = await Bot.query();
@@ -61,7 +63,8 @@ async function get(req, res) {
 async function startByID(req, res) {
   const id = req.params.id;
   fetch(`${UCI_CORE_URL}/start?campaignId=${id}`)
-    .then((s) => {
+    .then(async (s) => {
+      await Bot.query().findById(req.params.id).patch({ status: "enabled" });
       res.status(200).send({ status: "Bot Triggered" });
     })
     .catch((e) => {
@@ -73,9 +76,10 @@ async function startByID(req, res) {
 
 async function pauseByID(req, res) {
   const id = req.params.id;
-  fetch(`${UCI_CORE_URL}/start?campaignId=${id}`)
-    .then((s) => {
-      res.status(200).send({ status: "Bot Triggered" });
+  fetch(`${UCI_CORE_URL}/pause?campaignId=${id}`)
+    .then(async (s) => {
+      await Bot.query().findById(req.params.id).patch({ status: "disabled" });
+      res.status(200).send({ status: "Bot Paused" });
     })
     .catch((e) => {
       res
@@ -193,6 +197,9 @@ async function update(req, res) {
           (await ConversationLogic.query().findById(CLs[i])) instanceof
             ConversationLogic;
       }
+      data.logicIDs = data.logic;
+      delete data.logic;
+
       if (isValidUserSegment && isValidCL) {
         const inserted = await Bot.query(trx)
           .patch(data)
