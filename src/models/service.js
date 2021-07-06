@@ -80,7 +80,8 @@ class Service extends Model {
           })
           .then(async (resp) => {
             if (tag === "getAllUsers") {
-              const users = this.__getUserPhone(resp);
+              console.log(resp.data.users.length);
+              const users = resp.data.users;
               const validate = ajv.compile(userSchema);
               const valid = validate(resp.data.users[0]);
 

@@ -277,16 +277,53 @@ async function queryBuilder(req, res) {
   const queryPrefix = 'query Query {users: getUsersByQuery(queryString: "';
   const querySuffix = '") {id username mobilePhone data: jdata}}';
   const query = builder.buildQuery();
-  res.send({
-    all: {
-      query: queryPrefix + query + querySuffix,
-      total: 2863,
+  const cadence = {
+    concurrent: true,
+    pagination: false,
+    perPage: 10000,
+    retries: 5,
+    "retries-interval": 10,
+    timeout: 60,
+  };
+  const credentials = {
+    variable: "dummygql",
+    vault: "samagra",
+  };
+
+  const allConfig = {
+    type: "gql",
+    config: {
+      pageParam: "page",
+      cadence,
+      credentials,
+      gql: queryPrefix + query + querySuffix,
     },
+  };
+  const all = Service.fromJson(allConfig);
+  const verified = await all.verify("getAllUsers");
+  console.log(verified);
+
+  res.send({
+    category: "student",
+    count: verified.total,
+    all: allConfig,
     byID: {
-      query: queryPrefix + querySuffix,
+      type: "gql",
+      config: {
+        pageParam: "page",
+        cadence,
+        credentials,
+        gql: queryPrefix + querySuffix,
+      },
     },
     byPhone: {
-      query: queryPrefix + querySuffix,
+      type: "gql",
+      config: {
+        pageParam: "page",
+        cadence,
+        credentials,
+        gql: queryPrefix + querySuffix,
+      },
     },
   });
 }
