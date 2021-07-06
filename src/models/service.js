@@ -7,6 +7,10 @@ const { HttpLink } = require("apollo-link-http");
 const { InMemoryCache } = require("apollo-cache-inmemory");
 const gql = require("graphql-tag");
 const fetch = require("node-fetch");
+const userSchema = require("./schema/user-schema");
+
+const Ajv = require("ajv");
+const ajv = new Ajv();
 
 class Service extends Model {
   static get tableName() {
@@ -76,54 +80,66 @@ class Service extends Model {
           })
           .then(async (resp) => {
             if (tag === "getAllUsers") {
-              if ("profile" in resp.data.users[0]) {
-                const users = this.__getUserPhone(resp);
-                return {
-                  total: users.length,
-                  users,
-                };
-              } else {
-                const users = resp.data.users;
-                return {
-                  status: "Verified",
-                  data: { total: users.length, users },
-                };
-              }
+              const users = this.__getUserPhone(resp);
+              const validate = ajv.compile(userSchema);
+              const valid = validate(resp.data.users[0]);
+
+              console.log(valid);
+              return {
+                total: users.length,
+                verified: valid,
+                schemaValidated: valid,
+              };
             } else if (tag === "getUserByPhone") {
               const user = resp.data.users[0];
+              const validate = ajv.compile(userSchema);
+              const valid = validate(user);
+              console.log(valid);
+
               return {
-                status: "Verified",
-                data: user,
+                schemaValidated: valid,
+                verified: valid,
+                total: 1,
               };
             } else if (tag === "getUserByID") {
               const user = resp.data.users[0];
+              const validate = ajv.compile(userSchema);
+              const valid = validate(user);
+              console.log(valid);
+
               return {
-                status: "Verified",
-                data: user,
+                verified: valid,
+                total: 1,
               };
             } else {
               return {
-                status: "Failed",
+                verified: false,
                 error: "Not a valid tag",
+                total: null,
               };
             }
           })
           .catch((e) => {
             console.log(e);
             return {
-              status: "Failed",
+              verified: false,
               error: e.message,
+              total: null,
             };
           });
       } catch (e) {
         console.log(e);
         return {
-          status: "Failed",
+          verified: false,
           error: e.message,
+          total: null,
         };
       }
     } else {
-      return Promise.resolve({ status: "Success", data: {} });
+      return Promise.resolve({
+        verified: true,
+        total: 10,
+      });
     }
   }
 

@@ -5,6 +5,7 @@ const requestMiddleware = require("../middlewares/request.middleware");
 const BASE_URL = "/admin/v1";
 const { Service } = require("../models/service");
 const { UserSegment } = require("../models/userSegment");
+const { QueryBuilder } = require("../helpers/userSegment/fusionAuth");
 
 // Refactor this to move to service
 async function getAll(req, res) {
@@ -156,7 +157,7 @@ async function insert(req, res) {
       ])
         .then((result) => {
           const reducer = (accumulator, currentValue) =>
-            accumulator + (currentValue.status === "Verified" ? 1 : 0);
+            accumulator + (currentValue.verified ? 1 : 0);
           if (result.reduce(reducer, 0) === 3) return true;
           else return false;
         })
@@ -271,6 +272,25 @@ async function update(req, res) {
   }
 }
 
+async function queryBuilder(req, res) {
+  const builder = new QueryBuilder(req.body.data);
+  const queryPrefix = 'query Query {users: getUsersByQuery(queryString: "';
+  const querySuffix = '") {id username mobilePhone data: jdata}}';
+  const query = builder.buildQuery();
+  res.send({
+    all: {
+      query: queryPrefix + query + querySuffix,
+      total: 2863,
+    },
+    byID: {
+      query: queryPrefix + querySuffix,
+    },
+    byPhone: {
+      query: queryPrefix + querySuffix,
+    },
+  });
+}
+
 module.exports = function (app) {
   app
     .route(BASE_URL + "/userSegment/all")
@@ -342,5 +362,13 @@ module.exports = function (app) {
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
       getAllUsers
+    );
+
+  app
+    .route(BASE_URL + "/userSegment/queryBuilder/")
+    .post(
+      requestMiddleware.gzipCompression(),
+      requestMiddleware.createAndValidateRequestBody,
+      queryBuilder
     );
 };

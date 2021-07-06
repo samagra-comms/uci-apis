@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "insertDummy": "node helpers/userSegment/dummyData/FAInjester.js",
     "start": "node app.js",
     "test": "mocha 'test/**/*.js'",
     "test-print": "mocha 'test/service/printService.js'",

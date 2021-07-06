@@ -99,11 +99,13 @@ async function getAllUsers(req, res) {
 }
 
 async function getByParam(req, res) {
+  console.log("Here 0", new Date());
   if (req.query.name) {
     const bot = (await Bot.query().where("name", req.query.name))[0];
     if (bot instanceof Bot) {
       // Add logic
       let logic = await ConversationLogic.query().findByIds(bot.logicIDs);
+      console.log("Here 2", new Date());
       bot.logic = logic;
       res.send({ data: bot });
     } else
