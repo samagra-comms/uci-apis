@@ -37,6 +37,7 @@ try {
         "Content-Type, Authorization," +
           "cid, user-id, x-auth, Cache-Control, X-Requested-With, datatype, *"
       );
+      console.log(req.method);
       if (req.method === "OPTIONS") res.sendStatus(200);
       else next();
     });
@@ -46,13 +47,13 @@ try {
     app.use(bodyParser.urlencoded({ extended: false }));
     app.use("/admin/queues", router);
     app.use("/", indexRouter);
+    app.use(cookieParser());
     require("./routes/transformer")(app);
     require("./routes/userSegment")(app);
     require("./routes/adapter")(app);
     require("./routes/conversationLogic")(app);
     require("./routes/bot")(app);
     require("./routes/odk")(app);
-    app.use(cookieParser());
     module.exports = app;
     return app;
   };
