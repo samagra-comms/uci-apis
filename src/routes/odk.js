@@ -18,27 +18,19 @@ var storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-// const Blob = require("cross-blob");
-
 const BASE_URL = "/admin/v1";
-const ODK_URL =
-  "https://agg.staging.saksham.samagra.io/Aggregate.html#submissions/filter///";
+const ODK_BASE_URL = "https://agg.staging.saksham.samagra.io";
 
 async function uploadForm(req, res) {
   const vault = new Vault();
   const credentials = vault.getCredentials("", { variable: "ODK" });
 
-  var options = {
-    uri: ODK_URL,
-    auth: {
-      user: credentials.username,
-      pass: credentials.password,
-      sendImmediately: false,
-    },
-  };
+  const ODK_FILTER_URL = `${ODK_BASE_URL}/Aggregate.html#submissions/filter///`;
+  const ODK_FORM_UPLOAD_URL = `${ODK_BASE_URL}/formUpload`;
+
   var getRequest = new digestAuthRequest(
     "GET",
-    ODK_URL,
+    ODK_FILTER_URL,
     credentials.username,
     credentials.password
   );
@@ -56,11 +48,11 @@ async function uploadForm(req, res) {
         body: formData,
       };
 
-      fetch("https://agg.staging.saksham.samagra.io/formUpload", requestOptions)
+      fetch(ODK_FORM_UPLOAD_URL, requestOptions)
         .then((response) => response.text())
         .then((result) => {
           if (result.includes("Successful form upload.")) {
-            console.log("Form Uploaded Successfully");
+            fetch(process.env.TRANSFORMER_BASE_URL);
             fs.readFile(req.file.path, (error, data) => {
               if (error) {
                 res.status(400).send({
