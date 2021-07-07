@@ -70,34 +70,6 @@ async function search(req, res) {
   }
 }
 
-// async function update(req, res) {
-//     const data = req.body.data;
-//     const isExisting =
-//         (await UserSegment.query().findById(req.params.id)) !== undefined;
-//
-//     if (!isExisting) {
-//         res.status(400).send({
-//             status: `User does not exists with the id ${req.params.id}`,
-//         });
-//     } else {
-//         console.log('user Id ----1 ', data.type);
-//
-//         let serviceType = await Service.query().where("name", data.type)[0];
-//         if (!serviceType)
-//             serviceType = await Service.query().patch({name: data.type});
-//         console.log('user Id ---- 2', isExisting, req.params.id);
-//
-//         data.type = serviceType.id;
-//         // TODO: Verify data
-//         console.log('user Id ---- 3', isExisting, req.params.id);
-//
-//         await Transformer.query().patch(data).findById(req.params.id);
-//         const getAgain = await UserSegment.query().findById(req.params.id);
-//
-//         res.send({data: getAgain});
-//     }
-// }
-
 async function deleteByID(req, res) {
   const transformer = await UserSegment.query().deleteById(req.params.id);
   res.send({ data: `Number of transformers deleted: ${transformer}` });
@@ -299,32 +271,41 @@ async function queryBuilder(req, res) {
       gql: queryPrefix + query + querySuffix,
     },
   };
+
   const all = Service.fromJson(allConfig);
   const verified = await all.verify("getAllUsers");
-  console.log(verified);
+  const byIDConfig = {
+    type: "gql",
+    config: {
+      pageParam: "page",
+      cadence,
+      credentials,
+      gql: `query Query($id: String) {users: getUsersByQuery(queryString: $id) {id username mobilePhone data: jdata}}`,
+      verificationParams: {
+        id: `"(data.device.deviceID : '${verified.sampleUser.device.deviceID}')"`,
+      },
+    },
+  };
+
+  const byPhoneConfig = {
+    type: "gql",
+    config: {
+      pageParam: "page",
+      cadence,
+      credentials,
+      gql: `query Query($id: String) {users: getUsersByQuery(queryString: $id) {id username mobilePhone data: jdata}}`,
+      verificationParams: {
+        id: `"(data.device.deviceID : '${verified.sampleUser.device.deviceID}')"`,
+      },
+    },
+  };
 
   res.send({
     category: "student",
     count: verified.total,
     all: allConfig,
-    byID: {
-      type: "gql",
-      config: {
-        pageParam: "page",
-        cadence,
-        credentials,
-        gql: queryPrefix + querySuffix,
-      },
-    },
-    byPhone: {
-      type: "gql",
-      config: {
-        pageParam: "page",
-        cadence,
-        credentials,
-        gql: queryPrefix + querySuffix,
-      },
-    },
+    byID: byIDConfig,
+    byPhone: byPhoneConfig,
   });
 }
 

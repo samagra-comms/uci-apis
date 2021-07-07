@@ -90,6 +90,7 @@ class Service extends Model {
                 total: users.length,
                 verified: valid,
                 schemaValidated: valid,
+                sampleUser: users[0],
               };
             } else if (tag === "getUserByPhone") {
               const user = resp.data.users[0];
