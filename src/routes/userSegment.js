@@ -100,10 +100,11 @@ async function insert(req, res) {
       status: `UserSegment already exists with the name ${data.name}`,
     });
   } else {
-    let serviceTypeAll = await Service.query().where(data.all)[0];
-
+    let serviceTypeAll = await Service.query()
+      .where(data.all)
+      .then((s) => s[0])
+      .catch((e) => console.log(e));
     let serviceTypeByPhone = await Service.query().where(data.byPhone)[0];
-
     let serviceTypeByID = await Service.query().where(data.byID)[0];
 
     const trx = await UserSegment.startTransaction();
@@ -247,7 +248,8 @@ async function update(req, res) {
 async function queryBuilder(req, res) {
   const builder = new QueryBuilder(req.body.data);
   const queryPrefix = 'query Query {users: getUsersByQuery(queryString: "';
-  const querySuffix = '") {id username mobilePhone data: jdata}}';
+  const querySuffix =
+    '") {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType}}';
   const query = builder.buildQuery();
   const cadence = {
     concurrent: true,
@@ -274,31 +276,37 @@ async function queryBuilder(req, res) {
 
   const all = Service.fromJson(allConfig);
   const verified = await all.verify("getAllUsers");
-  const byIDConfig = {
-    type: "gql",
-    config: {
-      pageParam: "page",
-      cadence,
-      credentials,
-      gql: `query Query($id: String) {users: getUsersByQuery(queryString: $id) {id username mobilePhone data: jdata}}`,
-      verificationParams: {
-        id: `"(data.device.deviceID : '${verified.sampleUser.device.deviceID}')"`,
+  let byIDConfig =
+    "Could not construct this since there were 0 users in the query";
+  let byPhoneConfig =
+    "Could not construct this since there were 0 users in the query";
+  if (verified.sampleUser !== undefined) {
+    byIDConfig = {
+      type: "gql",
+      config: {
+        pageParam: "page",
+        cadence,
+        credentials,
+        gql: `query Query($id: String) {users: getUsersByQuery(queryString: $id) {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType }}`,
+        verificationParams: {
+          id: `"(data.device.deviceID : '${verified.sampleUser.device.deviceID}')"`,
+        },
       },
-    },
-  };
+    };
 
-  const byPhoneConfig = {
-    type: "gql",
-    config: {
-      pageParam: "page",
-      cadence,
-      credentials,
-      gql: `query Query($id: String) {users: getUsersByQuery(queryString: $id) {id username mobilePhone data: jdata}}`,
-      verificationParams: {
-        id: `"(data.device.deviceID : '${verified.sampleUser.device.deviceID}')"`,
+    byPhoneConfig = {
+      type: "gql",
+      config: {
+        pageParam: "page",
+        cadence,
+        credentials,
+        gql: `query Query($id: String) {users: getUsersByQuery(queryString: $id) {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType }}`,
+        verificationParams: {
+          id: `"(data.device.deviceID : '${verified.sampleUser.device.deviceID}')"`,
+        },
       },
-    },
-  };
+    };
+  }
 
   res.send({
     category: "student",
