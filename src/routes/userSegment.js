@@ -277,9 +277,9 @@ async function queryBuilder(req, res) {
   const all = Service.fromJson(allConfig);
   const verified = await all.verify("getAllUsers");
   let byIDConfig =
-    "Could not construct this since there were 0 users in the query";
+    "Could not construct this since there were 0 users in the search query";
   let byPhoneConfig =
-    "Could not construct this since there were 0 users in the query";
+    "Could not construct this since there were 0 users in the search query";
   if (verified.sampleUser !== undefined) {
     byIDConfig = {
       type: "gql",
@@ -289,7 +289,7 @@ async function queryBuilder(req, res) {
         credentials,
         gql: `query Query($id: String) {users: getUsersByQuery(queryString: $id) {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType }}`,
         verificationParams: {
-          id: `"(data.device.deviceID : '${verified.sampleUser.device.deviceID}')"`,
+          id: `(data.device.deviceID : '${verified.sampleUser.device.deviceID}')`,
         },
       },
     };
@@ -302,19 +302,25 @@ async function queryBuilder(req, res) {
         credentials,
         gql: `query Query($id: String) {users: getUsersByQuery(queryString: $id) {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType }}`,
         verificationParams: {
-          id: `"(data.device.deviceID : '${verified.sampleUser.device.deviceID}')"`,
+          id: `(data.device.deviceID : '${verified.sampleUser.device.deviceID}')`,
         },
       },
     };
+    res.send({
+      category: "student",
+      count: verified.total,
+      all: allConfig,
+      byID: byIDConfig,
+      byPhone: byPhoneConfig,
+    });
+  } else {
+    res.status(400).send({
+      error: {
+        byIDConfig,
+        byPhoneConfig,
+      },
+    });
   }
-
-  res.send({
-    category: "student",
-    count: verified.total,
-    all: allConfig,
-    byID: byIDConfig,
-    byPhone: byPhoneConfig,
-  });
 }
 
 module.exports = function (app) {

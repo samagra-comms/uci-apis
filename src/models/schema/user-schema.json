@@ -100,7 +100,7 @@
           "school": "School 1"
         }
       ],
-      "required": ["state", "district", "block", "cluster", "school"],
+      "required": [],
       "properties": {
         "id": {
           "$id": "#/properties/userLocation/properties/id",

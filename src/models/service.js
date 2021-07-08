@@ -85,7 +85,8 @@ class Service extends Model {
               const validate = ajv.compile(userSchema);
               const valid = validate(resp.data.users[0]);
 
-              console.log(valid);
+              console.log(validate.errors);
+              console.log(users[0]);
               return {
                 total: users.length,
                 verified: valid,
