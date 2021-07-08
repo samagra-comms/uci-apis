@@ -18,6 +18,8 @@ try {
   const knexInitializer = require("./models/init");
   const { Transformer } = require("./models/transformer");
   const { router } = require("bull-board");
+  var proxy = require("express-http-proxy");
+  const url = require("url");
 
   if (env.error) {
     throw env.error;
@@ -46,6 +48,16 @@ try {
     app.use(express.json());
     app.use(bodyParser.urlencoded({ extended: false }));
     app.use("/admin/queues", router);
+    app.use(
+      "/v1/graphql",
+      proxy(`${process.env.GRAPHQL_BASE_URL}/v1/graphql`, {
+        proxyReqPathResolver: (req) => {
+          console.log(url.parse(req.baseUrl).path);
+          return url.parse(req.baseUrl).path;
+        },
+      })
+    );
+
     app.use("/", indexRouter);
     app.use(cookieParser());
     require("./routes/transformer")(app);
