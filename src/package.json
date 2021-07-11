@@ -5,6 +5,7 @@
   "scripts": {
     "insertDummy": "node helpers/userSegment/dummyData/FAInjester.js",
     "start": "node app.js",
+    "debug": "node --inspect=0.0.0.0:9229 app.js",
     "test": "mocha 'test/**/*.js'",
     "test-print": "mocha 'test/service/printService.js'",
     "test-with-coverage": "nyc --reporter=lcov --reporter=text-lcov mocha test/**/*.js --exit --timeout 20000"
