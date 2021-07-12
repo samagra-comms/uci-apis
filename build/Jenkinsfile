@@ -29,7 +29,6 @@ node('build-slave') {
                     archiveArtifacts "metadata.json"
                     currentBuild.description = "${build_tag}"
                 }
-            
         }
     }
     catch (err) {
