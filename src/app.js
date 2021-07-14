@@ -51,8 +51,13 @@ try {
     app.use(
       "/v1/graphql",
       proxy(`${process.env.GRAPHQL_BASE_URL}/v1/graphql`, {
+        proxyReqOptDecorator: function (proxyReqOpts, srcReq) {
+          proxyReqOpts.headers = {
+            "x-hasura-admin-secret": `${process.env.HASURA_GRAPHQL_ADMIN_SECRET}`,
+          };
+          return proxyReqOpts;
+        },
         proxyReqPathResolver: (req) => {
-          console.log(url.parse(req.baseUrl).path);
           return url.parse(req.baseUrl).path;
         },
       })
