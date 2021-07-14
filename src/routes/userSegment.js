@@ -5,7 +5,9 @@ const requestMiddleware = require("../middlewares/request.middleware");
 const BASE_URL = "/admin/v1";
 const { Service } = require("../models/service");
 const { UserSegment } = require("../models/userSegment");
+const { Bot } = require("../models/Bot");
 const { QueryBuilder } = require("../helpers/userSegment/fusionAuth");
+const { DeviceManager } = require("../helpers/userSegment/deviceManager");
 
 // Refactor this to move to service
 async function getAll(req, res) {
@@ -323,6 +325,55 @@ async function queryBuilder(req, res) {
   }
 }
 
+async function addUserToRegistry() {
+  const botID = req.body.botID;
+  const username = req.body.username;
+
+  const deviceManager = new DeviceManager();
+
+  const globalBot = (await Bot.query().where("name", "Global Bot"))[0];
+  if (globalBot.id === botID) {
+    await deviceManager.addAnonymousDeviceToRegistry(username);
+  } else {
+    // Check if user is in UserSegments for the particular bot.
+    const bot = await Bot.query().findById(botID);
+    const userSegments = await UserSegment.query()
+      .findByIds(bot.users)
+      .withGraphFetched("[allService, byIDService, byPhoneService]");
+
+    let found = false;
+    let user;
+    for (let i = 0; i < userSegments.length; i++) {
+      const userQueryParams = {
+        id: `(data.device.deviceID : '${username.split(":")[1]}')`,
+      };
+      user = await userSegments[i].byPhoneService.getUserByGQL(userQueryParams);
+      if (user.verified) {
+        found = true;
+        break;
+      }
+    }
+
+    if (found) {
+      // If found, save it to the Registry to cache it.
+      await deviceManager.addUserToRegistry(botID, user.user);
+    } else {
+      // If not found, add an empty user to the Registry to add fields later on.
+      const dummyUser = {
+        device: {
+          deviceID: username.split(":")[1],
+          type: username.split(":")[0],
+        },
+      };
+      await deviceManager.addUserToRegistry(botID, dummyUser);
+    }
+  }
+  res.send({
+    status: "Success",
+    message: "User Added",
+  });
+}
+
 module.exports = function (app) {
   app
     .route(BASE_URL + "/userSegment/all")
@@ -402,5 +453,13 @@ module.exports = function (app) {
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
       queryBuilder
+    );
+
+  app
+    .route(BASE_URL + "/userSegment/addUser/")
+    .post(
+      requestMiddleware.gzipCompression(),
+      requestMiddleware.createAndValidateRequestBody,
+      addUserToRegistry
     );
 };

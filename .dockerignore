@@ -1,3 +1,4 @@
 pgdata
 redis-data
 node_modules
+**/vaultDataMock.json

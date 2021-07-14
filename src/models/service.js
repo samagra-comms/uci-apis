@@ -59,6 +59,47 @@ class Service extends Model {
     }
   }
 
+  getUserByGQL = async (userParams) => {
+    try {
+      const userQuery = this.config.gql;
+      const v = new Vault();
+      const credentials = v.getCredentials(this.type, this.config.credentials);
+
+      const client = this.__getGQLClient(credentials);
+      const variables = userParams;
+      return client
+        .query({
+          query: gql`
+            ${userQuery}
+          `,
+          variables,
+        })
+        .then(async (resp) => {
+          const user = resp.data.users[0];
+          const validate = ajv.compile(userSchema);
+          const valid = validate(user);
+
+          return {
+            verified: valid,
+            user,
+          };
+        })
+        .catch((e) => {
+          console.log(e);
+          return {
+            verified: false,
+            user: null,
+          };
+        });
+    } catch (e) {
+      console.log(e);
+      return {
+        verified: false,
+        user: null,
+      };
+    }
+  };
+
   verify(tag) {
     if (this.type === "gql") {
       try {

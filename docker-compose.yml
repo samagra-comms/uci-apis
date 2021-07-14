@@ -3,15 +3,17 @@ version: "3"
 services:
   federation-service:
     build: .
-    image: federation-service
+    image: uci-apis:0.0.1
     container_name: federation-service
     restart: unless-stopped
+    volumes:
+      - ./src/helpers/vaultDataMock.json:/opt/uci/src/helpers/vaultDataMock.json
     networks:
       - deployments_core
     env_file:
       - src/.env
     ports:
-      - 9999:9999
+      - 9998:9999
 
   comms:
     container_name: comms
