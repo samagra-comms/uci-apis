@@ -60,11 +60,18 @@ async function uploadForm(req, res) {
                 });
               }
               const formDef = JSON.parse(parser.toJson(data.toString()));
-              res.send({
-                status: "Successfully Uploaded Form",
-                formID: formDef["h:html"]["h:head"].model.instance.data.id,
-              });
-              console.log();
+              let formID = "";
+              try {
+                formID = formDef["h:html"]["h:head"].model.instance.data.id;
+                res.send({
+                  status: "Successfully Uploaded Form",
+                  formID,
+                });
+              } catch (e) {
+                res.status(400).send({
+                  status: "FormID could not be parsed. Please check the form",
+                });
+              }
             });
           } else {
             console.log("Form Uploaded Failed");
@@ -82,17 +89,13 @@ async function uploadForm(req, res) {
         });
     },
     function (errorCode) {
-      // error callback
-      // tell user request failed
+      res.status(400).send({
+        status: "Error in uploading Form" + error,
+      });
     }
   );
 }
 
 module.exports = function (app) {
-  app.route(BASE_URL + "/forms/upload").post(
-    // requestMiddleware.gzipCompression(),
-    // requestMiddleware.createAndValidateRequestBody,
-    upload.single("form"),
-    uploadForm
-  );
+  app.route(BASE_URL + "/forms/upload").post(upload.single("form"), uploadForm);
 };
