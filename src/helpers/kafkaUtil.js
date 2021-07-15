@@ -13,9 +13,9 @@ if (process.env.ENV === "dev") {
   });
 } else {
   const brokers = process.env.KAFKA_HOST.split(",").map(
-    (s) => s + process.env.KAFKA_PORT
+    (s) => s + ":" + process.env.KAFKA_PORT
   );
-  console.log(brokers);
+  console.log(`Trying to connect to ${brokers}`);
   kafka = new Kafka({
     clientId: "api",
     brokers: brokers,
