@@ -12,9 +12,13 @@ if (process.env.ENV === "dev") {
     // },
   });
 } else {
+  const brokers = process.env.KAFKA_HOST.split(",").map(
+    (s) => s + process.env.KAFKA_PORT
+  );
+  console.log(brokers);
   kafka = new Kafka({
     clientId: "api",
-    brokers: [`${process.env.KAFKA_HOST}`],
+    brokers: brokers,
   });
 }
 
