@@ -22,7 +22,7 @@ const knexConfig = {
     debug: false,
     client: "pg",
     useNullAsDefault: true,
-    connection: process.env.PSQL_DB_URL_DEV,
+    connection: process.env.PSQL_DB_URL,
     pool: {
       min: 2,
       max: 5,
@@ -31,7 +31,8 @@ const knexConfig = {
 };
 
 // Initialize knex.
-const knex = Knex(knexConfig.development);
+const config = process.env.dev ? knexConfig.development : knexConfig.production;
+const knex = Knex(config);
 knex
   .raw("select count(*) from transformer")
   .then(async (s) => {
@@ -66,6 +67,7 @@ knex
   })
   .catch((err) => {
     console.log("DB Connection: ❌");
+    console.log("Config", config);
     console.error(err);
     // process.exit(1);
   });
