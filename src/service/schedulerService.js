@@ -141,22 +141,20 @@ try {
 
           const { Kafka } = require("kafkajs");
           let kafka;
+          let kafka;
           if (process.env.ENV === "dev") {
-            console.log("******************");
-            console.log(process.env.ENV);
             kafka = new Kafka({
               clientId: "api",
               brokers: [`${process.env.KAFKA_HOST}`],
-              // sasl: {
-              //   mechanism: "plain",
-              //   username: process.env.KAFKA_USER,
-              //   password: process.env.KAFKA_PASS,
-              // },
             });
           } else {
+            const brokers = process.env.KAFKA_HOST.split(",").map(
+              (s) => s + ":" + process.env.KAFKA_PORT
+            );
+            console.log(`Trying to connect to ${brokers}`);
             kafka = new Kafka({
               clientId: "api",
-              brokers: [`${process.env.KAFKA_HOST}`],
+              brokers: brokers,
             });
           }
 
