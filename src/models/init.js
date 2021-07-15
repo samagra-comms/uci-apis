@@ -31,7 +31,8 @@ const knexConfig = {
 };
 
 // Initialize knex.
-const config = process.env.dev ? knexConfig.development : knexConfig.production;
+const config =
+  process.env.ENV === "dev" ? knexConfig.development : knexConfig.production;
 const knex = Knex(config);
 knex
   .raw("select count(*) from transformer")
