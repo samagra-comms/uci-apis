@@ -241,7 +241,6 @@ async function update(req, res) {
     }
   } catch (e) {
     console.error(e);
-    console.error("======12");
     await trx.rollback();
     return res.send({ data: "UserSegment could not be updated." });
   }
