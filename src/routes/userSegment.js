@@ -330,10 +330,11 @@ async function addUserToRegistry(req, res) {
   const username = req.params.userPhone;
 
   const deviceManager = new DeviceManager();
+  let deviceID = "";
 
   const globalBot = (await Bot.query().where("name", "Global Bot"))[0];
   if (globalBot.id === botID) {
-    await deviceManager.addAnonymousDeviceToRegistry(username);
+    deviceID = await deviceManager.addAnonymousDeviceToRegistry(username);
   } else {
     // Check if user is in UserSegments for the particular bot.
     const bot = await Bot.query().findById(botID);
@@ -356,7 +357,7 @@ async function addUserToRegistry(req, res) {
 
     if (found) {
       // If found, save it to the Registry to cache it.
-      await deviceManager.addDeviceToRegistry(botID, user.user);
+      deviceID = await deviceManager.addDeviceToRegistry(botID, user.user);
     } else {
       // If not found, add an empty user to the Registry to add fields later on.
       const dummyUser = {
@@ -365,13 +366,13 @@ async function addUserToRegistry(req, res) {
           type: username.split(":")[0],
         },
       };
-      await deviceManager.addDeviceToRegistry(botID, dummyUser);
+      deviceID = await deviceManager.addDeviceToRegistry(botID, dummyUser);
     }
   }
   res.send({
     status: "Success",
     message: "User Added",
-    userID: deviceManager.getUserNameEncrypted(username),
+    userID: deviceID,
   });
 }
 

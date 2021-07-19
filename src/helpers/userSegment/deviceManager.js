@@ -87,6 +87,7 @@ class DeviceManager {
         .then((response) => {
           console.log("User Added Successfully");
           console.log({ response });
+          return response.successResponse.user.id;
         })
         .catch((e) => {
           console.log(JSON.stringify(e));
@@ -98,7 +99,7 @@ class DeviceManager {
         user.registrations.map((s) => s.applicationId),
         botID
       );
-      if (isUserRegistered) return;
+      if (isUserRegistered) return user.id;
       else {
         return await client
           .register(isDeviceExisting.user.id, {
@@ -109,6 +110,7 @@ class DeviceManager {
           .then((response) => {
             console.log("User Added Successfully");
             console.log({ response });
+            return response.successResponse.user.id;
           })
           .catch((e) => console.log(JSON.stringify(e)));
       }
