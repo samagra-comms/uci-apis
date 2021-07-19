@@ -1,15 +1,10 @@
 const { ConsumerGroupStream } = require("kafka-node");
-const { Kafka } = require("kafkajs");
+const { Kafka, logLevel } = require("kafkajs");
 let kafka;
 if (process.env.ENV === "dev") {
   kafka = new Kafka({
     clientId: "api",
-    brokers: [`${process.env.KAFKA_HOST}`],
-    // sasl: {
-    //   mechanism: "plain",
-    //   username: process.env.KAFKA_USER,
-    //   password: process.env.KAFKA_PASS,
-    // },
+    brokers: [`${process.env.KAFKA_HOST_DEV}`],
   });
 } else {
   const brokers = process.env.KAFKA_HOST.split(",").map(
@@ -19,6 +14,7 @@ if (process.env.ENV === "dev") {
   kafka = new Kafka({
     clientId: "api",
     brokers: brokers,
+    logLevel: logLevel[process.env.KAFKA_LOG_LEVEL],
   });
 }
 
@@ -29,10 +25,10 @@ const consumer = kafka.consumer({ groupId: "api-group" });
 consumer
   .connect()
   .then((c) => {
-    console.log("------------ Consumer connected Kafka - ", c);
+    console.log("Kafka Connection Status: ✅");
   })
   .catch((e) => {
-    console.error("---------- Error while connecting consumer Kafka", e);
+    console.error("Kafka Connection Status: ❌", e);
   });
 
 const sendRecord = async (data, callback) => {
@@ -99,7 +95,6 @@ const KafkaService = {
           const service = await Service.query().findById(
             transformer[0].service
           );
-          console.log("Here");
           queue.add(
             service.type,
             {

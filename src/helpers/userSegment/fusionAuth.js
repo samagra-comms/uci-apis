@@ -160,10 +160,6 @@ class QueryBuilder {
   };
 }
 
-const builder = new QueryBuilder(filterSample);
-const roleQuery = builder.buildQuery();
-console.log({ roleQuery });
-
 module.exports = {
   QueryBuilder,
 };

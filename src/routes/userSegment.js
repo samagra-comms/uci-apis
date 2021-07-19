@@ -325,9 +325,9 @@ async function queryBuilder(req, res) {
   }
 }
 
-async function addUserToRegistry() {
-  const botID = req.body.botID;
-  const username = req.body.username;
+async function addUserToRegistry(req, res) {
+  const botID = req.params.botID;
+  const username = req.params.userPhone;
 
   const deviceManager = new DeviceManager();
 
@@ -356,7 +356,7 @@ async function addUserToRegistry() {
 
     if (found) {
       // If found, save it to the Registry to cache it.
-      await deviceManager.addUserToRegistry(botID, user.user);
+      await deviceManager.addDeviceToRegistry(botID, user.user);
     } else {
       // If not found, add an empty user to the Registry to add fields later on.
       const dummyUser = {
@@ -365,12 +365,13 @@ async function addUserToRegistry() {
           type: username.split(":")[0],
         },
       };
-      await deviceManager.addUserToRegistry(botID, dummyUser);
+      await deviceManager.addDeviceToRegistry(botID, dummyUser);
     }
   }
   res.send({
     status: "Success",
     message: "User Added",
+    userID: deviceManager.getUserNameEncrypted(username),
   });
 }
 
@@ -456,8 +457,8 @@ module.exports = function (app) {
     );
 
   app
-    .route(BASE_URL + "/userSegment/addUser/")
-    .post(
+    .route(BASE_URL + "/userSegment/addUser/:botID/:userPhone")
+    .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
       addUserToRegistry
