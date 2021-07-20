@@ -297,6 +297,39 @@ async function insert(req, res) {
   }
 }
 
+function successResponse(data) {
+  var response = {};
+  response.id = data.apiId;
+  response.ver = data.apiVersion;
+  response.ts = new Date();
+  response.params = getParams(data.msgid, "successful", null, null);
+  response.responseCode = data.responseCode || "OK";
+  response.result = data.result;
+  return response;
+}
+
+function errorResponse(data, errCode) {
+  var response = {};
+  response.id = data.apiId;
+  response.ver = data.apiVersion;
+  response.ts = new Date();
+  response.params = getParams(data.msgId, "failed", data.errCode, data.errMsg);
+  response.responseCode = errCode + "_" + data.responseCode;
+  response.result = data.result;
+  return response;
+}
+
+function getParams(msgId, status, errCode, msg) {
+  var params = {};
+  params.resmsgid = uuid();
+  params.msgid = msgId || null;
+  params.status = status;
+  params.err = errCode;
+  params.errmsg = msg;
+
+  return params;
+}
+
 module.exports = function (app) {
   app
     .route(BASE_URL + "/bot/all")
