@@ -8,6 +8,12 @@ const { UserSegment } = require("../models/userSegment");
 const { Bot } = require("../models/Bot");
 const { QueryBuilder } = require("../helpers/userSegment/fusionAuth");
 const { DeviceManager } = require("../helpers/userSegment/deviceManager");
+const messageUtils = require("../service/messageUtil");
+const uuid = require("uuid/v1");
+const USMessages = messageUtils.USER_SEGMENT;
+const programMessages = messageUtils.PROGRAM;
+const responseCode = messageUtils.RESPONSE_CODE;
+const errorCode = messageUtils.ERRORCODES;
 
 // Refactor this to move to service
 async function getAll(req, res) {
@@ -28,36 +34,16 @@ async function getAll(req, res) {
 }
 
 async function get(req, res) {
-  const batchSize = req.query.perPage;
-  const page = req.query.page - 1;
-  const allSegments = await UserSegment.query()
-    .page(page, batchSize)
-    .withGraphFetched("[allService, byIDService, byPhoneService]");
-  console.log({ allSegments });
-  const modifiedData = allSegments.results.map((s) => {
-    s.all = s.allService;
-    s.byID = s.byIDService;
-    s.byPhone = s.byPhoneService;
-    delete s.allService;
-    delete s.byIDService;
-    delete s.byPhoneService;
-    return s;
-  });
-  if (allSegments) res.send({ data: modifiedData, total: allSegments.total });
-  else res.send({ data: [], total: 0 });
-}
-
-async function getByID(req, res) {
-  const transformer = await UserSegment.query().findById(req.params.id);
-  if (transformer) res.send({ data: transformer });
-}
-
-async function search(req, res) {
-  if (req.param.name !== undefined) {
-    const segments = await UserSegment.query()
-      .where("name", "ILIKE", `%${req.query.name}%`)
+  const rspObj = req.rspObj;
+  const errCode =
+    programMessages.EXCEPTION_CODE + "_" + USMessages.READ.EXCEPTION_CODE;
+  try {
+    const batchSize = req.query.perPage;
+    const page = req.query.page - 1;
+    const allSegments = await UserSegment.query()
+      .page(page, batchSize)
       .withGraphFetched("[allService, byIDService, byPhoneService]");
-    await segments.forEach(async (s) => {
+    const modifiedData = allSegments.results.map((s) => {
       s.all = s.allService;
       s.byID = s.byIDService;
       s.byPhone = s.byPhoneService;
@@ -66,9 +52,68 @@ async function search(req, res) {
       delete s.byPhoneService;
       return s;
     });
-    res.send({ data: segments });
+    if (allSegments) {
+      rspObj.responseCode = responseCode.SUCCESS;
+      rspObj.result = { data: modifiedData, total: allSegments.total };
+      return res.status(200).send(successResponse(rspObj));
+    } else {
+      rspObj.responseCode = responseCode.SUCCESS;
+      rspObj.result = { data: [], total: 0 };
+      return res.status(200).send(successResponse(rspObj));
+    }
+  } catch (e) {
+    rspObj.errCode = USMessages.READ.EXCEPTION_CODE;
+    rspObj.errMsg = USMessages.READ.FAILED_MESSAGE;
+    rspObj.responseCode = responseCode.CLIENT_ERROR;
+    return res
+      .status(400)
+      .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+  }
+}
+
+async function getByID(req, res) {
+  const transformer = await UserSegment.query().findById(req.params.id);
+  if (transformer) res.send({ data: transformer });
+}
+
+async function search(req, res) {
+  const rspObj = req.rspObj;
+  const errCode =
+    programMessages.EXCEPTION_CODE + "_" + USMessages.SEARCH.EXCEPTION_CODE;
+  if (req.param.name !== undefined) {
+    try {
+      const segments = await UserSegment.query()
+        .where("name", "ILIKE", `%${req.query.name}%`)
+        .withGraphFetched("[allService, byIDService, byPhoneService]");
+      await segments.forEach(async (s) => {
+        s.all = s.allService;
+        s.byID = s.byIDService;
+        s.byPhone = s.byPhoneService;
+        delete s.allService;
+        delete s.byIDService;
+        delete s.byPhoneService;
+        return s;
+      });
+      rspObj.responseCode = responseCode.SUCCESS;
+      rspObj.result = {
+        data: segments,
+      };
+      return res.status(200).send(successResponse(rspObj));
+    } catch (e) {
+      rspObj.errCode = USMessages.SEARCH.EXCEPTION_CODE;
+      rspObj.errMsg = USMessages.SEARCH.FAILED_MESSAGE;
+      rspObj.responseCode = responseCode.CLIENT_ERROR;
+      return res
+        .status(400)
+        .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+    }
   } else {
-    return res.send({ error: "Incorrect search param" });
+    rspObj.errCode = USMessages.SEARCH.EXCEPTION_CODE;
+    rspObj.errMsg = USMessages.SEARCH.MISSING_MESSAGE;
+    rspObj.responseCode = responseCode.CLIENT_ERROR;
+    return res
+      .status(400)
+      .send(errorResponse(rspObj, errCode + errorCode.CODE1));
   }
 }
 
@@ -93,78 +138,107 @@ async function getAllUsers(req, res) {
 }
 
 async function insert(req, res) {
-  const data = req.body.data;
-  const isExisting =
-    (await (await UserSegment.query().where("name", data.name)).length) > 0;
+  const rspObj = req.rspObj;
+  const errCode =
+    programMessages.EXCEPTION_CODE + "_" + USMessages.CREATE.EXCEPTION_CODE;
+  try {
+    const data = req.body.data;
+    const isExisting =
+      (await (await UserSegment.query().where("name", data.name)).length) > 0;
 
-  if (isExisting) {
-    res.status(400).send({
-      status: `UserSegment already exists with the name ${data.name}`,
-    });
-  } else {
-    let serviceTypeAll = await Service.query()
-      .where(data.all)
-      .then((s) => s[0])
-      .catch((e) => console.log(e));
-    let serviceTypeByPhone = await Service.query().where(data.byPhone)[0];
-    let serviceTypeByID = await Service.query().where(data.byID)[0];
+    if (isExisting) {
+      res.status(400).send({
+        status: `UserSegment already exists with the name ${data.name}`,
+      });
+    } else {
+      let serviceTypeAll = await Service.query()
+        .where(data.all)
+        .then((s) => s[0])
+        .catch((e) => console.log(e));
+      let serviceTypeByPhone = await Service.query().where(data.byPhone)[0];
+      let serviceTypeByID = await Service.query().where(data.byID)[0];
 
-    const trx = await UserSegment.startTransaction();
-    try {
-      if (!serviceTypeAll)
-        serviceTypeAll = await Service.query(trx).insert(data.all);
-      if (!serviceTypeByPhone)
-        serviceTypeByPhone = await Service.query(trx).insert(data.byPhone);
+      const trx = await UserSegment.startTransaction();
+      try {
+        if (!serviceTypeAll)
+          serviceTypeAll = await Service.query(trx).insert(data.all);
+        if (!serviceTypeByPhone)
+          serviceTypeByPhone = await Service.query(trx).insert(data.byPhone);
 
-      if (!serviceTypeByID)
-        serviceTypeByID = await Service.query(trx).insert(data.byID);
+        if (!serviceTypeByID)
+          serviceTypeByID = await Service.query(trx).insert(data.byID);
 
-      // TODO: Refactor this to a better solution using ORM.
-      data.all = serviceTypeAll.id;
-      data.byID = serviceTypeByID.id;
-      data.byPhone = serviceTypeByPhone.id;
-      data.count = data.count;
+        // TODO: Refactor this to a better solution using ORM.
+        data.all = serviceTypeAll.id;
+        data.byID = serviceTypeByID.id;
+        data.byPhone = serviceTypeByPhone.id;
+        data.count = data.count;
 
-      const verified = await Promise.all([
-        serviceTypeAll.verify("getAllUsers"),
-        serviceTypeByID.verify("getUserByID"),
-        serviceTypeByPhone.verify("getUserByPhone"),
-      ])
-        .then((result) => {
-          const reducer = (accumulator, currentValue) =>
-            accumulator + (currentValue.verified ? 1 : 0);
-          if (result.reduce(reducer, 0) === 3) return true;
-          else return false;
-        })
-        .catch((e) => {
-          trx.rollback();
+        const verified = await Promise.all([
+          serviceTypeAll.verify("getAllUsers"),
+          serviceTypeByID.verify("getUserByID"),
+          serviceTypeByPhone.verify("getUserByPhone"),
+        ])
+          .then((result) => {
+            const reducer = (accumulator, currentValue) =>
+              accumulator + (currentValue.verified ? 1 : 0);
+            if (result.reduce(reducer, 0) === 3) return true;
+            else return false;
+          })
+          .catch((e) => {
+            trx.rollback();
+            console.error(e);
+            res.send({ data: "UserSegment could not be verified." });
+          });
+        if (verified) {
+          const inserted = await UserSegment.query(trx).insert(data);
+          await trx.commit();
+          const getAgain = await UserSegment.query()
+            .findById(inserted.id)
+            .withGraphFetched("[allService, byIDService, byPhoneService]");
+          getAgain.all = getAgain.allService;
+          getAgain.byID = getAgain.byIDService;
+          getAgain.byPhone = getAgain.byPhoneService;
+          delete getAgain.allService;
+          delete getAgain.byIDService;
+          delete getAgain.byPhoneService;
+          rspObj.responseCode = responseCode.SUCCESS;
+          rspObj.result = {
+            inserted: getAgain,
+          };
+          return res.status(200).send(successResponse(rspObj));
+        } else {
+          await trx.rollback();
           console.error(e);
-          res.send({ data: "UserSegment could not be verified." });
-        });
-      if (verified) {
-        const inserted = await UserSegment.query(trx).insert(data);
-        await trx.commit();
-        const getAgain = await UserSegment.query()
-          .findById(inserted.id)
-          .withGraphFetched("[allService, byIDService, byPhoneService]");
-        getAgain.all = getAgain.allService;
-        getAgain.byID = getAgain.byIDService;
-        getAgain.byPhone = getAgain.byPhoneService;
-        delete getAgain.allService;
-        delete getAgain.byIDService;
-        delete getAgain.byPhoneService;
-        res.send({ data: getAgain });
-      } else {
-        await trx.rollback();
-        res.send({
-          data: "UserSegment could not be registered. Services down.",
-        });
+          trx.rollback();
+          rspObj.errCode = USMessages.CREATE.EXCEPTION_CODE;
+          rspObj.errMsg = USMessages.CREATE.FAILED_MESSAGE;
+          rspObj.responseCode = responseCode.CLIENT_ERROR;
+          rspObj.result = {
+            error: "UserSegment could not be registered. Services down.",
+          };
+          return res
+            .status(400)
+            .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+        }
+      } catch (e) {
+        console.error(e);
+        trx.rollback();
+        rspObj.errCode = USMessages.CREATE.EXCEPTION_CODE;
+        rspObj.errMsg = USMessages.CREATE.FAILED_MESSAGE;
+        rspObj.responseCode = responseCode.CLIENT_ERROR;
+        return res
+          .status(400)
+          .send(errorResponse(rspObj, errCode + errorCode.CODE1));
       }
-    } catch (e) {
-      console.error(e);
-      trx.rollback();
-      res.send({ data: "UserSegment could not be registered." });
     }
+  } catch (e) {
+    rspObj.errCode = USMessages.CREATE.EXCEPTION_CODE;
+    rspObj.errMsg = USMessages.CREATE.FAILED_MESSAGE;
+    rspObj.responseCode = responseCode.CLIENT_ERROR;
+    return res
+      .status(400)
+      .send(errorResponse(rspObj, errCode + errorCode.CODE1));
   }
 }
 
@@ -232,7 +306,11 @@ async function update(req, res) {
       delete getAgain.allService;
       delete getAgain.byIDService;
       delete getAgain.byPhoneService;
-      return res.send({ data: getAgain });
+      rspObj.responseCode = responseCode.SUCCESS;
+      rspObj.result = {
+        inserted: getAgain,
+      };
+      return res.status(200).send(successResponse(rspObj));
     } else {
       await trx.rollback();
       return res.send({
@@ -247,80 +325,100 @@ async function update(req, res) {
 }
 
 async function queryBuilder(req, res) {
-  const builder = new QueryBuilder(req.body.data);
-  const queryPrefix = 'query Query {users: getUsersByQuery(queryString: "';
-  const querySuffix =
-    '") {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType}}';
-  const query = builder.buildQuery();
-  const cadence = {
-    concurrent: true,
-    pagination: false,
-    perPage: 10000,
-    retries: 5,
-    "retries-interval": 10,
-    timeout: 60,
-  };
-  const credentials = {
-    variable: "dummygql",
-    vault: "samagra",
-  };
+  const rspObj = req.rspObj;
+  const errCode =
+    programMessages.EXCEPTION_CODE +
+    "_" +
+    USMessages.QUERY_BUILDER.EXCEPTION_CODE;
+  try {
+    const builder = new QueryBuilder(req.body.data);
+    const queryPrefix = 'query Query {users: getUsersByQuery(queryString: "';
+    const querySuffix =
+      '") {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType}}';
+    const query = builder.buildQuery();
+    const cadence = {
+      concurrent: true,
+      pagination: false,
+      perPage: 10000,
+      retries: 5,
+      "retries-interval": 10,
+      timeout: 60,
+    };
+    const credentials = {
+      variable: "dummygql",
+      vault: "samagra",
+    };
 
-  const allConfig = {
-    type: "gql",
-    config: {
-      pageParam: "page",
-      cadence,
-      credentials,
-      gql: queryPrefix + query + querySuffix,
-    },
-  };
-
-  const all = Service.fromJson(allConfig);
-  const verified = await all.verify("getAllUsers");
-  let byIDConfig =
-    "Could not construct this since there were 0 users in the search query";
-  let byPhoneConfig =
-    "Could not construct this since there were 0 users in the search query";
-  if (verified.sampleUser !== undefined) {
-    byIDConfig = {
+    const allConfig = {
       type: "gql",
       config: {
         pageParam: "page",
         cadence,
         credentials,
-        gql: `query Query($id: String) {users: getUsersByQuery(queryString: $id) {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType }}`,
-        verificationParams: {
-          id: `(data.device.deviceID : '${verified.sampleUser.device.deviceID}')`,
-        },
+        gql: queryPrefix + query + querySuffix,
       },
     };
 
-    byPhoneConfig = {
-      type: "gql",
-      config: {
-        pageParam: "page",
-        cadence,
-        credentials,
-        gql: `query Query($id: String) {users: getUsersByQuery(queryString: $id) {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType }}`,
-        verificationParams: {
-          id: `(data.device.deviceID : '${verified.sampleUser.device.deviceID}')`,
+    const all = Service.fromJson(allConfig);
+    const verified = await all.verify("getAllUsers");
+    let byIDConfig =
+      "Could not construct this since there were 0 users in the search query";
+    let byPhoneConfig =
+      "Could not construct this since there were 0 users in the search query";
+    if (verified.sampleUser !== undefined) {
+      byIDConfig = {
+        type: "gql",
+        config: {
+          pageParam: "page",
+          cadence,
+          credentials,
+          gql: `query Query($id: String) {users: getUsersByQuery(queryString: $id) {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType }}`,
+          verificationParams: {
+            id: `(data.device.deviceID : '${verified.sampleUser.device.deviceID}')`,
+          },
         },
-      },
-    };
-    res.send({
-      category: "student",
-      count: verified.total,
-      all: allConfig,
-      byID: byIDConfig,
-      byPhone: byPhoneConfig,
-    });
-  } else {
-    res.status(400).send({
-      error: {
+      };
+
+      byPhoneConfig = {
+        type: "gql",
+        config: {
+          pageParam: "page",
+          cadence,
+          credentials,
+          gql: `query Query($id: String) {users: getUsersByQuery(queryString: $id) {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType }}`,
+          verificationParams: {
+            id: `(data.device.deviceID : '${verified.sampleUser.device.deviceID}')`,
+          },
+        },
+      };
+      rspObj.responseCode = responseCode.SUCCESS;
+      rspObj.result = {
+        category: "student",
+        count: verified.total,
+        all: allConfig,
+        byID: byIDConfig,
+        byPhone: byPhoneConfig,
+      };
+      return res.status(200).send(successResponse(rspObj));
+    } else {
+      rspObj.errCode = USMessages.QUERY_BUILDER.EXCEPTION_CODE;
+      rspObj.errMsg = USMessages.QUERY_BUILDER.FAILED_MESSAGE;
+      rspObj.responseCode = responseCode.CLIENT_ERROR;
+      rspObj.result = {
         byIDConfig,
         byPhoneConfig,
-      },
-    });
+      };
+      return res
+        .status(400)
+        .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+    }
+  } catch (e) {
+    rspObj.errCode = USMessages.QUERY_BUILDER.EXCEPTION_CODE;
+    rspObj.errMsg = USMessages.QUERY_BUILDER.FAILED_MESSAGE;
+    rspObj.responseCode = responseCode.CLIENT_ERROR;
+    return res
+      .status(400)
+      .send(errorResponse(rspObj, errCode + errorCode.CODE1));
   }
 }
 
@@ -407,7 +505,6 @@ function getParams(msgId, status, errCode, msg) {
 
   return params;
 }
-
 
 module.exports = function (app) {
   app

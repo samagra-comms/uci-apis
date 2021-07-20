@@ -1024,4 +1024,38 @@ exports.CONVERSATION_LOGIC = {
   },
 };
 
-exports.USER_SEGMENT = {};
+exports.USER_SEGMENT = {
+  READ: {
+    EXCEPTION_CODE: "USRED",
+    FAILED_CODE: "ERROR_READING_USER_SEGMENT_REQUEST",
+    FAILED_MESSAGE:
+      "Error fetching user segment request for the requested process_id",
+    INFO: "Read user segment",
+  },
+  SEARCH: {
+    EXCEPTION_CODE: "USSER",
+    MISSING_CODE: "ERR_SEARCHING_USER_SEGMENTT",
+    MISSING_MESSAGE: "Required fields like filters are missing",
+    FAILED_CODE: "ERROR_SEARCHING_BUSER_SEGMENT",
+    FAILED_MESSAGE: "Unable to search for user segment",
+    INFO: "Search user segment",
+  },
+  CREATE: {
+    EXCEPTION_CODE: "USCRT",
+    MISSING_CODE: "ERR_CREATE_BULK_JOB",
+    MISSING_MESSAGE: "Required fields to create bulk job request are missing",
+    FAILED_CODE: "ERR_CREATE_BULK_JOB_REQUEST_FAILED",
+    FAILED_MESSAGE: "Unable to create the user segment request",
+    INFO: "Create user segment",
+  },
+  QUERY_BUILDER: {
+    EXCEPTION_CODE: "USQB",
+    MISSING_CODE: "ERR_QUERY_BUILDER",
+    MISSING_MESSAGE: "Required fields to create query request are missing",
+    FAILED_CODE: "ERR_CREATE_BULK_JOB_REQUEST_FAILED",
+    FAILED_MESSAGE: "Unable to create the query builder request",
+    INFO: "Create bulk Job",
+  },
+};
+
+exports.BOT = {};
