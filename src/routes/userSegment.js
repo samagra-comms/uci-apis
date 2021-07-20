@@ -241,7 +241,6 @@ async function update(req, res) {
     }
   } catch (e) {
     console.error(e);
-    console.error("======12");
     await trx.rollback();
     return res.send({ data: "UserSegment could not be updated." });
   }
@@ -325,15 +324,16 @@ async function queryBuilder(req, res) {
   }
 }
 
-async function addUserToRegistry() {
-  const botID = req.body.botID;
-  const username = req.body.username;
+async function addUserToRegistry(req, res) {
+  const botID = req.params.botID;
+  const username = req.params.userPhone;
 
   const deviceManager = new DeviceManager();
+  let deviceID = "";
 
   const globalBot = (await Bot.query().where("name", "Global Bot"))[0];
   if (globalBot.id === botID) {
-    await deviceManager.addAnonymousDeviceToRegistry(username);
+    deviceID = await deviceManager.addAnonymousDeviceToRegistry(username);
   } else {
     // Check if user is in UserSegments for the particular bot.
     const bot = await Bot.query().findById(botID);
@@ -356,7 +356,7 @@ async function addUserToRegistry() {
 
     if (found) {
       // If found, save it to the Registry to cache it.
-      await deviceManager.addUserToRegistry(botID, user.user);
+      deviceID = await deviceManager.addDeviceToRegistry(botID, user.user);
     } else {
       // If not found, add an empty user to the Registry to add fields later on.
       const dummyUser = {
@@ -365,14 +365,49 @@ async function addUserToRegistry() {
           type: username.split(":")[0],
         },
       };
-      await deviceManager.addUserToRegistry(botID, dummyUser);
+      deviceID = await deviceManager.addDeviceToRegistry(botID, dummyUser);
     }
   }
   res.send({
     status: "Success",
     message: "User Added",
+    userID: deviceID,
   });
 }
+
+function successResponse(data) {
+  var response = {};
+  response.id = data.apiId;
+  response.ver = data.apiVersion;
+  response.ts = new Date();
+  response.params = getParams(data.msgid, "successful", null, null);
+  response.responseCode = data.responseCode || "OK";
+  response.result = data.result;
+  return response;
+}
+
+function errorResponse(data, errCode) {
+  var response = {};
+  response.id = data.apiId;
+  response.ver = data.apiVersion;
+  response.ts = new Date();
+  response.params = getParams(data.msgId, "failed", data.errCode, data.errMsg);
+  response.responseCode = errCode + "_" + data.responseCode;
+  response.result = data.result;
+  return response;
+}
+
+function getParams(msgId, status, errCode, msg) {
+  var params = {};
+  params.resmsgid = uuid();
+  params.msgid = msgId || null;
+  params.status = status;
+  params.err = errCode;
+  params.errmsg = msg;
+
+  return params;
+}
+
 
 module.exports = function (app) {
   app
@@ -456,8 +491,8 @@ module.exports = function (app) {
     );
 
   app
-    .route(BASE_URL + "/userSegment/addUser/")
-    .post(
+    .route(BASE_URL + "/userSegment/addUser/:botID/:userPhone")
+    .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
       addUserToRegistry

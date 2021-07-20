@@ -1,33 +1,47 @@
-var async = require('async')
-var uuidV1 = require('uuid/v1')
-var respUtil = require('response_util') // done
-var messageUtil = require('../service/messageUtil') //done
-var logger = require('sb_logger_util_v2') // done
-var utilsService = require('../service/utilsService') //
-var contentProvider = require('sb_content_provider_util') // done
-var ApiInterceptor = require('sb_api_interceptor') // done
-var _ = require('underscore') // done
-var reqMsg = messageUtil.REQUEST
-var responseCode = messageUtil.RESPONSE_CODE
-var apiVersions = messageUtil.API_VERSION
-var jwt = require('jsonwebtoken') // done
-var lodash = require('lodash')
-var configUtil = require('sb-config-util') // done
-var compression = require('compression') // done
+var async = require("async");
+var uuidV1 = require("uuid/v1");
+var respUtil = require("response_util"); // done
+var messageUtil = require("../service/messageUtil"); //done
+var logger = require("sb_logger_util_v2"); // done
+var utilsService = require("../service/utilsService"); //
+var contentProvider = require("sb_content_provider_util"); // done
+var ApiInterceptor = require("sb_api_interceptor"); // done
+var _ = require("underscore"); // done
+var reqMsg = messageUtil.REQUEST;
+var responseCode = messageUtil.RESPONSE_CODE;
+var apiVersions = messageUtil.API_VERSION;
+var jwt = require("jsonwebtoken"); // done
+var lodash = require("lodash");
+var configUtil = require("sb-config-util"); // done
+var compression = require("compression"); // done
+
+const { Bot } = require("../models/bot");
+const { ConversationLogic } = require("../models/conversationLogic");
+const { UserSegment } = require("../models/userSegment");
 
 var keyCloakConfig = {
-  'authServerUrl': process.env.sunbird_keycloak_auth_server_url ? process.env.sunbird_keycloak_auth_server_url : 'https://staging.open-sunbird.org/auth',
-  'realm': process.env.sunbird_keycloak_realm ? process.env.sunbird_keycloak_realm : 'sunbird',
-  'clientId': process.env.sunbird_keycloak_client_id ? process.env.sunbird_keycloak_client_id : 'portal',
-  'public': process.env.sunbird_keycloak_public ? process.env.sunbird_keycloak_public : true
-}
+  authServerUrl: process.env.sunbird_keycloak_auth_server_url
+    ? process.env.sunbird_keycloak_auth_server_url
+    : "https://staging.open-sunbird.org/auth",
+  realm: process.env.sunbird_keycloak_realm
+    ? process.env.sunbird_keycloak_realm
+    : "sunbird",
+  clientId: process.env.sunbird_keycloak_client_id
+    ? process.env.sunbird_keycloak_client_id
+    : "portal",
+  public: process.env.sunbird_keycloak_public
+    ? process.env.sunbird_keycloak_public
+    : true,
+};
 
 var cacheConfig = {
-  store: process.env.sunbird_cache_store ? process.env.sunbird_cache_store : 'memory',
-  ttl: process.env.sunbird_cache_ttl ? process.env.sunbird_cache_ttl : 1800
-}
+  store: process.env.sunbird_cache_store
+    ? process.env.sunbird_cache_store
+    : "memory",
+  ttl: process.env.sunbird_cache_ttl ? process.env.sunbird_cache_ttl : 1800,
+};
 
-var apiInterceptor = new ApiInterceptor(keyCloakConfig, cacheConfig)
+var apiInterceptor = new ApiInterceptor(keyCloakConfig, cacheConfig);
 
 /**
  * This function helps to validate the request body and create response body
@@ -37,14 +51,15 @@ var apiInterceptor = new ApiInterceptor(keyCloakConfig, cacheConfig)
  * @param {type} next
  * @returns {unresolved}
  */
-function createAndValidateRequestBody (req, res, next) {
-  logger.debug({ msg: 'createAndValidateRequestBody() called' }, req)
-  req.body.ts = new Date()
-  req.body.url = req.url
-  req.body.path = req.route.path
-  req.body.params = req.body.params ? req.body.params : {}
-  req.body.params.msgid = req.get('x-msgid') || req.body.params.msgid || uuidV1()
-  req.id = req.body.params.msgid
+function createAndValidateRequestBody(req, res, next) {
+  logger.debug({ msg: "createAndValidateRequestBody() called" }, req);
+  req.body.ts = new Date();
+  req.body.url = req.url;
+  req.body.path = req.route.path;
+  req.body.params = req.body.params ? req.body.params : {};
+  req.body.params.msgid =
+    req.get("x-msgid") || req.body.params.msgid || uuidV1();
+  req.id = req.body.params.msgid;
   var rspObj = {
     apiId: utilsService.getAppIDForRESP(req.body.path),
     path: req.body.path,
@@ -53,34 +68,50 @@ function createAndValidateRequestBody (req, res, next) {
     result: {},
     startTime: new Date(),
     method: req.originalMethod,
-    did: req.get('x-device-id')
-  }
+    did: req.get("x-device-id"),
+  };
 
   rspObj.telemetryData = {
     params: utilsService.getParamsDataForLogEvent(rspObj),
     context: utilsService.getTelemetryContextData(req),
-    actor: utilsService.getTelemetryActorData(req)
-  }
-  req.headers.telemetryData = rspObj.telemetryData
+    actor: utilsService.getTelemetryActorData(req),
+  };
+  req.headers.telemetryData = rspObj.telemetryData;
 
-  var removedHeaders = ['host', 'origin', 'accept', 'referer', 'content-length', 'user-agent',
-    'accept-language', 'accept-charset', 'cookie', 'dnt', 'postman-token', 'cache-control', 'connection']
+  var removedHeaders = [
+    "host",
+    "origin",
+    "accept",
+    "referer",
+    "content-length",
+    "user-agent",
+    "accept-language",
+    "accept-charset",
+    "cookie",
+    "dnt",
+    "postman-token",
+    "cache-control",
+    "connection",
+  ];
 
   removedHeaders.forEach(function (e) {
-    delete req.headers[e]
-  })
+    delete req.headers[e];
+  });
 
   var requestedData = {
     body: req.body,
     params: req.params,
     query: req.query,
-    headers: lodash.omit(req.headers, ['Authorization', 'x-authenticated-user-token'])
-  }
+    headers: lodash.omit(req.headers, [
+      "Authorization",
+      "x-authenticated-user-token",
+    ]),
+  };
 
-  logger.debug({ msg: 'new request', requestData: requestedData }, req)
+  logger.debug({ msg: "new request", requestData: requestedData }, req);
 
-  req.rspObj = rspObj
-  next()
+  req.rspObj = rspObj;
+  next();
 }
 
 /**
@@ -89,78 +120,86 @@ function createAndValidateRequestBody (req, res, next) {
  * @param  {[type]}   res
  * @param  {Function} next
  */
-function validateToken (req, res, next) {
+function validateToken(req, res, next) {
   const logObject = {
-    traceId : req.headers['x-request-id'] || uuidV1(),
-    message : reqMsg.TOKEN.INFOMISSINGTOKEN
-   }
-   loggerService.entryLog(req.body, logObject);
-  logger.debug({ msg: 'validateToken() called' }, req)
-  var token = req.get('x-authenticated-user-token')
-  var rspObj = req.rspObj
+    traceId: req.headers["x-request-id"] || uuidV1(),
+    message: reqMsg.TOKEN.INFOMISSINGTOKEN,
+  };
+  loggerService.entryLog(req.body, logObject);
+  logger.debug({ msg: "validateToken() called" }, req);
+  var token = req.get("x-authenticated-user-token");
+  var rspObj = req.rspObj;
   if (!token) {
-    rspObj.errCode = reqMsg.TOKEN.MISSING_CODE
-    rspObj.errMsg = reqMsg.TOKEN.MISSING_MESSAGE
-    rspObj.responseCode = responseCode.UNAUTHORIZED_ACCESS
+    rspObj.errCode = reqMsg.TOKEN.MISSING_CODE;
+    rspObj.errMsg = reqMsg.TOKEN.MISSING_MESSAGE;
+    rspObj.responseCode = responseCode.UNAUTHORIZED_ACCESS;
 
-    logger.error({
-      msg: 'API failed due to missing token',
-      err: {
-        errCode: rspObj.errCode,
-        errMsg: rspObj.errMsg,
-        responseCode: rspObj.responseCode
-      }
-    }, req)
-    loggerService.exitLog({responseCode: rspObj.responseCode}, logObject);
-    return res.status(401).send(respUtil.errorResponse(rspObj))
+    logger.error(
+      {
+        msg: "API failed due to missing token",
+        err: {
+          errCode: rspObj.errCode,
+          errMsg: rspObj.errMsg,
+          responseCode: rspObj.responseCode,
+        },
+      },
+      req
+    );
+    loggerService.exitLog({ responseCode: rspObj.responseCode }, logObject);
+    return res.status(401).send(respUtil.errorResponse(rspObj));
   }
 
   apiInterceptor.validateToken(token, function (err, tokenData) {
     if (err) {
-      rspObj.errCode = reqMsg.TOKEN.INVALID_CODE
-      rspObj.errMsg = reqMsg.TOKEN.INVALID_MESSAGE
-      rspObj.responseCode = responseCode.UNAUTHORIZED_ACCESS
-      logger.error({
-        msg: 'Invalid token',
-        err: {
-          err,
-          errCode: rspObj.errCode,
-          errMsg: rspObj.errMsg,
-          responseCode: rspObj.responseCode
-        }
-      }, req)
-      loggerService.exitLog({responseCode: rspObj.responseCode}, logObject);
-      return res.status(401).send(respUtil.errorResponse(rspObj))
+      rspObj.errCode = reqMsg.TOKEN.INVALID_CODE;
+      rspObj.errMsg = reqMsg.TOKEN.INVALID_MESSAGE;
+      rspObj.responseCode = responseCode.UNAUTHORIZED_ACCESS;
+      logger.error(
+        {
+          msg: "Invalid token",
+          err: {
+            err,
+            errCode: rspObj.errCode,
+            errMsg: rspObj.errMsg,
+            responseCode: rspObj.responseCode,
+          },
+        },
+        req
+      );
+      loggerService.exitLog({ responseCode: rspObj.responseCode }, logObject);
+      return res.status(401).send(respUtil.errorResponse(rspObj));
     } else {
-      var payload = jwt.decode(tokenData.token)
-      delete req.headers['x-authenticated-userid']
-      var url = req.path
-      if (!url.includes('/content/v3/review') &&
-        !url.includes('/v1/content/review') &&
-        !url.includes('/v1/course/review')) {
-        delete req.headers['x-authenticated-user-token']
+      var payload = jwt.decode(tokenData.token);
+      delete req.headers["x-authenticated-userid"];
+      var url = req.path;
+      if (
+        !url.includes("/content/v3/review") &&
+        !url.includes("/v1/content/review") &&
+        !url.includes("/v1/course/review")
+      ) {
+        delete req.headers["x-authenticated-user-token"];
       }
-      req.rspObj.userId = tokenData.userId
-      logger.debug({ msg: ` x-authenticated-userid  :- ${tokenData.userId}` })
-      rspObj.telemetryData.actor = utilsService.getTelemetryActorData(req)
-      var userId = tokenData.userId.split(':')
-      req.headers['x-authenticated-userid'] = userId[userId.length - 1]
-      req.rspObj.userName = payload.name
-      req.rspObj = rspObj
-      next()
+      req.rspObj.userId = tokenData.userId;
+      logger.debug({ msg: ` x-authenticated-userid  :- ${tokenData.userId}` });
+      rspObj.telemetryData.actor = utilsService.getTelemetryActorData(req);
+      var userId = tokenData.userId.split(":");
+      req.headers["x-authenticated-userid"] = userId[userId.length - 1];
+      req.rspObj.userName = payload.name;
+      req.rspObj = rspObj;
+      next();
     }
-  })
+  });
 }
 
-function gzipCompression (req, res, next) {
+function gzipCompression(req, res, next) {
   return function (req, res, next) {
-    if (configUtil.getConfig('ENABLE_GZIP') === 'true') {
-      var comMidleware = compression()
-      comMidleware(req, res, next)
+    if (configUtil.getConfig("ENABLE_GZIP") === "true") {
+      var comMidleware = compression();
+      comMidleware(req, res, next);
     } else {
-      next()
+      next();
     }
-  }
+  };
 }
 /**
  * [validateUserToken - to validate x-authenticated-user-token]
@@ -168,53 +207,59 @@ function gzipCompression (req, res, next) {
  * @param  {[type]}   res
  * @param  {Function} next
  */
-function validateUserToken (req, res, next) {
+function validateUserToken(req, res, next) {
   const logObject = {
-    traceId : req.headers['x-request-id'] || uuidV1(),
-    message : reqMsg.TOKEN.INFOVALIDATETOKEN
-   }
-   loggerService.entryLog(req.body, logObject);
-  var token = req.get('x-authenticated-user-token')
-  var rspObj = req.rspObj || {}
+    traceId: req.headers["x-request-id"] || uuidV1(),
+    message: reqMsg.TOKEN.INFOVALIDATETOKEN,
+  };
+  loggerService.entryLog(req.body, logObject);
+  var token = req.get("x-authenticated-user-token");
+  var rspObj = req.rspObj || {};
 
   if (!token) {
-    rspObj.errCode = reqMsg.TOKEN.MISSING_CODE
-    rspObj.errMsg = reqMsg.TOKEN.MISSING_MESSAGE
-    rspObj.responseCode = responseCode.UNAUTHORIZED_ACCESS
-    logger.error({
-      msg: 'x-authenticated-user-token not present',
-      err: {
-        errCode: rspObj.errCode,
-        errMsg: rspObj.errMsg,
-        responseCode: rspObj.responseCode
-      }
-    }, req)
-    loggerService.exitLog({responseCode: rspObj.responseCode}, logObject);
-    return res.status(401).send(respUtil.errorResponse(rspObj))
+    rspObj.errCode = reqMsg.TOKEN.MISSING_CODE;
+    rspObj.errMsg = reqMsg.TOKEN.MISSING_MESSAGE;
+    rspObj.responseCode = responseCode.UNAUTHORIZED_ACCESS;
+    logger.error(
+      {
+        msg: "x-authenticated-user-token not present",
+        err: {
+          errCode: rspObj.errCode,
+          errMsg: rspObj.errMsg,
+          responseCode: rspObj.responseCode,
+        },
+      },
+      req
+    );
+    loggerService.exitLog({ responseCode: rspObj.responseCode }, logObject);
+    return res.status(401).send(respUtil.errorResponse(rspObj));
   }
 
   apiInterceptor.validateToken(token, function (err, tokenData) {
     if (err) {
-      rspObj.errCode = reqMsg.TOKEN.INVALID_CODE
-      rspObj.errMsg = reqMsg.TOKEN.INVALID_MESSAGE
-      rspObj.responseCode = responseCode.UNAUTHORIZED_ACCESS
-      logger.error({
-        msg: 'Invalid token',
-        err: {
-          err,
-          errCode: rspObj.errCode,
-          errMsg: rspObj.errMsg,
-          responseCode: rspObj.responseCode
+      rspObj.errCode = reqMsg.TOKEN.INVALID_CODE;
+      rspObj.errMsg = reqMsg.TOKEN.INVALID_MESSAGE;
+      rspObj.responseCode = responseCode.UNAUTHORIZED_ACCESS;
+      logger.error(
+        {
+          msg: "Invalid token",
+          err: {
+            err,
+            errCode: rspObj.errCode,
+            errMsg: rspObj.errMsg,
+            responseCode: rspObj.responseCode,
+          },
+          additionalInfo: { token },
         },
-        additionalInfo: { token }
-      }, req)
-      loggerService.exitLog({responseCode: rspObj.responseCode}, logObject);
-      return res.status(401).send(respUtil.errorResponse(rspObj))
+        req
+      );
+      loggerService.exitLog({ responseCode: rspObj.responseCode }, logObject);
+      return res.status(401).send(respUtil.errorResponse(rspObj));
     } else {
-      delete req.headers['x-authenticated-user-token']
-      next()
+      delete req.headers["x-authenticated-user-token"];
+      next();
     }
-  })
+  });
 }
 
 /**
@@ -223,72 +268,104 @@ function validateUserToken (req, res, next) {
  * @param  {[type]}   response
  * @param  {Function} next
  */
-function apiAccessForCreatorUser (req, response, next) {
+function apiAccessForCreatorUser(req, response, next) {
   const logObject = {
-    traceId : req.headers['x-request-id'] || uuidV1(),
-    message : contentMessage.GET.INFOCREATOR
-   }
-   loggerService.entryLog(req.body, logObject);
-  logger.debug({ msg: 'apiAccessForCreatorUser() called' }, req)
-  var userId = req.get('x-authenticated-userid')
-  var data = {}
-  var rspObj = req.rspObj
+    traceId: req.headers["x-request-id"] || uuidV1(),
+    message: contentMessage.GET.INFOCREATOR,
+  };
+  loggerService.entryLog(req.body, logObject);
+  logger.debug({ msg: "apiAccessForCreatorUser() called" }, req);
+  var userId = req.get("x-authenticated-userid");
+  var data = {};
+  var rspObj = req.rspObj;
   var qs = {
-    fields: 'createdBy,collaborators'
-  }
-  var contentMessage = messageUtil.CONTENT
+    fields: "createdBy,collaborators",
+  };
+  var contentMessage = messageUtil.CONTENT;
 
-  data.contentId = req.params.contentId
+  data.contentId = req.params.contentId;
 
   async.waterfall([
-
     function (CBW) {
-      contentProvider.getContentUsingQuery(data.contentId, qs, req.headers,
+      contentProvider.getContentUsingQuery(
+        data.contentId,
+        qs,
+        req.headers,
         function (err, res) {
           if (err || res.responseCode !== responseCode.SUCCESS) {
-            rspObj.errCode = res && res.params ? res.params.err : contentMessage.GET.FAILED_CODE
-            rspObj.errMsg = res && res.params ? res.params.errmsg : contentMessage.GET.FAILED_MESSAGE
-            rspObj.responseCode = res && res.responseCode ? res.responseCode : responseCode.SERVER_ERROR
-            logger.error({
-              msg: 'Getting error from content provider',
-              err: {
-                err,
-                errCode: rspObj.errCode,
-                errMsg: rspObj.errMsg,
-                responseCode: rspObj.responseCode
+            rspObj.errCode =
+              res && res.params
+                ? res.params.err
+                : contentMessage.GET.FAILED_CODE;
+            rspObj.errMsg =
+              res && res.params
+                ? res.params.errmsg
+                : contentMessage.GET.FAILED_MESSAGE;
+            rspObj.responseCode =
+              res && res.responseCode
+                ? res.responseCode
+                : responseCode.SERVER_ERROR;
+            logger.error(
+              {
+                msg: "Getting error from content provider",
+                err: {
+                  err,
+                  errCode: rspObj.errCode,
+                  errMsg: rspObj.errMsg,
+                  responseCode: rspObj.responseCode,
+                },
+                res,
               },
-              res
-            }, req)
-            var httpStatus = res && res.statusCode >= 100 && res.statusCode < 600 ? res.statusCode : 500
-            loggerService.exitLog({responseCode: rspObj.responseCode}, logObject);
-            return response.status(httpStatus).send(respUtil.errorResponse(rspObj))
+              req
+            );
+            var httpStatus =
+              res && res.statusCode >= 100 && res.statusCode < 600
+                ? res.statusCode
+                : 500;
+            loggerService.exitLog(
+              { responseCode: rspObj.responseCode },
+              logObject
+            );
+            return response
+              .status(httpStatus)
+              .send(respUtil.errorResponse(rspObj));
           } else {
-            CBW(null, res)
+            CBW(null, res);
           }
-        })
+        }
+      );
     },
     function (res) {
-      let createdBy = res.result.content.createdBy.split(':')
-      if (createdBy[createdBy.length - 1] !== userId && !lodash.includes(res.result.content.collaborators, userId)) {
-        rspObj.errCode = reqMsg.TOKEN.INVALID_CODE
-        rspObj.errMsg = reqMsg.TOKEN.INVALID_MESSAGE
-        rspObj.responseCode = responseCode.UNAUTHORIZED_ACCESS
-        logger.error({
-          msg: 'Content createdBy and userId not matched',
-          additionalInfo: { createdBy: res.result.content.createdBy, userId: userId },
-          err: {
-            errCode: rspObj.errCode,
-            errMsg: rspObj.errMsg,
-            responseCode: rspObj.responseCode
-          }
-        }, req)
-        loggerService.exitLog({responseCode: rspObj.responseCode}, logObject);
-        return response.status(401).send(respUtil.errorResponse(rspObj))
+      let createdBy = res.result.content.createdBy.split(":");
+      if (
+        createdBy[createdBy.length - 1] !== userId &&
+        !lodash.includes(res.result.content.collaborators, userId)
+      ) {
+        rspObj.errCode = reqMsg.TOKEN.INVALID_CODE;
+        rspObj.errMsg = reqMsg.TOKEN.INVALID_MESSAGE;
+        rspObj.responseCode = responseCode.UNAUTHORIZED_ACCESS;
+        logger.error(
+          {
+            msg: "Content createdBy and userId not matched",
+            additionalInfo: {
+              createdBy: res.result.content.createdBy,
+              userId: userId,
+            },
+            err: {
+              errCode: rspObj.errCode,
+              errMsg: rspObj.errMsg,
+              responseCode: rspObj.responseCode,
+            },
+          },
+          req
+        );
+        loggerService.exitLog({ responseCode: rspObj.responseCode }, logObject);
+        return response.status(401).send(respUtil.errorResponse(rspObj));
       } else {
-        next()
+        next();
       }
-    }
-  ])
+    },
+  ]);
 }
 
 /**
@@ -297,70 +374,99 @@ function apiAccessForCreatorUser (req, response, next) {
  * @param  {[type]}   response
  * @param  {Function} next
  */
-function apiAccessForReviewerUser (req, response, next) {
+function apiAccessForReviewerUser(req, response, next) {
   const logObject = {
-    traceId : req.headers['x-request-id'] || uuidV1(),
-    message : contentMessage.GET.INFOREVIEWER
-   }
+    traceId: req.headers["x-request-id"] || uuidV1(),
+    message: contentMessage.GET.INFOREVIEWER,
+  };
   loggerService.entryLog(req.body, logObject);
-  logger.debug({ msg: 'apiAccessForReviewerUser() called' }, req)
-  var userId = req.get('x-authenticated-userid')
-  var data = {}
-  var rspObj = req.rspObj
+  logger.debug({ msg: "apiAccessForReviewerUser() called" }, req);
+  var userId = req.get("x-authenticated-userid");
+  var data = {};
+  var rspObj = req.rspObj;
   var qs = {
-    fields: 'createdBy,collaborators'
-  }
-  var contentMessage = messageUtil.CONTENT
+    fields: "createdBy,collaborators",
+  };
+  var contentMessage = messageUtil.CONTENT;
 
-  data.contentId = req.params.contentId
+  data.contentId = req.params.contentId;
 
   async.waterfall([
-
     function (CBW) {
-      contentProvider.getContentUsingQuery(data.contentId, qs, req.headers,
+      contentProvider.getContentUsingQuery(
+        data.contentId,
+        qs,
+        req.headers,
         function (err, res) {
           if (err || res.responseCode !== responseCode.SUCCESS) {
-            rspObj.errCode = res && res.params ? res.params.err : contentMessage.GET.FAILED_CODE
-            rspObj.errMsg = res && res.params ? res.params.errmsg : contentMessage.GET.FAILED_MESSAGE
-            rspObj.responseCode = res && res.responseCode ? res.responseCode : responseCode.SERVER_ERROR
-            logger.error({
-              msg: 'getting error from content provider',
-              err: {
-                err,
-                errCode: rspObj.errCode,
-                errMsg: rspObj.errMsg,
-                responseCode: rspObj.responseCode
+            rspObj.errCode =
+              res && res.params
+                ? res.params.err
+                : contentMessage.GET.FAILED_CODE;
+            rspObj.errMsg =
+              res && res.params
+                ? res.params.errmsg
+                : contentMessage.GET.FAILED_MESSAGE;
+            rspObj.responseCode =
+              res && res.responseCode
+                ? res.responseCode
+                : responseCode.SERVER_ERROR;
+            logger.error(
+              {
+                msg: "getting error from content provider",
+                err: {
+                  err,
+                  errCode: rspObj.errCode,
+                  errMsg: rspObj.errMsg,
+                  responseCode: rspObj.responseCode,
+                },
+                additionalInfo: { qs },
               },
-              additionalInfo: { qs }
-            }, req)
-            var httpStatus = res && res.statusCode >= 100 && res.statusCode < 600 ? res.statusCode : 500
-            loggerService.exitLog({responseCode: rspObj.responseCode}, logObject);
-            return response.status(httpStatus).send(respUtil.errorResponse(rspObj))
+              req
+            );
+            var httpStatus =
+              res && res.statusCode >= 100 && res.statusCode < 600
+                ? res.statusCode
+                : 500;
+            loggerService.exitLog(
+              { responseCode: rspObj.responseCode },
+              logObject
+            );
+            return response
+              .status(httpStatus)
+              .send(respUtil.errorResponse(rspObj));
           } else {
-            CBW(null, res)
+            CBW(null, res);
           }
-        })
+        }
+      );
     },
     function (res) {
-      if (res.result.content.createdBy === userId || lodash.includes(res.result.content.collaborators, userId)) {
-        rspObj.errCode = reqMsg.TOKEN.INVALID_CODE
-        rspObj.errMsg = reqMsg.TOKEN.INVALID_MESSAGE
-        rspObj.responseCode = responseCode.UNAUTHORIZED_ACCESS
-        logger.error({
-          msg: 'Unauthorized access',
-          err: {
-            errCode: rspObj.errCode,
-            errMsg: rspObj.errMsg,
-            responseCode: rspObj.responseCode
-          }
-        }, req)
-        loggerService.exitLog({responseCode: rspObj.responseCode}, logObject);
-        return response.status(401).send(respUtil.errorResponse(rspObj))
+      if (
+        res.result.content.createdBy === userId ||
+        lodash.includes(res.result.content.collaborators, userId)
+      ) {
+        rspObj.errCode = reqMsg.TOKEN.INVALID_CODE;
+        rspObj.errMsg = reqMsg.TOKEN.INVALID_MESSAGE;
+        rspObj.responseCode = responseCode.UNAUTHORIZED_ACCESS;
+        logger.error(
+          {
+            msg: "Unauthorized access",
+            err: {
+              errCode: rspObj.errCode,
+              errMsg: rspObj.errMsg,
+              responseCode: rspObj.responseCode,
+            },
+          },
+          req
+        );
+        loggerService.exitLog({ responseCode: rspObj.responseCode }, logObject);
+        return response.status(401).send(respUtil.errorResponse(rspObj));
       } else {
-        next()
+        next();
       }
-    }
-  ])
+    },
+  ]);
 }
 
 /**
@@ -369,91 +475,129 @@ function apiAccessForReviewerUser (req, response, next) {
  * @param  {[type]}   response
  * @param  {Function} next
  */
-function hierarchyUpdateApiAccess (req, response, next) {
+function hierarchyUpdateApiAccess(req, response, next) {
   const logObject = {
-    traceId : req.headers['x-request-id'] || uuidV1(),
-    message : contentMessage.HIERARCHY_UPDATE.INFO
-   }
+    traceId: req.headers["x-request-id"] || uuidV1(),
+    message: contentMessage.HIERARCHY_UPDATE.INFO,
+  };
   loggerService.entryLog(req.body, logObject);
-  logger.debug({ msg: 'hierarchyUpdateApiAccess() called' }, req)
-  var userId = req.get('x-authenticated-userid')
-  var data = req.body
-  var rspObj = req.rspObj
+  logger.debug({ msg: "hierarchyUpdateApiAccess() called" }, req);
+  var userId = req.get("x-authenticated-userid");
+  var data = req.body;
+  var rspObj = req.rspObj;
   var qs = {
-    fields: 'createdBy,collaborators'
-  }
-  var contentMessage = messageUtil.CONTENT
+    fields: "createdBy,collaborators",
+  };
+  var contentMessage = messageUtil.CONTENT;
 
   if (!data.request || !data.request.data || !data.request.data.hierarchy) {
-    rspObj.errCode = contentMessage.HIERARCHY_UPDATE.MISSING_CODE
-    rspObj.errMsg = contentMessage.HIERARCHY_UPDATE.MISSING_MESSAGE
-    rspObj.responseCode = responseCode.CLIENT_ERROR
-    logger.error({
-      msg: 'Error due to required params are missing',
-      additionalInfo: data.request,
-      err: {
-        errCode: rspObj.errCode,
-        errMsg: rspObj.errMsg,
-        responseCode: rspObj.responseCode
-      }
-    }, req)
-    loggerService.exitLog({responseCode: rspObj.responseCode}, logObject);
-    return response.status(400).send(respUtil.errorResponse(rspObj))
+    rspObj.errCode = contentMessage.HIERARCHY_UPDATE.MISSING_CODE;
+    rspObj.errMsg = contentMessage.HIERARCHY_UPDATE.MISSING_MESSAGE;
+    rspObj.responseCode = responseCode.CLIENT_ERROR;
+    logger.error(
+      {
+        msg: "Error due to required params are missing",
+        additionalInfo: data.request,
+        err: {
+          errCode: rspObj.errCode,
+          errMsg: rspObj.errMsg,
+          responseCode: rspObj.responseCode,
+        },
+      },
+      req
+    );
+    loggerService.exitLog({ responseCode: rspObj.responseCode }, logObject);
+    return response.status(400).send(respUtil.errorResponse(rspObj));
   }
 
   var hierarchy = !_.isEmpty(data.request.data.hierarchy)
-    ? data.request.data.hierarchy : data.request.data.nodesModified
+    ? data.request.data.hierarchy
+    : data.request.data.nodesModified;
   data.contentId = _.findKey(hierarchy, function (item) {
-    if (item.root === true) return item
-  })
+    if (item.root === true) return item;
+  });
 
   async.waterfall([
     function (CBW) {
-      contentProvider.getContentUsingQuery(data.contentId, qs, req.headers, function (err, res) {
-        if (err || res.responseCode !== responseCode.SUCCESS) {
-          rspObj.errCode = res && res.params ? res.params.err : contentMessage.GET.FAILED_CODE
-          rspObj.errMsg = res && res.params ? res.params.errmsg : contentMessage.GET.FAILED_MESSAGE
-          rspObj.responseCode = res && res.responseCode ? res.responseCode : responseCode.SERVER_ERROR
-          logger.error({
-            msg: 'Getting error from content provider',
-            err: {
-              err,
-              errCode: rspObj.errCode,
-              errMsg: rspObj.errMsg,
-              responseCode: rspObj.responseCode
-            },
-            additionalInfo: { qs }
-          }, req)
+      contentProvider.getContentUsingQuery(
+        data.contentId,
+        qs,
+        req.headers,
+        function (err, res) {
+          if (err || res.responseCode !== responseCode.SUCCESS) {
+            rspObj.errCode =
+              res && res.params
+                ? res.params.err
+                : contentMessage.GET.FAILED_CODE;
+            rspObj.errMsg =
+              res && res.params
+                ? res.params.errmsg
+                : contentMessage.GET.FAILED_MESSAGE;
+            rspObj.responseCode =
+              res && res.responseCode
+                ? res.responseCode
+                : responseCode.SERVER_ERROR;
+            logger.error(
+              {
+                msg: "Getting error from content provider",
+                err: {
+                  err,
+                  errCode: rspObj.errCode,
+                  errMsg: rspObj.errMsg,
+                  responseCode: rspObj.responseCode,
+                },
+                additionalInfo: { qs },
+              },
+              req
+            );
 
-          var httpStatus = res && res.statusCode >= 100 && res.statusCode < 600 ? res.statusCode : 500
-          loggerService.exitLog({responseCode: rspObj.responseCode}, logObject);
-          return response.status(httpStatus).send(respUtil.errorResponse(rspObj))
-        } else {
-          CBW(null, res)
+            var httpStatus =
+              res && res.statusCode >= 100 && res.statusCode < 600
+                ? res.statusCode
+                : 500;
+            loggerService.exitLog(
+              { responseCode: rspObj.responseCode },
+              logObject
+            );
+            return response
+              .status(httpStatus)
+              .send(respUtil.errorResponse(rspObj));
+          } else {
+            CBW(null, res);
+          }
         }
-      })
+      );
     },
     function (res) {
-      if (res.result.content.createdBy !== userId && !lodash.includes(res.result.content.collaborators, userId)) {
-        rspObj.errCode = reqMsg.TOKEN.INVALID_CODE
-        rspObj.errMsg = reqMsg.TOKEN.INVALID_MESSAGE
-        rspObj.responseCode = responseCode.UNAUTHORIZED_ACCESS
-        logger.error({
-          msg: 'Content createdBy and userId not matched',
-          additionalInfo: { createBy: res.result.content.createdBy, userId: userId },
-          err: {
-            errCode: rspObj.errCode,
-            errMsg: rspObj.errMsg,
-            responseCode: rspObj.responseCode
-          }
-        }, req)
-        loggerService.exitLog({responseCode: rspObj.responseCode}, logObject);
-        return response.status(401).send(respUtil.errorResponse(rspObj))
+      if (
+        res.result.content.createdBy !== userId &&
+        !lodash.includes(res.result.content.collaborators, userId)
+      ) {
+        rspObj.errCode = reqMsg.TOKEN.INVALID_CODE;
+        rspObj.errMsg = reqMsg.TOKEN.INVALID_MESSAGE;
+        rspObj.responseCode = responseCode.UNAUTHORIZED_ACCESS;
+        logger.error(
+          {
+            msg: "Content createdBy and userId not matched",
+            additionalInfo: {
+              createBy: res.result.content.createdBy,
+              userId: userId,
+            },
+            err: {
+              errCode: rspObj.errCode,
+              errMsg: rspObj.errMsg,
+              responseCode: rspObj.responseCode,
+            },
+          },
+          req
+        );
+        loggerService.exitLog({ responseCode: rspObj.responseCode }, logObject);
+        return response.status(401).send(respUtil.errorResponse(rspObj));
       } else {
-        next()
+        next();
       }
-    }
-  ])
+    },
+  ]);
 }
 
 /**
@@ -462,40 +606,108 @@ function hierarchyUpdateApiAccess (req, response, next) {
  * @param  {[type]}   res
  * @param  {Function} next
  */
-function checkChannelID (req, res, next) {
-  logger.debug({ msg: 'checkChannelID() called' }, req)
+function checkChannelID(req, res, next) {
+  logger.debug({ msg: "checkChannelID() called" }, req);
   const logObject = {
-    traceId : req.headers['x-request-id'] || uuidV1(),
-    message : reqMsg.PARAMS.INFO
-   }
+    traceId: req.headers["x-request-id"] || uuidV1(),
+    message: reqMsg.PARAMS.INFO,
+  };
   loggerService.entryLog(req.body, logObject);
-  var channelID = req.get('x-channel-id')
-  var rspObj = req.rspObj
+  var channelID = req.get("x-channel-id");
+  var rspObj = req.rspObj;
   if (!channelID) {
-    rspObj.errCode = reqMsg.PARAMS.MISSING_CHANNELID_CODE
-    rspObj.errMsg = reqMsg.PARAMS.MISSING_CHANNELID_MESSAGE
-    rspObj.responseCode = responseCode.CLIENT_ERROR
-    logger.error({
-      msg: 'API failed due to missing channelID',
-      err: {
-        errCode: rspObj.errCode,
-        errMsg: rspObj.errMsg,
-        responseCode: rspObj.responseCode
-      }
-    }, req)
-    loggerService.exitLog({responseCode: rspObj.responseCode}, logObject);
-    return res.status(400).send(respUtil.errorResponse(rspObj))
+    rspObj.errCode = reqMsg.PARAMS.MISSING_CHANNELID_CODE;
+    rspObj.errMsg = reqMsg.PARAMS.MISSING_CHANNELID_MESSAGE;
+    rspObj.responseCode = responseCode.CLIENT_ERROR;
+    logger.error(
+      {
+        msg: "API failed due to missing channelID",
+        err: {
+          errCode: rspObj.errCode,
+          errMsg: rspObj.errMsg,
+          responseCode: rspObj.responseCode,
+        },
+      },
+      req
+    );
+    loggerService.exitLog({ responseCode: rspObj.responseCode }, logObject);
+    return res.status(400).send(respUtil.errorResponse(rspObj));
   }
-  logger.debug({ msg: `channel id = ${channelID}` })
-  next()
+  logger.debug({ msg: `channel id = ${channelID}` });
+  next();
 }
 
+/**
+ * @description determine if an array contains one or more items from another array.
+ * @param {array} haystack the array to search.
+ * @param {array} arr the array providing items to check for in the haystack.
+ * @return {boolean} true|false if haystack contains at least one item from arr.
+ */
+var findOne = (haystack, arr) => {
+  return arr.some((v) => haystack.includes(v));
+};
+
+const getReqAsset = (assetString) => {
+  if (assetString === "bot") return Bot;
+  else if (assetString === "userSegment") return UserSegment;
+  else if (assetString === "conversationLogic") return ConversationLogic;
+  else if (assetString === "forms") return "forms";
+  else return null;
+};
+
+const addOwnerInfo = (req, res, next) => {
+  const urlsWithVerification = [
+    "bot/pause",
+    "bot/start",
+    "bot/delete",
+    "bot/update",
+    "bot/get",
+    "conversationLogic/update/",
+    "conversationLogic/delete/",
+  ];
+
+  const asset = getReqAsset(req);
+  const ownerOrgID = req.headers.ownerOrgID;
+  const ownerID = req.headers.ownerID;
+
+  if (findOne(req.originalUrl, urlsWithVerification)) {
+    if (typeof asset === "string") next();
+    else {
+      return asset
+        .query()
+        .findById(req.params.id)
+        .then((s) => {
+          if (s && s.ownerID === ownerID) return next();
+          else
+            return res.status(400).send(
+              respUtil.errorResponse({
+                error: "You are not authorized to access this element.",
+              })
+            );
+        })
+        .catch((e) => {
+          return res.status(400).send(
+            respUtil.errorResponse({
+              error: "You are not authorized to access this element.",
+            })
+          );
+        });
+    }
+  } else {
+    //Add headers as part of request
+    req.body.ownerID = ownerID;
+    req.body.ownerOrgID = ownerOrgID;
+    return next();
+  }
+};
+
 // Exports required function
-module.exports.validateToken = validateToken
-module.exports.createAndValidateRequestBody = createAndValidateRequestBody
-module.exports.apiAccessForReviewerUser = apiAccessForReviewerUser
-module.exports.apiAccessForCreatorUser = apiAccessForCreatorUser
-module.exports.hierarchyUpdateApiAccess = hierarchyUpdateApiAccess
-module.exports.checkChannelID = checkChannelID
-module.exports.validateUserToken = validateUserToken
-module.exports.gzipCompression = gzipCompression
+module.exports.validateToken = validateToken;
+module.exports.createAndValidateRequestBody = createAndValidateRequestBody;
+module.exports.apiAccessForReviewerUser = apiAccessForReviewerUser;
+module.exports.apiAccessForCreatorUser = apiAccessForCreatorUser;
+module.exports.hierarchyUpdateApiAccess = hierarchyUpdateApiAccess;
+module.exports.checkChannelID = checkChannelID;
+module.exports.validateUserToken = validateUserToken;
+module.exports.gzipCompression = gzipCompression;
+module.exports.addOwnerInfo = addOwnerInfo;

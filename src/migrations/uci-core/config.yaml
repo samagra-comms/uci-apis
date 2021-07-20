@@ -1,5 +1,5 @@
 version: 2
-endpoint: http://localhost:15003
+endpoint: http://homeserver:15003
 metadata_directory: metadata
 actions:
   kind: synchronous

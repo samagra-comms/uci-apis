@@ -1,6 +1,7 @@
 var express = require("express");
 const { result, forEach } = require("lodash");
 const requestMiddleware = require("../middlewares/request.middleware");
+const { FusionAuthClient } = require("fusionauth-node-client");
 
 const BASE_URL = "/admin/v1";
 const { Bot } = require("../models/bot");
@@ -8,6 +9,12 @@ const { ConversationLogic } = require("../models/conversationLogic");
 const { UserSegment } = require("../models/userSegment");
 const { Adapter } = require("../models/adapter");
 const fetch = require("node-fetch");
+
+const fusionAuthURL = process.env.FA_URL;
+const fusionAuthAPIKey = process.env.FA_API_KEY;
+const anonymousBotID = process.env.FA_ANONYMOUS_BOT_ID;
+
+const client = new FusionAuthClient(fusionAuthAPIKey, fusionAuthURL);
 
 const UCI_CORE_URL = `http://${process.env.UCI_CORE_BASE_URL}/campaign`;
 
@@ -262,13 +269,25 @@ async function insert(req, res) {
       delete data.logic;
       if (isValidUserSegment && isValidCL) {
         const inserted = await Bot.query(trx).insert(data);
-        await trx.commit();
-        res.send({ data: inserted });
+        await client
+          .createApplication(inserted.id, {
+            application: {
+              name: inserted.name,
+            },
+          })
+          .then(async (r) => {
+            await trx.commit();
+            res.send({ data: inserted });
+          })
+          .catch(async (e) => {
+            JSON.stringify(e);
+            await trx.rollback();
+            res
+              .status(400)
+              .send({ status: "Error", error: "Invalid transformer ID" });
+          });
       } else {
         await trx.rollback();
-        res
-          .status(400)
-          .send({ status: "Error", error: "Invalid transformer ID" });
       }
     } catch (e) {
       console.error(e);
@@ -276,6 +295,39 @@ async function insert(req, res) {
       res.status(400).send({ data: "Bot could not be registered." });
     }
   }
+}
+
+function successResponse(data) {
+  var response = {};
+  response.id = data.apiId;
+  response.ver = data.apiVersion;
+  response.ts = new Date();
+  response.params = getParams(data.msgid, "successful", null, null);
+  response.responseCode = data.responseCode || "OK";
+  response.result = data.result;
+  return response;
+}
+
+function errorResponse(data, errCode) {
+  var response = {};
+  response.id = data.apiId;
+  response.ver = data.apiVersion;
+  response.ts = new Date();
+  response.params = getParams(data.msgId, "failed", data.errCode, data.errMsg);
+  response.responseCode = errCode + "_" + data.responseCode;
+  response.result = data.result;
+  return response;
+}
+
+function getParams(msgId, status, errCode, msg) {
+  var params = {};
+  params.resmsgid = uuid();
+  params.msgid = msgId || null;
+  params.status = status;
+  params.err = errCode;
+  params.errmsg = msg;
+
+  return params;
 }
 
 module.exports = function (app) {

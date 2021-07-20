@@ -141,7 +141,6 @@ try {
 
           const { Kafka } = require("kafkajs");
           let kafka;
-          let kafka;
           if (process.env.ENV === "dev") {
             kafka = new Kafka({
               clientId: "api",
