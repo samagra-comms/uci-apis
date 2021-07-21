@@ -30,13 +30,13 @@ async function getByID(req, res) {
 async function update(req, res) {
   const data = req.body.data;
   const rspObj = req.rspObj;
+  const errCode =
+    programMessages.EXCEPTION_CODE + "_" + CLMessages.UPDATE.EXCEPTION_CODE;
 
   try {
     const isExisting =
       (await ConversationLogic.query().findById(req.params.id)) !== undefined;
 
-    const errCode =
-      programMessages.EXCEPTION_CODE + "_" + CLMessages.UPDATE.EXCEPTION_CODE;
     if (!isExisting) {
       rspObj.errCode = CLMessages.UPDATE.MISSING_CODE_CL;
       rspObj.errMsg = CLMessages.UPDATE.MISSING_CL_MESSAGE;
