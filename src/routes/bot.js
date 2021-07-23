@@ -10,6 +10,13 @@ const { UserSegment } = require("../models/userSegment");
 const { Adapter } = require("../models/adapter");
 const fetch = require("node-fetch");
 
+const uuid = require("uuid/v1");
+const messageUtils = require("../service/messageUtil");
+const BotMessages = messageUtils.BOT;
+const programMessages = messageUtils.PROGRAM;
+const responseCode = messageUtils.RESPONSE_CODE;
+const errorCode = messageUtils.ERRORCODES;
+
 const fusionAuthURL = process.env.FA_URL;
 const fusionAuthAPIKey = process.env.FA_API_KEY;
 const anonymousBotID = process.env.FA_ANONYMOUS_BOT_ID;
@@ -27,82 +34,171 @@ async function getAll(req, res) {
 }
 
 async function getByID(req, res) {
-  const bot = await Bot.query().findById(req.params.id);
-  if (bot) {
-    const conversationLogics = await ConversationLogic.query().findByIds(
-      bot.logicIDs
-    );
-    const userSegments = await UserSegment.query()
-      .findByIds(bot.users)
-      .withGraphFetched("[allService, byIDService, byPhoneService]");
-    for (let j = 0; j < conversationLogics.length; j++) {
-      const adapterID = conversationLogics[j].adapter;
-      conversationLogics[j].adapter = await Adapter.query().findById(adapterID);
+  const rspObj = req.rspObj;
+  const errCode =
+    programMessages.EXCEPTION_CODE + "_" + BotMessages.READ.EXCEPTION_CODE;
+  try {
+    const bot = await Bot.query().findById(req.params.id);
+    if (bot) {
+      const conversationLogics = await ConversationLogic.query().findByIds(
+        bot.logicIDs
+      );
+      const userSegments = await UserSegment.query()
+        .findByIds(bot.users)
+        .withGraphFetched("[allService, byIDService, byPhoneService]");
+      for (let j = 0; j < conversationLogics.length; j++) {
+        const adapterID = conversationLogics[j].adapter;
+        conversationLogics[j].adapter = await Adapter.query().findById(
+          adapterID
+        );
+      }
+      bot.userSegments = userSegments;
+      bot.logic = conversationLogics;
+      rspObj.responseCode = responseCode.SUCCESS;
+      rspObj.result = { data: bot };
+      return res.status(200).send(successResponse(rspObj));
+    } else {
+      rspObj.errCode = BotMessages.READ.MISSING_CODE;
+      rspObj.errMsg = BotMessages.READ.MISSING_MESSAGE;
+      rspObj.responseCode = responseCode.CLIENT_ERROR;
+      return res
+        .status(400)
+        .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+      res.send({ error: `Bot with id ${req.params.id} not found` });
     }
-    bot.userSegments = userSegments;
-    bot.logic = conversationLogics;
-    res.send({ data: bot });
-  } else res.send({ error: `Bot with id ${req.params.id} not found` });
+  } catch (e) {
+    rspObj.errCode = BotMessages.READ.FAILED_CODE;
+    rspObj.errMsg = BotMessages.READ.FAILED_MESSAGE;
+    rspObj.responseCode = responseCode.CLIENT_ERROR;
+    return res
+      .status(400)
+      .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+  }
 }
 
 async function get(req, res) {
-  const batchSize = req.query.perPage;
-  const page = req.query.page - 1;
-  const botsData = await Bot.query().page(page, batchSize);
-  const data = [];
-  for (let i = 0; i < botsData.results.length; i++) {
-    let bot = botsData.results[i];
-    const conversationLogics = await ConversationLogic.query().findByIds(
-      bot.logicIDs
-    );
-    for (let j = 0; j < conversationLogics.length; j++) {
-      const adapterID = conversationLogics[j].adapter;
-      conversationLogics[j].adapter = await Adapter.query().findById(adapterID);
+  const rspObj = req.rspObj;
+  const errCode =
+    programMessages.EXCEPTION_CODE + "_" + BotMessages.READ.EXCEPTION_CODE;
+  try {
+    const batchSize = req.query.perPage;
+    const page = req.query.page - 1;
+    const botsData = await Bot.query().page(page, batchSize);
+    const data = [];
+    for (let i = 0; i < botsData.results.length; i++) {
+      let bot = botsData.results[i];
+      const conversationLogics = await ConversationLogic.query().findByIds(
+        bot.logicIDs
+      );
+      for (let j = 0; j < conversationLogics.length; j++) {
+        const adapterID = conversationLogics[j].adapter;
+        conversationLogics[j].adapter = await Adapter.query().findById(
+          adapterID
+        );
+      }
+      const userSegments = await UserSegment.query().findByIds(bot.users);
+      bot.logic = conversationLogics;
+      bot.userSegments = userSegments;
+      data.push(bot);
     }
-    const userSegments = await UserSegment.query().findByIds(bot.users);
-    bot.logic = conversationLogics;
-    bot.userSegments = userSegments;
-    data.push(bot);
+    rspObj.responseCode = responseCode.SUCCESS;
+    rspObj.result = { data, total: botsData.total };
+    return res.status(200).send(successResponse(rspObj));
+  } catch (e) {
+    rspObj.errCode = BotMessages.READ.FAILED_CODE;
+    rspObj.errMsg = BotMessages.READ.FAILED_MESSAGE;
+    rspObj.responseCode = responseCode.CLIENT_ERROR;
+    return res
+      .status(400)
+      .send(errorResponse(rspObj, errCode + errorCode.CODE1));
   }
-  res.send({ data, total: botsData.total });
 }
 
 async function startByID(req, res) {
-  const id = req.params.id;
-  fetch(`${UCI_CORE_URL}/start?campaignId=${id}`)
-    .then(async (s) => {
-      await Bot.query().findById(req.params.id).patch({ status: "enabled" });
-      res.status(200).send({ status: "Bot Triggered" });
-    })
-    .catch((e) => {
-      res
-        .status(400)
-        .send({ status: "Exception in triggering Bot", error: e.message });
-    });
+  const rspObj = req.rspObj;
+  const errCode =
+    programMessages.EXCEPTION_CODE + "_" + BotMessages.START.EXCEPTION_CODE;
+  try {
+    const id = req.params.id;
+    fetch(`${UCI_CORE_URL}/start?campaignId=${id}`)
+      .then(async (s) => {
+        await Bot.query().findById(req.params.id).patch({ status: "enabled" });
+        rspObj.responseCode = responseCode.SUCCESS;
+        rspObj.result = { status: "Bot Triggered" };
+        return res.status(200).send(successResponse(rspObj));
+      })
+      .catch((e) => {
+        rspObj.errCode = BotMessages.START.FAILED_CODE;
+        rspObj.errMsg = BotMessages.START.FAILED_MESSAGE;
+        rspObj.responseCode = responseCode.CLIENT_ERROR;
+        return res
+          .status(400)
+          .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+      });
+  } catch (e) {
+    rspObj.errCode = BotMessages.START.FAILED_CODE;
+    rspObj.errMsg = BotMessages.START.FAILED_MESSAGE;
+    rspObj.responseCode = responseCode.CLIENT_ERROR;
+    return res
+      .status(400)
+      .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+  }
 }
 
 async function pauseByID(req, res) {
-  const id = req.params.id;
-  fetch(`${UCI_CORE_URL}/pause?campaignId=${id}`)
-    .then(async (s) => {
-      await Bot.query().findById(req.params.id).patch({ status: "disabled" });
-      res.status(200).send({ status: "Bot Paused" });
-    })
-    .catch((e) => {
-      res
-        .status(400)
-        .send({ status: "Exception in triggering Bot", error: e.message });
-    });
+  const rspObj = req.rspObj;
+  const errCode =
+    programMessages.EXCEPTION_CODE + "_" + BotMessages.PAUSE.EXCEPTION_CODE;
+  try {
+    const id = req.params.id;
+    fetch(`${UCI_CORE_URL}/pause?campaignId=${id}`)
+      .then(async (s) => {
+        await Bot.query().findById(req.params.id).patch({ status: "disabled" });
+        rspObj.responseCode = responseCode.SUCCESS;
+        rspObj.result = { status: "Bot Paused" };
+        return res.status(200).send(successResponse(rspObj));
+      })
+      .catch((e) => {
+        rspObj.errCode = BotMessages.PAUSE.FAILED_CODE;
+        rspObj.errMsg = BotMessages.PAUSE.FAILED_MESSAGE;
+        rspObj.responseCode = responseCode.CLIENT_ERROR;
+        return res
+          .status(400)
+          .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+      });
+  } catch (e) {
+    rspObj.errCode = BotMessages.PAUSE.FAILED_CODE;
+    rspObj.errMsg = BotMessages.PAUSE.FAILED_MESSAGE;
+    rspObj.responseCode = responseCode.CLIENT_ERROR;
+    return res
+      .status(400)
+      .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+  }
 }
 
 async function getAllUsers(req, res) {
-  console.log(req.params);
-  const bot = await Bot.query().findById(req.params.id);
-  const userSegment = await UserSegment.query()
-    .findByIds(bot.users)
-    .withGraphFetched("[allService, byIDService, byPhoneService]");
-  const allUsers = await userSegment[0].allService.resolve();
-  res.send({ data: allUsers });
+  const rspObj = req.rspObj;
+  const errCode =
+    programMessages.EXCEPTION_CODE +
+    "_" +
+    BotMessages.GET_BY_PARAM.EXCEPTION_CODE;
+  try {
+    const bot = await Bot.query().findById(req.params.id);
+    const userSegment = await UserSegment.query()
+      .findByIds(bot.users)
+      .withGraphFetched("[allService, byIDService, byPhoneService]");
+    const allUsers = await userSegment[0].allService.resolve();
+    rspObj.responseCode = responseCode.SUCCESS;
+    rspObj.result = { data: allUsers };
+    return res.status(200).send(successResponse(rspObj));
+  } catch (e) {
+    rspObj.errCode = BotMessages.GET_BY_PARAM.FAILED_CODE;
+    rspObj.errMsg = BotMessages.GET_BY_PARAM.FAILED_MESSAGE;
+    rspObj.responseCode = responseCode.CLIENT_ERROR;
+    return res
+      .status(400)
+      .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+  }
 }
 
 async function getByParam(req, res) {
@@ -139,55 +235,80 @@ async function getByParam(req, res) {
 }
 
 async function search(req, res) {
-  const batchSize = req.query.perPage;
-  const page = req.query.page - 1;
-  if (req.query.name) {
-    let bots;
-    if (req.query.match === "true") {
-      console.log("Here");
-      bots = await Bot.query()
-        .where("name", req.query.name)
-        .page(page, batchSize);
-    } else {
-      bots = await Bot.query()
-        .where("name", "ILIKE", `%${req.query.name}%`)
-        .page(page, batchSize);
-    }
+  const rspObj = req.rspObj;
+  const errCode =
+    programMessages.EXCEPTION_CODE + "_" + BotMessages.SEARCH.EXCEPTION_CODE;
+  try {
+    const batchSize = req.query.perPage;
+    const page = req.query.page - 1;
+    if (req.query.name) {
+      let bots;
+      if (req.query.match === "true") {
+        console.log("Here");
+        bots = await Bot.query()
+          .where("name", req.query.name)
+          .page(page, batchSize);
+      } else {
+        bots = await Bot.query()
+          .where("name", "ILIKE", `%${req.query.name}%`)
+          .page(page, batchSize);
+      }
 
-    const botsModified = await Promise.all(
-      bots.results.map(async (bot) => {
-        const conversationLogics = await ConversationLogic.query().findByIds(
-          bot.logicIDs
-        );
-        const userSegments = await UserSegment.query()
-          .findByIds(bot.users)
-          .withGraphFetched("[allService, byIDService, byPhoneService]");
-        for (let j = 0; j < conversationLogics.length; j++) {
-          const adapterID = conversationLogics[j].adapter;
-          conversationLogics[j].adapter = await Adapter.query().findById(
-            adapterID
+      const botsModified = await Promise.all(
+        bots.results.map(async (bot) => {
+          const conversationLogics = await ConversationLogic.query().findByIds(
+            bot.logicIDs
           );
-        }
-        console.log({ userSegments, conversationLogics });
-        bot.userSegments = userSegments;
-        bot.logic = conversationLogics;
-        return bot;
-      })
-    );
-    res.send({ data: botsModified, total: bots.total });
-  } else {
-    res.status(400).send({ status: "Invalid query param" });
+          const userSegments = await UserSegment.query()
+            .findByIds(bot.users)
+            .withGraphFetched("[allService, byIDService, byPhoneService]");
+          for (let j = 0; j < conversationLogics.length; j++) {
+            const adapterID = conversationLogics[j].adapter;
+            conversationLogics[j].adapter = await Adapter.query().findById(
+              adapterID
+            );
+          }
+          console.log({ userSegments, conversationLogics });
+          bot.userSegments = userSegments;
+          bot.logic = conversationLogics;
+          return bot;
+        })
+      );
+      rspObj.responseCode = responseCode.SUCCESS;
+      rspObj.result = { data: botsModified, total: bots.total };
+      return res.status(200).send(successResponse(rspObj));
+    } else {
+      rspObj.errCode = BotMessages.SEARCH.MISSING_CODE;
+      rspObj.errMsg = BotMessages.SEARCH.MISSING_MESSAGE;
+      rspObj.responseCode = responseCode.CLIENT_ERROR;
+      return res
+        .status(400)
+        .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+    }
+  } catch (e) {
+    rspObj.errCode = BotMessages.SEARCH.FAILED_CODE;
+    rspObj.errMsg = BotMessages.SEARCH.FAILED_MESSAGE;
+    rspObj.responseCode = responseCode.CLIENT_ERROR;
+    return res
+      .status(400)
+      .send(errorResponse(rspObj, errCode + errorCode.CODE1));
   }
 }
 
 async function update(req, res) {
+  const rspObj = req.rspObj;
+  const errCode =
+    programMessages.EXCEPTION_CODE + "_" + BotMessages.UPDATE.EXCEPTION_CODE;
   const data = req.body.data;
   const isExisting = (await Bot.query().findById(req.params.id)) !== undefined;
 
   if (!isExisting) {
-    res.status(400).send({
-      status: `ConversationLogic does not exists with the id ${req.params.id}`,
-    });
+    rspObj.errCode = BotMessages.UPDATE.BOT_NOT_EXIST_CODE;
+    rspObj.errMsg = BotMessages.UPDATE.BOT_NOT_EXIST_MESSAGE;
+    rspObj.responseCode = responseCode.CLIENT_ERROR;
+    return res
+      .status(400)
+      .send(errorResponse(rspObj, errCode + errorCode.CODE1));
   } else {
     try {
       const trx = await Bot.startTransaction();
@@ -216,84 +337,158 @@ async function update(req, res) {
           .patch(data)
           .findById(req.params.id);
         await trx.commit();
-        res.send({ data: "Patched" });
+        rspObj.responseCode = responseCode.SUCCESS;
+        rspObj.result = { data: inserted };
+        return res.status(200).send(successResponse(rspObj));
       } else {
         await trx.rollback();
-        res
+        rspObj.errCode = BotMessages.UPDATE.INVALID_USER_SEGMENT_CODE;
+        rspObj.errMsg = BotMessages.UPDATE.INVALID_USER_SEGMENT_MESSAGE;
+        rspObj.responseCode = responseCode.CLIENT_ERROR;
+        return res
           .status(400)
-          .send({ status: "Error", error: "Invalid transformer ID" });
+          .send(errorResponse(rspObj, errCode + errorCode.CODE1));
       }
     } catch (e) {
       console.error(e);
       await trx.rollback();
-      res.send({ data: "ConversationLogic could not be registered." });
+      rspObj.errCode = BotMessages.UPDATE.FAILED_CODE;
+      rspObj.errMsg = BotMessages.UPDATE.FAILED_MESSAGE;
+      rspObj.responseCode = responseCode.CLIENT_ERROR;
+      return res
+        .status(400)
+        .send(errorResponse(rspObj, errCode + errorCode.CODE1));
     }
   }
 }
 
 async function deleteByID(req, res) {
-  const transformer = await Bot.query().deleteById(req.params.id);
-  res.send({ data: `Number of CLs deleted: ${transformer}` });
+  const rspObj = req.rspObj;
+  const errCode =
+    programMessages.EXCEPTION_CODE + "_" + BotMessages.DELETE.EXCEPTION_CODE;
+  try {
+    if (req.params.id) {
+      const transformer = await Bot.query().deleteById(req.params.id);
+      rspObj.responseCode = responseCode.SUCCESS;
+      rspObj.result = { data: `Number of CLs deleted: ${transformer}` };
+      return res.status(200).send(successResponse(rspObj));
+    } else {
+      rspObj.errCode = BotMessages.DELETE.MISSING_CODE;
+      rspObj.errMsg = BotMessages.DELETE.MISSING_MESSAGE;
+      rspObj.responseCode = responseCode.CLIENT_ERROR;
+      return res
+        .status(400)
+        .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+    }
+  } catch (e) {
+    rspObj.errCode = BotMessages.DELETE.FAILED_CODE;
+    rspObj.errMsg = BotMessages.DELETE.FAILED_MESSAGE;
+    rspObj.responseCode = responseCode.CLIENT_ERROR;
+    return res
+      .status(400)
+      .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+  }
 }
 
 async function insert(req, res) {
-  const data = req.body.data;
-  const isExisting = (await Bot.query().where(data).length) > 0;
+  const rspObj = req.rspObj;
+  const errCode =
+    programMessages.EXCEPTION_CODE + "_" + BotMessages.CREATE.EXCEPTION_CODE;
 
-  if (isExisting) {
-    res.status(400).send({
-      status: `ConversationLogic already exists with the name ${data.name}`,
-    });
-  } else {
-    const trx = await Bot.startTransaction();
-    try {
-      // Loop over transformers to verify if they exist or not.
-      const userSegments = data.users;
-      let isValidUserSegment = true;
-      for (let i = 0; i < userSegments.length; i++) {
-        isValidUserSegment =
-          isValidUserSegment &&
-          (await UserSegment.query().findById(userSegments[i])) instanceof
-            UserSegment;
-      }
-      const CLs = data.logic;
-      let isValidCL = true;
-      for (let i = 0; i < CLs.length; i++) {
-        isValidCL =
-          isValidCL &&
-          (await ConversationLogic.query().findById(CLs[i])) instanceof
-            ConversationLogic;
-      }
+  try {
+    const data = req.body.data;
+    const isExisting = (await Bot.query().where(data).length) > 0;
 
-      data.logicIDs = data.logic;
-      delete data.logic;
-      if (isValidUserSegment && isValidCL) {
-        const inserted = await Bot.query(trx).insert(data);
-        await client
-          .createApplication(inserted.id, {
-            application: {
-              name: inserted.name,
-            },
-          })
-          .then(async (r) => {
-            await trx.commit();
-            res.send({ data: inserted });
-          })
-          .catch(async (e) => {
-            JSON.stringify(e);
-            await trx.rollback();
-            res
-              .status(400)
-              .send({ status: "Error", error: "Invalid transformer ID" });
-          });
-      } else {
+    if (isExisting) {
+      rspObj.errCode = BotMessages.CREATE.ALREADY_EXIST_CODE;
+      rspObj.errMsg = BotMessages.CREATE.ALREADY_EXIST_MESSAGE;
+      rspObj.responseCode = responseCode.CLIENT_ERROR;
+      return res
+        .status(400)
+        .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+    } else {
+      const trx = await Bot.startTransaction();
+      try {
+        // Loop over transformers to verify if they exist or not.
+        const userSegments = data.users;
+        let isValidUserSegment = true;
+        for (let i = 0; i < userSegments.length; i++) {
+          isValidUserSegment =
+            isValidUserSegment &&
+            (await UserSegment.query().findById(userSegments[i])) instanceof
+              UserSegment;
+        }
+        const CLs = data.logic;
+        let isValidCL = true;
+        for (let i = 0; i < CLs.length; i++) {
+          isValidCL =
+            isValidCL &&
+            (await ConversationLogic.query().findById(CLs[i])) instanceof
+              ConversationLogic;
+        }
+
+        data.logicIDs = data.logic;
+        delete data.logic;
+        if (isValidUserSegment && isValidCL) {
+          const inserted = await Bot.query(trx).insert(data);
+          await client
+            .createApplication(inserted.id, {
+              application: {
+                name: inserted.name,
+              },
+            })
+            .then(async (r) => {
+              await trx.commit();
+              rspObj.responseCode = responseCode.SUCCESS;
+              rspObj.result = { data: inserted };
+              return res.status(200).send(successResponse(rspObj));
+            })
+            .catch(async (e) => {
+              JSON.stringify(e);
+              await trx.rollback();
+              rspObj.errCode = BotMessages.CREATE.INVALID_TRANSFORMER_CODE;
+              rspObj.errMsg = BotMessages.CREATE.INVALID_TRANSFORMER_MESSAGE;
+              rspObj.responseCode = responseCode.CLIENT_ERROR;
+              rspObj.result = {
+                error: e.message,
+              };
+              return res
+                .status(400)
+                .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+            });
+        } else {
+          await trx.rollback();
+          rspObj.errCode = BotMessages.CREATE.INVALID_USER_SEGMENT_CODE;
+          rspObj.errMsg = BotMessages.CREATE.INVALID_USER_SEGMENT_MESSAGE;
+          rspObj.responseCode = responseCode.CLIENT_ERROR;
+          rspObj.result = {
+            error: e.message,
+          };
+          return res
+            .status(400)
+            .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+        }
+      } catch (e) {
+        console.error(e);
         await trx.rollback();
+        rspObj.errCode = BotMessages.CREATE.FAILED_CODE;
+        rspObj.errMsg = BotMessages.CREATE.INVALID_USER_SEGMENT;
+        rspObj.responseCode = responseCode.CLIENT_ERROR;
+        rspObj.result = {
+          error: e.message,
+        };
+        return res
+          .status(400)
+          .send(errorResponse(rspObj, errCode + errorCode.CODE1));
       }
-    } catch (e) {
-      console.error(e);
-      await trx.rollback();
-      res.status(400).send({ data: "Bot could not be registered." });
     }
+  } catch (e) {
+    rspObj.errCode = BotMessages.CREATE.FAILED_CODE;
+    rspObj.errMsg = BotMessages.CREATE.FAILED_MESSAGE;
+    rspObj.responseCode = responseCode.CLIENT_ERROR;
+    return res
+      .status(400)
+      .send(errorResponse(rspObj, errCode + errorCode.CODE1));
   }
 }
 

@@ -30,13 +30,13 @@ async function getByID(req, res) {
 async function update(req, res) {
   const data = req.body.data;
   const rspObj = req.rspObj;
+  const errCode =
+    programMessages.EXCEPTION_CODE + "_" + CLMessages.UPDATE.EXCEPTION_CODE;
 
   try {
     const isExisting =
       (await ConversationLogic.query().findById(req.params.id)) !== undefined;
 
-    const errCode =
-      programMessages.EXCEPTION_CODE + "_" + CLMessages.UPDATE.EXCEPTION_CODE;
     if (!isExisting) {
       rspObj.errCode = CLMessages.UPDATE.MISSING_CODE_CL;
       rspObj.errMsg = CLMessages.UPDATE.MISSING_CL_MESSAGE;
@@ -167,7 +167,11 @@ async function insert(req, res) {
             name: data.name,
           });
           await trx.commit();
-          res.send({ data: inserted });
+          rspObj.responseCode = responseCode.SUCCESS;
+          rspObj.result = {
+            inserted,
+          };
+          return res.status(200).send(successResponse(rspObj));
         } else {
           await trx.rollback();
           rspObj.errCode = CLMessages.CREATE.MISSING_CODE_TRANSFORMER;

@@ -1024,4 +1024,116 @@ exports.CONVERSATION_LOGIC = {
   },
 };
 
-exports.USER_SEGMENT = {};
+exports.USER_SEGMENT = {
+  READ: {
+    EXCEPTION_CODE: "USRED",
+    FAILED_CODE: "ERROR_READING_USER_SEGMENT_REQUEST",
+    FAILED_MESSAGE:
+      "Error fetching user segment request for the requested process_id",
+    INFO: "Read user segment",
+  },
+  SEARCH: {
+    EXCEPTION_CODE: "USSER",
+    MISSING_CODE: "ERR_SEARCHING_USER_SEGMENTT",
+    MISSING_MESSAGE: "Required fields like filters are missing",
+    FAILED_CODE: "ERROR_SEARCHING_BUSER_SEGMENT",
+    FAILED_MESSAGE: "Unable to search for user segment",
+    INFO: "Search user segment",
+  },
+  CREATE: {
+    EXCEPTION_CODE: "USCRT",
+    MISSING_CODE: "ERR_CREATE_USER_SEGMENT",
+    MISSING_MESSAGE:
+      "Required fields to create user segment request are missing",
+    FAILED_CODE: "ERR_CREATE_BULK_JOB_REQUEST_FAILED",
+    FAILED_MESSAGE: "Unable to create the user segment request",
+    INFO: "Create user segment",
+  },
+  QUERY_BUILDER: {
+    EXCEPTION_CODE: "USQB",
+    MISSING_CODE: "ERR_QUERY_BUILDER",
+    MISSING_MESSAGE: "Required fields to create query request are missing",
+    FAILED_CODE: "ERR_CREATE_BULK_JOB_REQUEST_FAILED",
+    FAILED_MESSAGE: "Unable to create the query builder request",
+    INFO: "Create bulk Job",
+  },
+};
+
+exports.BOT = {
+  READ: {
+    EXCEPTION_CODE: "BORED",
+    MISSING_CODE: "ERR_CREATE_BOT",
+    MISSING_MESSAGE: "Required fields to create bot request are missing",
+    FAILED_CODE: "ERROR_READING_BOT_REQUEST",
+    FAILED_MESSAGE: "Error fetching bot request for the requested process_id",
+    INFO: "Read bot",
+  },
+  GET_BY_PARAM: {
+    EXCEPTION_CODE: "BOSER",
+    MISSING_CODE: "ERR_SEARCHING_BOT",
+    MISSING_MESSAGE: "Required fields like filters are missing",
+    FAILED_CODE: "ERROR_SEARCHING_BOT",
+    FAILED_MESSAGE: "Unable to search for bot",
+    INFO: "Search bot",
+  },
+  SEARCH: {
+    EXCEPTION_CODE: "BOSER",
+    MISSING_CODE: "ERR_SEARCHING_BOT",
+    MISSING_MESSAGE: "Required fields like filters are missing",
+    FAILED_CODE: "ERROR_SEARCHING_BOT",
+    FAILED_MESSAGE: "Unable to search for bot",
+    INFO: "Search bot",
+  },
+  PAUSE: {
+    EXCEPTION_CODE: "BOPAU",
+    MISSING_CODE: "ERR_FINDING_BOT",
+    MISSING_MESSAGE: "Required fields like filters are missing",
+    FAILED_CODE: "ERROR_PAUSING_BOT",
+    FAILED_MESSAGE: "Unable to pause bot",
+    INFO: "Pause bot",
+  },
+  START: {
+    EXCEPTION_CODE: "BOSTA",
+    MISSING_CODE: "ERR_FINDING_BOT",
+    MISSING_MESSAGE: "Required fields like filters are missing",
+    FAILED_CODE: "ERROR_STARTING_BOT",
+    FAILED_MESSAGE: "Unable to start bot",
+    INFO: "Start bot",
+  },
+  CREATE: {
+    EXCEPTION_CODE: "BOCRT",
+    MISSING_CODE: "ERR_CREATE_BOT",
+    MISSING_MESSAGE: "Required fields to create bot request are missing",
+    ALREADY_EXIST_CODE: "ERR_BOT_ALREADY_EXIST",
+    ALREADY_EXIST_MESSAGE: "Bot already exist with the given name",
+    INVALID_TRANSFORMER_CODE: "ERR_WRONG_TRANSFORMER_ID",
+    INVALID_TRANSFORMER_MESSAGE: "Invalid transformer id",
+    INVALID_USER_SEGMENT_CODE: "ERR_INVALID_USER_SEGMENT",
+    INVALID_USER_SEGMENT_MESSAGE: "Invalid user segment",
+    FAILED_CODE: "ERR_CREATE_BOT_REQUEST_FAILED",
+    FAILED_MESSAGE: "Unable to create the bot request",
+    INFO: "Create bot",
+  },
+  UPDATE: {
+    EXCEPTION_CODE: "BOUPD",
+    MISSING_CODE: "ERR_UPDATE_BOT",
+    MISSING_MESSAGE: "Required fields to create bot request are missing",
+    BOT_NOT_EXIST_CODE: "ERR_BOT_ALREADY_EXIST",
+    BOT_NOT_EXIST_MESSAGE: "Bot already exist with the given name",
+    INVALID_TRANSFORMER_CODE: "ERR_WRONG_TRANSFORMER_ID",
+    INVALID_TRANSFORMER_MESSAGE: "Invalid transformer id",
+    INVALID_USER_SEGMENT_CODE: "ERR_INVALID_USER_SEGMENT",
+    INVALID_USER_SEGMENT_MESSAGE: "Invalid user segment",
+    FAILED_CODE: "ERR_UPDATE_BOT_REQUEST_FAILED",
+    FAILED_MESSAGE: "Unable to update the bot request",
+    INFO: "Create bot",
+  },
+  DELETE: {
+    EXCEPTION_CODE: "BOTDL",
+    MISSING_CODE: "ERR_DELETE_BOT",
+    MISSING_MESSAGE: "Required fields to delete bot request are missing",
+    FAILED_CODE: "ERR_DELETE_BOT_REQUEST_FAILED",
+    FAILED_MESSAGE: "Unable to create the bot request",
+    INFO: "Delete bot",
+  },
+};
