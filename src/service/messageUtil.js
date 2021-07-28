@@ -1072,9 +1072,11 @@ exports.BOT = {
     EXCEPTION_CODE: "BOSER",
     MISSING_CODE: "ERR_SEARCHING_BOT",
     MISSING_MESSAGE: "Required fields like filters are missing",
+    INCORRECT_NAME_CODE: "ERR_SEARCHING_BOT",
+    INCORRECT_NAME_MESSAGE: "No Bot found with this name",
     FAILED_CODE: "ERROR_SEARCHING_BOT",
     FAILED_MESSAGE: "Unable to search for bot",
-    INFO: "Search bot",
+    INFO: "Get By Params Bot",
   },
   SEARCH: {
     EXCEPTION_CODE: "BOSER",
@@ -1138,6 +1140,7 @@ exports.BOT = {
   },
 };
 
+
 exports.ODK = {
   UPLOAD: {
     EXCEPTION_CODE: "ODKUP",
@@ -1190,5 +1193,18 @@ exports.TRANSFORMER = {
     DELETE_CODE: "ID_NOT_EXISTS",
     DELETE_MESSAGE: "ID not present"
   }
+
+
+exports.MIDDLEWARE = {
+  ADD_OWNER: {
+    EXCEPTION_CODE: "MIDOW",
+    UNAUTHORIZED_CODE: "UNAUTHORIZED_REQUEST",
+    UNAUTHORIZED_MESSAGE: "The user is not the owner of the asset.",
+    MISSING_CODE: "ERR_MISSING_OWNER",
+    MISSING_MESSAGE: "Required fields to delete bot request are missing",
+    FAILED_CODE: "ERR_ADD_OWNER_REQUEST_FAILED",
+    FAILED_MESSAGE: "Unable to get requested asset",
+    INFO: "Add Owner",
+  },
 
 };

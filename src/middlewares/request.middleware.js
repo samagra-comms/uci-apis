@@ -10,6 +10,8 @@ var _ = require("underscore"); // done
 var reqMsg = messageUtil.REQUEST;
 var responseCode = messageUtil.RESPONSE_CODE;
 var apiVersions = messageUtil.API_VERSION;
+const programMessages = messageUtil.PROGRAM;
+const MiddlewareMessages = messageUtil.MIDDLEWARE;
 var jwt = require("jsonwebtoken"); // done
 var lodash = require("lodash");
 var configUtil = require("sb-config-util"); // done
@@ -655,7 +657,21 @@ const getReqAsset = (assetString) => {
   else return null;
 };
 
+function isValidReq(req, urlsWithVerification) {
+  return (
+    findOne(req.originalUrl, urlsWithVerification) &&
+    req.query.id !== undefined &&
+    req.query.id !== null
+  );
+}
+
 const addOwnerInfo = (req, res, next) => {
+  const rspObj = req.rspObj;
+  const errCode =
+    programMessages.EXCEPTION_CODE +
+    "_" +
+    MiddlewareMessages.ADD_OWNER.EXCEPTION_CODE;
+
   const urlsWithVerification = [
     "bot/pause",
     "bot/start",
@@ -666,11 +682,11 @@ const addOwnerInfo = (req, res, next) => {
     "conversationLogic/delete/",
   ];
 
-  const asset = getReqAsset(req);
-  const ownerOrgID = req.headers.ownerOrgID;
-  const ownerID = req.headers.ownerID;
+  const asset = getReqAsset(req.headers.asset);
+  const ownerOrgID = req.headers.ownerorgid;
+  const ownerID = req.headers.ownerid;
 
-  if (findOne(req.originalUrl, urlsWithVerification)) {
+  if (isValidReq(req, urlsWithVerification)) {
     if (typeof asset === "string") next();
     else {
       return asset
@@ -678,26 +694,32 @@ const addOwnerInfo = (req, res, next) => {
         .findById(req.params.id)
         .then((s) => {
           if (s && s.ownerID === ownerID) return next();
-          else
-            return res.status(400).send(
-              respUtil.errorResponse({
-                error: "You are not authorized to access this element.",
-              })
-            );
+          else {
+            rspObj.errCode = MiddlewareMessages.ADD_OWNER.UNAUTHORIZED_CODE;
+            rspObj.errMsg = MiddlewareMessages.ADD_OWNER.UNAUTHORIZED_MESSAGE;
+            rspObj.responseCode = responseCode.CLIENT_ERROR;
+            return res.status(400).send(respUtil.errorResponse(rspObj));
+          }
         })
         .catch((e) => {
-          return res.status(400).send(
-            respUtil.errorResponse({
-              error: "You are not authorized to access this element.",
-            })
-          );
+          rspObj.errCode = MiddlewareMessages.ADD_OWNER.FAILED_CODE;
+          rspObj.errMsg = MiddlewareMessages.ADD_OWNER.FAILED_MESSAGE;
+          rspObj.responseCode = responseCode.CLIENT_ERROR;
+          return res.status(400).send(respUtil.errorResponse(rspOb));
         });
     }
   } else {
     //Add headers as part of request
-    req.body.ownerID = ownerID;
-    req.body.ownerOrgID = ownerOrgID;
-    return next();
+    if (ownerOrgID !== undefined && ownerID !== undefined) {
+      req.body.ownerID = ownerID;
+      req.body.ownerOrgID = ownerOrgID;
+      return next();
+    } else {
+      rspObj.errCode = MiddlewareMessages.ADD_OWNER.UNAUTHORIZED_CODE;
+      rspObj.errMsg = MiddlewareMessages.ADD_OWNER.UNAUTHORIZED_MESSAGE;
+      rspObj.responseCode = responseCode.CLIENT_ERROR;
+      return res.status(400).send(respUtil.errorResponse(rspObj));
+    }
   }
 };
 
