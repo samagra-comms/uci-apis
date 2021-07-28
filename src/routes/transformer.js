@@ -9,23 +9,42 @@ const {queue} = require("../service/schedulerService");
 const KafkaService = require("../helpers/kafkaUtil");
 const {Vault} = require("../helpers/vault");
 
+const uuid = require("uuid/v1");
+const messageUtils = require("../service/messageUtil");
+const TransMessages = messageUtils.TRANSFORMER;
+const programMessages = messageUtils.PROGRAM;
+const responseCode = messageUtils.RESPONSE_CODE;
+const errorCode = messageUtils.ERRORCODES;
+
 // Refactor this to move to service
 async function getAll(req, res) {
     const allTransformers = await Transformer.query().withGraphFetched("service");
-    console.log({allTransformers});
     KafkaService.refreshSubscribers(allTransformers);
-    res.send({data: allTransformers});
+    sendSuccessRes(req,allTransformers,res)
 }
 
 async function getByID(req, res) {
+    const errCode =
+    programMessages.EXCEPTION_CODE + "_" + TransMessages.FORM.EXCEPTION_CODE;
     const transformer = await Transformer.query()
         .findById(req.params.id)
         .withGraphFetched("service");
-    res.send({data: transformer});
+        if(transformer){
+            sendSuccessRes(req,transformer,res) 
+        } else{
+            sendErrorRes(req,res,
+                TransMessages.UPDATE.FAIL_CODE,
+                errorCode,
+                TransMessages.UPDATE.FAIL_MESSAGE,
+                `Transformer does not exists with the id ${req.params.id}`,
+                errCode)
+        }
 }
 
 async function update(req, res) {
     const data = req.body.data;
+    const errCode =
+    programMessages.EXCEPTION_CODE + "_" + TransMessages.UPDATE.EXCEPTION_CODE;
     const isExisting =
         (await Transformer.query().findById(req.params.id)) !== undefined;
 
@@ -33,9 +52,12 @@ async function update(req, res) {
     const transformerTxn = await Transformer.startTransaction();
 
     if (!isExisting) {
-        res.status(400).send({
-            status: `Transformer does not exists with the id ${req.params.id}`,
-        });
+        sendErrorRes(req,res,
+            TransMessages.UPDATE.FAIL_CODE,
+            errorCode,
+            TransMessages.UPDATE.FAIL_MESSAGE,
+            `Transformer does not exists with the id ${req.params.id}`,
+            errCode)
     } else {
         const serviceParams = {
             type: data.service.type,
@@ -63,38 +85,62 @@ async function update(req, res) {
             await serviceTxn.commit();
             await transformerTxn.commit();
             const getAgain = await Transformer.query().findById(req.params.id);
-            return res.send({data: getAgain});
+            sendSuccessRes(req,getAgain,res)
 
         } catch (e) {
             await serviceTxn.rollback()
             await transformerTxn.rollback()
-            return res.status(400).send({
-                status: `transformer Cannot Be Updated ${req.params.id}`,
-            });
+            sendErrorRes(req,res,
+                TransMessages.UPDATE.EXCEPTION_CODE,
+                errorCode,
+                TransMessages.UPDATE.FAIL_MESSAGE_1,
+                e,
+                errCode)
         }
 
     }
 }
 
 async function deleteByID(req, res) {
+    const errCode =
+    programMessages.EXCEPTION_CODE + "_" + TransMessages.DELETE.EXCEPTION_CODE;
     const transformer = await Transformer.query().deleteById(req.params.id);
-    res.send({data: `Number of transformers deleted: ${transformer}`});
+    if(transformer === 0){
+        sendErrorRes(req,res,
+            TransMessages.DELETE.DELETE_CODE,
+            errorCode,
+            TransMessages.DELETE.DELETE_MESSAGE,
+            `Transformer does not exists with the id ${req.params.id}`,
+            errCode)
+    }else{
+        let resData = `Number of transformers deleted: ${transformer}`
+        sendSuccessRes(req,resData,res);
+    }
+    
 }
 
 async function dryRun(req, res) {
     // TODO: Dry Run
-    res.send({data: "Success"});
+    sendSuccessRes(req,responseCode.SUCCESS,res);
 }
 
 async function insert(req, res) {
     const data = req.body.data;
+    const errCode =
+    programMessages.EXCEPTION_CODE + "_" + TransMessages.INSERT.EXCEPTION_CODE;
     const isExisting =
         (await (await Transformer.query().where("name", data.name)).length) > 0;
 
     if (isExisting) {
-        res.status(400).send({
-            status: `Transformer already exists with the name ${data.name}`,
-        });
+        sendErrorRes(req,res,
+            TransMessages.INSERT.ALREADY_EXIST_CODE,
+            errorCode,
+            TransMessages.INSERT.ALREADY_EXIST_MESSAGE,
+            `Transformer already exists with the name ${data.name}`,
+            errCode)
+        // res.status(400).send({
+        //     status: `Transformer already exists with the name ${data.name}`,
+        // });
     } else {
         let serviceType = await Service.query().where(data.service)[0];
 
@@ -113,7 +159,13 @@ async function insert(req, res) {
             );
             if (topicCreated === undefined) {
                 await trx.rollback();
-                res.send({data: "Transformer could not be registered."});
+                sendErrorRes(req,res,
+                    TransMessages.INSERT.TRANS_UNDEFINED,
+                    errorCode,
+                    TransMessages.INSERT.CANNOT_CREATE,
+                    "Transformer could not be registered.",
+                    errCode)
+                // res.send({data: "Transformer could not be registered."});
             } else {
                 await trx.commit();
                 const transformer = await Transformer.query()
@@ -121,16 +173,25 @@ async function insert(req, res) {
                     .withGraphFetched("service");
                 KafkaService.refreshSubscribers([transformer]);
                 transformer.service = serviceType;
-                res.send({data: transformer});
+                sendSuccessRes(req,transformer,res);
+                // res.send({data: transformer});
             }
         } catch (e) {
             console.error(e);
-            res.send({data: "Transformer could not be registered."});
+            sendErrorRes(req,res,
+                TransMessages.INSERT.EXCEPTION_CODE,
+                errorCode,
+                TransMessages.INSERT.CANNOT_CREATE,
+                e,
+                errCode)
+            // res.send({data: "Transformer could not be registered."});
         }
     }
 }
 
 async function getForms(req, res) {
+    const errCode =
+    programMessages.EXCEPTION_CODE + "_" + TransMessages.FORM.EXCEPTION_CODE;
     const transformer = await Transformer.query()
         .findById(req.params.id)
         .withGraphFetched("service");
@@ -172,13 +233,71 @@ async function getForms(req, res) {
             transformer.service.config.credentials
         );
         const forms = await getODKForms(credentials);
-        res.send({data: forms});
+        sendSuccessRes(req,forms,res);
+        // res.send({data: forms});
     } else {
-        res
-            .status(400)
-            .send({status: "Error", error: "Transformer is not of ODK type"});
+        sendErrorRes(req,res,
+            TransMessages.FORM.FORM_FAIL_CODE,
+            errorCode,
+            TransMessages.FORM.FORM_FAIL_MESSAGE,
+            "Transformer is not of ODK type",
+            errCode)
+        // res
+        //     .status(400)
+        //     .send({status: "Error", error: "Transformer is not of ODK type"});
     }
 }
+
+function getParams(msgId, status, errCode, msg) {
+    var params = {};
+    params.resmsgid = uuid();
+    params.msgid = msgId || null;
+    params.status = status;
+    params.err = errCode;
+    params.errmsg = msg;
+  
+    return params;
+  }
+  
+  function sendErrorRes(rspObj,res,errCode,errorCode,errMsg,error){
+      rspObj.errCode = errCode;
+      rspObj.errMsg = errMsg;
+      rspObj.responseCode = responseCode.CLIENT_ERROR;
+      rspObj.result = {
+        error: error,
+      };
+      return res
+        .status(400)
+        .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+  }
+  
+  function sendSuccessRes(rspObj,resData,res){
+      rspObj.responseCode = responseCode.SUCCESS;
+      rspObj.result = { data: resData };
+      return res.status(200).send(successResponse(rspObj)); 
+  }
+  
+  function successResponse(data) {
+    var response = {};
+    response.id = data.apiId;
+    response.ver = data.apiVersion;
+    response.ts = new Date();
+    response.params = getParams(data.msgid, "successful", null, null);
+    response.responseCode = data.responseCode || "OK";
+    response.result = data.result;
+    return response;
+  }
+  
+  function errorResponse(data, errCode) {
+    var response = {};
+    response.id = data.apiId;
+    response.ver = data.apiVersion;
+    response.ts = new Date();
+    response.params = getParams(data.msgId, "failed", data.errCode, data.errMsg);
+    response.responseCode = errCode + "_" + data.responseCode;
+    response.result = data.result;
+    return response;
+  }
 
 module.exports = function (app) {
     app

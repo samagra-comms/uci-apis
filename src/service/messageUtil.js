@@ -1137,3 +1137,58 @@ exports.BOT = {
     INFO: "Delete bot",
   },
 };
+
+exports.ODK = {
+  UPLOAD: {
+    EXCEPTION_CODE: "ODKUP",
+    FAIL_CODE: "ERR_PARSE_FORM",
+    FAIL_MESSAGE: "Error in uploading Form - Error in parsing form",
+    FORMID_FAIL_MESSAGE:"FormID could not be parsed. Please check the form",
+    UPLOAD_FAIL_ADMIN: "Error in uploading Form - Contact Admin",
+    UPLOAD_FAIL_MESSAGE: "Error in uploading Form",
+  },
+
+};
+
+exports.ADAPTER = {
+  UPDATE: {
+    EXCEPTION_CODE: "ADAPTER_UP",
+    FAIL_CODE: "ADAPTER_NOT_EXISTS",
+    FAIL_MESSAGE: "Adapter does not exists",
+    FAIL_MESSAGE_1:"Adapter Cannot be Updated",
+  },
+  INSERT: {
+    EXCEPTION_CODE: "ADAPTER_IN",
+    ALREADY_EXIST_CODE: "ADAPTER_ALREDAY_PRESENT",
+    ALREADY_EXIST_MESSAGE: "Adapter already exists",
+    CANNOT_CREATE: "Adapter Cannot be created",
+  }
+
+};
+
+exports.TRANSFORMER = {
+  UPDATE: {
+    EXCEPTION_CODE: "TRANS_UP",
+    FAIL_CODE: "TRANSFORMER_NOT_EXISTS",
+    FAIL_MESSAGE: "Transformer does not exists",
+    FAIL_MESSAGE_1:"Transformer Cannot be Updated",
+  },
+  INSERT: {
+    EXCEPTION_CODE: "TRANS_IN",
+    ALREADY_EXIST_CODE: "TRANSFORMER_ALREDAY_PRESENT",
+    ALREADY_EXIST_MESSAGE: "Transformer already exists",
+    CANNOT_CREATE: "Transformer could not be registered",
+    TRANS_UNDEFINED: "Transformer undefined",
+  },
+  FORM: {
+    EXCEPTION_CODE: "TRANS_FORM",
+    FORM_FAIL_CODE:"NOT_ODK_TYPE",
+    FORM_FAIL_MESSAGE:"Transformer is not of ODK type",
+  },
+  DELETE: {
+    EXCEPTION_CODE: "TRANS_DEL",
+    DELETE_CODE: "ID_NOT_EXISTS",
+    DELETE_MESSAGE: "ID not present"
+  }
+
+};
