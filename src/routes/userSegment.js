@@ -79,11 +79,14 @@ async function getByID(req, res) {
 
 async function search(req, res) {
   const rspObj = req.rspObj;
+  const ownerID = req.body.ownerID;
+  const ownerOrgID = req.body.ownerOrgID;
   const errCode =
     programMessages.EXCEPTION_CODE + "_" + USMessages.SEARCH.EXCEPTION_CODE;
   if (req.param.name !== undefined) {
     try {
       const segments = await UserSegment.query()
+        .where({ ownerID, ownerOrgID })
         .where("name", "ILIKE", `%${req.query.name}%`)
         .withGraphFetched("[allService, byIDService, byPhoneService]");
       await segments.forEach(async (s) => {
@@ -136,6 +139,8 @@ async function getAllUsers(req, res) {
 
 async function insert(req, res) {
   const rspObj = req.rspObj;
+  const ownerID = req.body.ownerID;
+  const ownerOrgID = req.body.ownerOrgID;
   const errCode =
     programMessages.EXCEPTION_CODE + "_" + USMessages.CREATE.EXCEPTION_CODE;
   try {
@@ -170,6 +175,8 @@ async function insert(req, res) {
         data.byID = serviceTypeByID.id;
         data.byPhone = serviceTypeByPhone.id;
         data.count = data.count;
+        data.ownerID = ownerID;
+        data.ownerOrgID = ownerOrgID;
 
         const verified = await Promise.all([
           serviceTypeAll.verify("getAllUsers"),
@@ -498,6 +505,7 @@ module.exports = function (app) {
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.addOwnerInfo,
       getAll
     );
 
@@ -506,6 +514,7 @@ module.exports = function (app) {
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.addOwnerInfo,
       get
     );
 
@@ -514,6 +523,7 @@ module.exports = function (app) {
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.addOwnerInfo,
       search
     );
 
@@ -522,6 +532,7 @@ module.exports = function (app) {
     .post(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.addOwnerInfo,
       insert
     );
 
@@ -530,6 +541,7 @@ module.exports = function (app) {
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.addOwnerInfo,
       getByID
     );
 
@@ -538,6 +550,7 @@ module.exports = function (app) {
     .post(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.addOwnerInfo,
       update
     );
 
@@ -546,6 +559,7 @@ module.exports = function (app) {
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.addOwnerInfo,
       deleteByID
     );
 
@@ -554,6 +568,7 @@ module.exports = function (app) {
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.addOwnerInfo,
       dryRun
     );
 
@@ -562,6 +577,7 @@ module.exports = function (app) {
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.addOwnerInfo,
       getAllUsers
     );
 
@@ -570,6 +586,7 @@ module.exports = function (app) {
     .post(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.addOwnerInfo,
       queryBuilder
     );
 
@@ -578,6 +595,7 @@ module.exports = function (app) {
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.addOwnerInfo,
       addUserToRegistry
     );
 };

@@ -131,6 +131,8 @@ async function deleteByID(req, res) {
 
 async function insert(req, res) {
   const data = req.body.data;
+  const ownerID = req.body.ownerID;
+  const ownerOrgID = req.body.ownerOrgID;
   const rspObj = req.rspObj;
   const isExisting = (await ConversationLogic.query().where(data).length) > 0;
 
@@ -170,6 +172,8 @@ async function insert(req, res) {
             transformers: JSON.stringify(data.transformers),
             adapter: data.adapter,
             name: data.name,
+            ownerID,
+            ownerOrgID,
           });
           await trx.commit();
           response.sendSuccessRes(req,inserted,res);

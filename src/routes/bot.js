@@ -1,6 +1,7 @@
 var express = require("express");
 const { result, forEach } = require("lodash");
 const requestMiddleware = require("../middlewares/request.middleware");
+const addOwnerInfo = require("../middlewares/request.middleware");
 const { FusionAuthClient } = require("fusionauth-node-client");
 const response = require("./response");
 const BASE_URL = "/admin/v1";
@@ -80,7 +81,11 @@ async function get(req, res) {
   try {
     const batchSize = req.query.perPage;
     const page = req.query.page - 1;
-    const botsData = await Bot.query().page(page, batchSize);
+    const ownerID = req.body.ownerID;
+    const ownerOrgID = req.body.ownerOrgID;
+    const botsData = await Bot.query()
+      .where({ ownerID, ownerOrgID })
+      .page(page, batchSize);
     const data = [];
     for (let i = 0; i < botsData.results.length; i++) {
       let bot = botsData.results[i];
@@ -98,6 +103,7 @@ async function get(req, res) {
       bot.userSegments = userSegments;
       data.push(bot);
     }
+
     response.sendSuccessRes(req,{ data, total: botsData.total },res);
     } catch (e) {
     response.sendErrorRes(req,res,
@@ -106,7 +112,6 @@ async function get(req, res) {
       BotMessages.READ.FAILED_MESSAGE,
       e,
       errCode)
-    
   }
 }
 
@@ -192,35 +197,73 @@ async function getAllUsers(req, res) {
 }
 
 async function getByParam(req, res) {
-  if (req.query.name) {
-    const bot = (await Bot.query().where("name", req.query.name))[0];
-    if (bot instanceof Bot) {
-      // Add logic
-      let logic = await ConversationLogic.query().findByIds(bot.logicIDs);
-      bot.logic = logic;
-      res.send({ data: bot });
-    } else
-      res.status(400).send({ status: "Bot not found with the given name." });
-  } else if (req.query.startingMessage) {
-    if (req.query.startingMessage === "") {
-      res.status(400).send({ status: "Invalid query param" });
-    } else {
+  try {
+    const ownerID = req.body.ownerID;
+    const ownerOrgID = req.body.ownerOrgID;
+    if (req.query.name) {
       const bot = (
-        await Bot.query().where("startingMessage", req.query.startingMessage)
+        await Bot.query().where({ name: req.query.name, ownerID, ownerOrgID })
       )[0];
       if (bot instanceof Bot) {
         // Add logic
         let logic = await ConversationLogic.query().findByIds(bot.logicIDs);
         bot.logic = logic;
-        res.send({ data: bot });
-      } else {
-        res
+        rspObj.responseCode = responseCode.SUCCESS;
+        rspObj.result = { data: bot };
+        return res.status(200).send(successResponse(rspObj));
+      } else rspObj.errCode = BotMessages.GET_BY_PARAM.INCORRECT_NAME_CODE;
+      rspObj.errMsg = BotMessages.GET_BY_PARAM.INCORRECT_NAME_MESSAGE;
+      rspObj.responseCode = responseCode.CLIENT_ERROR;
+      return res
+        .status(400)
+        .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+    } else if (req.query.startingMessage) {
+      if (req.query.startingMessage === "") {
+        rspObj.errCode = BotMessages.GET_BY_PARAM.MISSING_CODE;
+        rspObj.errMsg = BotMessages.GET_BY_PARAM.MISSING_MESSAGE;
+        rspObj.responseCode = responseCode.CLIENT_ERROR;
+        return res
           .status(400)
-          .send({ status: "Bot not found with the given startingMessage." });
+          .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+      } else {
+        const bot = (
+          await Bot.query().where({
+            startingMessage: req.query.startingMessage,
+            ownerID,
+            ownerOrgID,
+          })
+        )[0];
+        if (bot instanceof Bot) {
+          // Add logic
+          let logic = await ConversationLogic.query().findByIds(bot.logicIDs);
+          bot.logic = logic;
+          rspObj.responseCode = responseCode.SUCCESS;
+          rspObj.result = { data: bot };
+          return res.status(200).send(successResponse(rspObj));
+        } else {
+          rspObj.errCode = BotMessages.GET_BY_PARAM.FAILED_CODE;
+          rspObj.errMsg = BotMessages.GET_BY_PARAM.FAILED_MESSAGE;
+          rspObj.responseCode = responseCode.CLIENT_ERROR;
+          return res
+            .status(400)
+            .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+        }
       }
+    } else {
+      rspObj.errCode = BotMessages.GET_BY_PARAM.MISSING_CODE;
+      rspObj.errMsg = BotMessages.GET_BY_PARAM.MISSING_MESSAGE;
+      rspObj.responseCode = responseCode.CLIENT_ERROR;
+      return res
+        .status(400)
+        .send(errorResponse(rspObj, errCode + errorCode.CODE1));
     }
-  } else {
-    res.status(400).send({ status: "Invalid query param" });
+  } catch (e) {
+    rspObj.errCode = BotMessages.GET_BY_PARAM.FAILED_CODE;
+    rspObj.errMsg = BotMessages.GET_BY_PARAM.FAILED_MESSAGE;
+    rspObj.responseCode = responseCode.CLIENT_ERROR;
+    return res
+      .status(400)
+      .send(errorResponse(rspObj, errCode + errorCode.CODE1));
   }
 }
 
@@ -231,6 +274,8 @@ async function search(req, res) {
   try {
     const batchSize = req.query.perPage;
     const page = req.query.page - 1;
+    const ownerID = req.body.ownerID;
+    const ownerOrgID = req.body.ownerOrgID;
     if (req.query.name) {
       let bots;
       if (req.query.match === "true") {
@@ -379,6 +424,8 @@ async function deleteByID(req, res) {
 
 async function insert(req, res) {
   const rspObj = req.rspObj;
+  const ownerID = req.body.ownerID;
+  const ownerOrgID = req.body.ownerOrgID;
   const errCode =
     programMessages.EXCEPTION_CODE + "_" + BotMessages.CREATE.EXCEPTION_CODE;
 
@@ -415,6 +462,8 @@ async function insert(req, res) {
         }
 
         data.logicIDs = data.logic;
+        data.ownerID = ownerID;
+        data.ownerOrgID = ownerOrgID;
         delete data.logic;
         if (isValidUserSegment && isValidCL) {
           const inserted = await Bot.query(trx).insert(data);
@@ -515,6 +564,7 @@ module.exports = function (app) {
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.addOwnerInfo,
       get
     );
 
@@ -523,6 +573,7 @@ module.exports = function (app) {
     .post(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.addOwnerInfo,
       insert
     );
 
@@ -531,6 +582,7 @@ module.exports = function (app) {
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.addOwnerInfo,
       getByID
     );
 
@@ -539,6 +591,7 @@ module.exports = function (app) {
     .post(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.addOwnerInfo,
       update
     );
 
@@ -547,6 +600,7 @@ module.exports = function (app) {
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.addOwnerInfo,
       deleteByID
     );
 
@@ -555,6 +609,7 @@ module.exports = function (app) {
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.addOwnerInfo,
       getByParam
     );
 
@@ -563,6 +618,7 @@ module.exports = function (app) {
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.addOwnerInfo,
       search
     );
 
@@ -571,6 +627,7 @@ module.exports = function (app) {
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.addOwnerInfo,
       startByID
     );
 
@@ -579,6 +636,7 @@ module.exports = function (app) {
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.addOwnerInfo,
       pauseByID
     );
 
@@ -587,6 +645,7 @@ module.exports = function (app) {
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.addOwnerInfo,
       getAllUsers
     );
 };
