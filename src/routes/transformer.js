@@ -1,5 +1,6 @@
 var express = require("express");
 const requestMiddleware = require("../middlewares/request.middleware");
+const response = require("./response");
 
 const BASE_URL = "/admin/v1";
 const {Transformer} = require("../models/transformer");
@@ -20,7 +21,7 @@ const errorCode = messageUtils.ERRORCODES;
 async function getAll(req, res) {
     const allTransformers = await Transformer.query().withGraphFetched("service");
     KafkaService.refreshSubscribers(allTransformers);
-    sendSuccessRes(req,allTransformers,res)
+    response.sendSuccessRes(req,allTransformers,res)
 }
 
 async function getByID(req, res) {
@@ -30,9 +31,9 @@ async function getByID(req, res) {
         .findById(req.params.id)
         .withGraphFetched("service");
         if(transformer){
-            sendSuccessRes(req,transformer,res) 
+            response.sendSuccessRes(req,transformer,res) 
         } else{
-            sendErrorRes(req,res,
+            response.sendErrorRes(req,res,
                 TransMessages.UPDATE.FAIL_CODE,
                 errorCode,
                 TransMessages.UPDATE.FAIL_MESSAGE,
@@ -52,7 +53,7 @@ async function update(req, res) {
     const transformerTxn = await Transformer.startTransaction();
 
     if (!isExisting) {
-        sendErrorRes(req,res,
+        response.sendErrorRes(req,res,
             TransMessages.UPDATE.FAIL_CODE,
             errorCode,
             TransMessages.UPDATE.FAIL_MESSAGE,
@@ -85,12 +86,12 @@ async function update(req, res) {
             await serviceTxn.commit();
             await transformerTxn.commit();
             const getAgain = await Transformer.query().findById(req.params.id);
-            sendSuccessRes(req,getAgain,res)
+            response.sendSuccessRes(req,getAgain,res)
 
         } catch (e) {
             await serviceTxn.rollback()
             await transformerTxn.rollback()
-            sendErrorRes(req,res,
+            response.sendErrorRes(req,res,
                 TransMessages.UPDATE.EXCEPTION_CODE,
                 errorCode,
                 TransMessages.UPDATE.FAIL_MESSAGE_1,
@@ -106,7 +107,7 @@ async function deleteByID(req, res) {
     programMessages.EXCEPTION_CODE + "_" + TransMessages.DELETE.EXCEPTION_CODE;
     const transformer = await Transformer.query().deleteById(req.params.id);
     if(transformer === 0){
-        sendErrorRes(req,res,
+        response.sendErrorRes(req,res,
             TransMessages.DELETE.DELETE_CODE,
             errorCode,
             TransMessages.DELETE.DELETE_MESSAGE,
@@ -114,14 +115,14 @@ async function deleteByID(req, res) {
             errCode)
     }else{
         let resData = `Number of transformers deleted: ${transformer}`
-        sendSuccessRes(req,resData,res);
+        response.sendSuccessRes(req,resData,res);
     }
     
 }
 
 async function dryRun(req, res) {
     // TODO: Dry Run
-    sendSuccessRes(req,responseCode.SUCCESS,res);
+    response.sendSuccessRes(req,responseCode.SUCCESS,res);
 }
 
 async function insert(req, res) {
@@ -132,7 +133,7 @@ async function insert(req, res) {
         (await (await Transformer.query().where("name", data.name)).length) > 0;
 
     if (isExisting) {
-        sendErrorRes(req,res,
+        response.sendErrorRes(req,res,
             TransMessages.INSERT.ALREADY_EXIST_CODE,
             errorCode,
             TransMessages.INSERT.ALREADY_EXIST_MESSAGE,
@@ -159,7 +160,7 @@ async function insert(req, res) {
             );
             if (topicCreated === undefined) {
                 await trx.rollback();
-                sendErrorRes(req,res,
+                response.sendErrorRes(req,res,
                     TransMessages.INSERT.TRANS_UNDEFINED,
                     errorCode,
                     TransMessages.INSERT.CANNOT_CREATE,
@@ -173,12 +174,12 @@ async function insert(req, res) {
                     .withGraphFetched("service");
                 KafkaService.refreshSubscribers([transformer]);
                 transformer.service = serviceType;
-                sendSuccessRes(req,transformer,res);
+                response.sendSuccessRes(req,transformer,res);
                 // res.send({data: transformer});
             }
         } catch (e) {
             console.error(e);
-            sendErrorRes(req,res,
+            response.sendErrorRes(req,res,
                 TransMessages.INSERT.EXCEPTION_CODE,
                 errorCode,
                 TransMessages.INSERT.CANNOT_CREATE,
@@ -233,10 +234,10 @@ async function getForms(req, res) {
             transformer.service.config.credentials
         );
         const forms = await getODKForms(credentials);
-        sendSuccessRes(req,forms,res);
+        response.sendSuccessRes(req,forms,res);
         // res.send({data: forms});
     } else {
-        sendErrorRes(req,res,
+        response.sendErrorRes(req,res,
             TransMessages.FORM.FORM_FAIL_CODE,
             errorCode,
             TransMessages.FORM.FORM_FAIL_MESSAGE,
@@ -248,56 +249,56 @@ async function getForms(req, res) {
     }
 }
 
-function getParams(msgId, status, errCode, msg) {
-    var params = {};
-    params.resmsgid = uuid();
-    params.msgid = msgId || null;
-    params.status = status;
-    params.err = errCode;
-    params.errmsg = msg;
+// function getParams(msgId, status, errCode, msg) {
+//     var params = {};
+//     params.resmsgid = uuid();
+//     params.msgid = msgId || null;
+//     params.status = status;
+//     params.err = errCode;
+//     params.errmsg = msg;
   
-    return params;
-  }
+//     return params;
+//   }
   
-  function sendErrorRes(rspObj,res,errCode,errorCode,errMsg,error){
-      rspObj.errCode = errCode;
-      rspObj.errMsg = errMsg;
-      rspObj.responseCode = responseCode.CLIENT_ERROR;
-      rspObj.result = {
-        error: error,
-      };
-      return res
-        .status(400)
-        .send(errorResponse(rspObj, errCode + errorCode.CODE1));
-  }
+//   function response.sendErrorRes(rspObj,res,errCode,errorCode,errMsg,error){
+//       rspObj.errCode = errCode;
+//       rspObj.errMsg = errMsg;
+//       rspObj.responseCode = responseCode.CLIENT_ERROR;
+//       rspObj.result = {
+//         error: error,
+//       };
+//       return res
+//         .status(400)
+//         .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+//   }
   
-  function sendSuccessRes(rspObj,resData,res){
-      rspObj.responseCode = responseCode.SUCCESS;
-      rspObj.result = { data: resData };
-      return res.status(200).send(successResponse(rspObj)); 
-  }
+//   function response.sendSuccessRes(rspObj,resData,res){
+//       rspObj.responseCode = responseCode.SUCCESS;
+//       rspObj.result = { data: resData };
+//       return res.status(200).send(successResponse(rspObj)); 
+//   }
   
-  function successResponse(data) {
-    var response = {};
-    response.id = data.apiId;
-    response.ver = data.apiVersion;
-    response.ts = new Date();
-    response.params = getParams(data.msgid, "successful", null, null);
-    response.responseCode = data.responseCode || "OK";
-    response.result = data.result;
-    return response;
-  }
+//   function successResponse(data) {
+//     var response = {};
+//     response.id = data.apiId;
+//     response.ver = data.apiVersion;
+//     response.ts = new Date();
+//     response.params = getParams(data.msgid, "successful", null, null);
+//     responseCode = data.responseCode || "OK";
+//     response.result = data.result;
+//     return response;
+//   }
   
-  function errorResponse(data, errCode) {
-    var response = {};
-    response.id = data.apiId;
-    response.ver = data.apiVersion;
-    response.ts = new Date();
-    response.params = getParams(data.msgId, "failed", data.errCode, data.errMsg);
-    response.responseCode = errCode + "_" + data.responseCode;
-    response.result = data.result;
-    return response;
-  }
+//   function errorResponse(data, errCode) {
+//     var response = {};
+//     response.id = data.apiId;
+//     response.ver = data.apiVersion;
+//     response.ts = new Date();
+//     response.params = getParams(data.msgId, "failed", data.errCode, data.errMsg);
+//     responseCode = errCode + "_" + data.responseCode;
+//     response.result = data.result;
+//     return response;
+//   }
 
 module.exports = function (app) {
     app
