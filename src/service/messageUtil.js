@@ -516,6 +516,7 @@ exports.EMAIL = {
 };
 
 exports.HEALTH_CHECK = {
+  EXCEPTION_CODE: "HEALTH_CHECK_SERVICE",
   EK_STEP: {
     NAME: "ekstep.api",
     FAILED_CODE: "CONTENT_PROVIDER_HEALTH_FAILED",
@@ -531,6 +532,54 @@ exports.HEALTH_CHECK = {
     FAILED_CODE: "CASSANDRA_HEALTH_FAILED",
     FAILED_MESSAGE: "Cassandra db is not connected",
   },
+  POSTGRES_DB: {
+    NAME : "postgres.db",
+    SUCCESS_CODE:"PSQL_UP",
+    FAILED_CODE:"POSTGRES_HEALTH_FAILED",
+    FAILED_MESSAGE: "PostgreSQL db is not connected",
+  },
+  KAFKA: {
+    NAME : "kafka",
+    SUCCESS_CODE:"KAFKA_UP",
+    FAILED_CODE:"KAFKA_HEALTH_FAILED",
+    FAILED_MESSAGE: "Kafka is not connected",
+  },
+  GQL: {
+    NAME : "graphql",
+    SUCCESS_CODE:"GQL_UP",
+    FAILED_CODE:"GQL_HEALTH_FAILED",
+    FAILED_MESSAGE: "Graphql is not connected",
+  },
+  FUSION: {
+    NAME : "fusionAuth",
+    SUCCESS_CODE:"FUSIONAUTH_UP",
+    FAILED_CODE:"FUSIONAUTH_HEALTH_FAILED",
+    FAILED_MESSAGE: "FusionAuth is not connected",
+  },
+  REDIS: {
+    NAME : "redis",
+    SUCCESS_CODE:"REDIS_UP",
+    FAILED_CODE:"REDIS_HEALTH_FAILED",
+    FAILED_MESSAGE: "redis is not connected",
+  },
+  CAMPAIGN: {
+    NAME : "campaign",
+    SUCCESS_CODE:"CAMPAIGN_UP",
+    FAILED_CODE:"CAMPAIGN_HEALTH_FAILED",
+    FAILED_MESSAGE: "campaign is not connected",
+  },
+  INBOUND: {
+    NAME : "inbound",
+    SUCCESS_CODE:"INOUND_UP",
+    FAILED_CODE:"INBOUND_HEALTH_FAILED",
+    FAILED_MESSAGE: "inbound is not connected",
+  },
+ TRANSFORMER: {
+    NAME : "transformer",
+    SUCCESS_CODE:"TRANSFORMER_UP",
+    FAILED_CODE:"TRANSFORMER_HEALTH_FAILED",
+    FAILED_MESSAGE: "transformer is not connected",
+  }
 };
 
 exports.DIALCODE = {
@@ -1193,6 +1242,7 @@ exports.TRANSFORMER = {
     DELETE_CODE: "ID_NOT_EXISTS",
     DELETE_MESSAGE: "ID not present"
   }
+};
 
 
 exports.MIDDLEWARE = {
