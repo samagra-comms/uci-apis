@@ -1,11 +1,11 @@
 var express = require("express");
 const { result } = require("lodash");
 const requestMiddleware = require("../middlewares/request.middleware");
-
+const response = require("./response");
 const BASE_URL = "/admin/v1";
 const { Service } = require("../models/service");
 const { UserSegment } = require("../models/userSegment");
-const { Bot } = require("../models/Bot");
+const { Bot } = require("../models/bot");
 const { QueryBuilder } = require("../helpers/userSegment/fusionAuth");
 const { DeviceManager } = require("../helpers/userSegment/deviceManager");
 const messageUtils = require("../service/messageUtil");
@@ -55,25 +55,26 @@ async function get(req, res) {
     if (allSegments) {
       rspObj.responseCode = responseCode.SUCCESS;
       rspObj.result = { data: modifiedData, total: allSegments.total };
-      return res.status(200).send(successResponse(rspObj));
+      return res.status(200).send(response.successResponse(rspObj));
     } else {
       rspObj.responseCode = responseCode.SUCCESS;
       rspObj.result = { data: [], total: 0 };
-      return res.status(200).send(successResponse(rspObj));
+      return res.status(200).send(response.successResponse(rspObj));
     }
   } catch (e) {
-    rspObj.errCode = USMessages.READ.EXCEPTION_CODE;
-    rspObj.errMsg = USMessages.READ.FAILED_MESSAGE;
-    rspObj.responseCode = responseCode.CLIENT_ERROR;
-    return res
-      .status(400)
-      .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+    response.sendErrorRes(req,res,
+      USMessages.READ.EXCEPTION_CODE,
+      errorCode,
+      USMessages.READ.FAILED_MESSAGE,
+      e.message,
+      errCode)
   }
 }
 
 async function getByID(req, res) {
   const transformer = await UserSegment.query().findById(req.params.id);
-  if (transformer) res.send({ data: transformer });
+  if (transformer) response.sendSuccessRes(req,transformer,res);
+
 }
 
 async function search(req, res) {
@@ -97,32 +98,28 @@ async function search(req, res) {
         delete s.byPhoneService;
         return s;
       });
-      rspObj.responseCode = responseCode.SUCCESS;
-      rspObj.result = {
-        data: segments,
-      };
-      return res.status(200).send(successResponse(rspObj));
+      response.sendSuccessRes(req,segments,res);      
     } catch (e) {
-      rspObj.errCode = USMessages.SEARCH.EXCEPTION_CODE;
-      rspObj.errMsg = USMessages.SEARCH.FAILED_MESSAGE;
-      rspObj.responseCode = responseCode.CLIENT_ERROR;
-      return res
-        .status(400)
-        .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+      response.sendErrorRes(req,res,
+        USMessages.SEARCH.EXCEPTION_CODE,
+        errorCode,
+        USMessages.SEARCH.FAILED_MESSAGE,
+        e.message,
+        errCode)      
     }
   } else {
-    rspObj.errCode = USMessages.SEARCH.EXCEPTION_CODE;
-    rspObj.errMsg = USMessages.SEARCH.MISSING_MESSAGE;
-    rspObj.responseCode = responseCode.CLIENT_ERROR;
-    return res
-      .status(400)
-      .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+    response.sendErrorRes(req,res,
+      USMessages.SEARCH.EXCEPTION_CODE,
+      errorCode,
+      USMessages.SEARCH.FAILED_MESSAGE,
+      USMessages.SEARCH.FAILED_MESSAGE,
+      errCode)    
   }
 }
 
 async function deleteByID(req, res) {
   const transformer = await UserSegment.query().deleteById(req.params.id);
-  res.send({ data: `Number of transformers deleted: ${transformer}` });
+  response.sendSuccessRes(req,`Number of transformers deleted: ${transformer}`,res);
 }
 
 async function dryRun(req, res) {
@@ -209,43 +206,36 @@ async function insert(req, res) {
           delete getAgain.allService;
           delete getAgain.byIDService;
           delete getAgain.byPhoneService;
-          rspObj.responseCode = responseCode.SUCCESS;
-          rspObj.result = {
-            inserted: getAgain,
-          };
-          return res.status(200).send(successResponse(rspObj));
+          response.sendSuccessRes(req,getAgain,res);          
         } else {
           await trx.rollback();
           console.error(e);
           trx.rollback();
-          rspObj.errCode = USMessages.CREATE.EXCEPTION_CODE;
-          rspObj.errMsg = USMessages.CREATE.FAILED_MESSAGE;
-          rspObj.responseCode = responseCode.CLIENT_ERROR;
-          rspObj.result = {
-            error: "UserSegment could not be registered. Services down.",
-          };
-          return res
-            .status(400)
-            .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+          response.sendErrorRes(req,res,
+            USMessages.CREATE.EXCEPTION_CODE,
+            errorCode,
+            USMessages.CREATE.FAILED_MESSAGE,
+            "UserSegment could not be registered. Services down.",
+            errCode)          
         }
       } catch (e) {
         console.error(e);
         trx.rollback();
-        rspObj.errCode = USMessages.CREATE.EXCEPTION_CODE;
-        rspObj.errMsg = USMessages.CREATE.FAILED_MESSAGE;
-        rspObj.responseCode = responseCode.CLIENT_ERROR;
-        return res
-          .status(400)
-          .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+        response.sendErrorRes(req,res,
+          USMessages.CREATE.EXCEPTION_CODE,
+          errorCode,
+          USMessages.CREATE.FAILED_MESSAGE,
+          e,
+          errCode)        
       }
     }
   } catch (e) {
-    rspObj.errCode = USMessages.CREATE.EXCEPTION_CODE;
-    rspObj.errMsg = USMessages.CREATE.FAILED_MESSAGE;
-    rspObj.responseCode = responseCode.CLIENT_ERROR;
-    return res
-      .status(400)
-      .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+    response.sendErrorRes(req,res,
+      USMessages.CREATE.EXCEPTION_CODE,
+      errorCode,
+      USMessages.CREATE.FAILED_MESSAGE,
+      e,
+      errCode)
   }
 }
 
@@ -313,11 +303,7 @@ async function update(req, res) {
       delete getAgain.allService;
       delete getAgain.byIDService;
       delete getAgain.byPhoneService;
-      rspObj.responseCode = responseCode.SUCCESS;
-      rspObj.result = {
-        inserted: getAgain,
-      };
-      return res.status(200).send(successResponse(rspObj));
+      response.sendSuccessRes(req,getAgain,res);
     } else {
       await trx.rollback();
       return res.send({
@@ -406,7 +392,7 @@ async function queryBuilder(req, res) {
         byID: byIDConfig,
         byPhone: byPhoneConfig,
       };
-      return res.status(200).send(successResponse(rspObj));
+      return res.status(200).send(response.successResponse(rspObj));
     } else {
       rspObj.errCode = USMessages.QUERY_BUILDER.EXCEPTION_CODE;
       rspObj.errMsg = USMessages.QUERY_BUILDER.FAILED_MESSAGE;
@@ -417,15 +403,15 @@ async function queryBuilder(req, res) {
       };
       return res
         .status(400)
-        .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+        .send(response.errorResponse(rspObj, errCode + errorCode.CODE1));
     }
   } catch (e) {
-    rspObj.errCode = USMessages.QUERY_BUILDER.EXCEPTION_CODE;
-    rspObj.errMsg = USMessages.QUERY_BUILDER.FAILED_MESSAGE;
-    rspObj.responseCode = responseCode.CLIENT_ERROR;
-    return res
-      .status(400)
-      .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+    response.sendErrorRes(req,res,
+      USMessages.QUERY_BUILDER.EXCEPTION_CODE,
+      errorCode,
+      USMessages.QUERY_BUILDER.FAILED_MESSAGE,
+      e,
+      errCode)    
   }
 }
 

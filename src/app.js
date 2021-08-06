@@ -1,4 +1,4 @@
-try {
+  try {
   const env = require("dotenv").config();
   const createError = require("http-errors");
   const express = require("express");
@@ -51,13 +51,16 @@ try {
     app.use(
       "/v1/graphql",
       proxy(`${process.env.GRAPHQL_BASE_URL}/v1/graphql`, {
-        proxyReqOptDecorator: function (proxyReqOpts, srcReq) {
+       
+        proxyReqOptDecorator: function (proxyReqOpts, srcReq) {         
           proxyReqOpts.headers = {
             "x-hasura-admin-secret": `${process.env.HASURA_GRAPHQL_ADMIN_SECRET}`,
-          };
+          };         
           return proxyReqOpts;
         },
+
         proxyReqPathResolver: (req) => {
+          console.log("log:",url.parse(req.baseUrl).path)
           return url.parse(req.baseUrl).path;
         },
       })
@@ -71,6 +74,16 @@ try {
     require("./routes/conversationLogic")(app);
     require("./routes/bot")(app);
     require("./routes/odk")(app);
+    require("./healthCheck/DB")(app);
+    require("./healthCheck/kafka")(app);
+    require("./healthCheck/gql")(app);
+    require("./healthCheck/fusionAuth")(app);
+    require("./healthCheck/redis")(app);
+    require("./healthCheck/campagin")(app);
+    require("./healthCheck/test")(app);
+    require("./healthCheck/inbound")(app);
+    require("./healthCheck/transformer")(app);
+    require("./healthCheck/health")(app);
     module.exports = app;
     return app;
   };

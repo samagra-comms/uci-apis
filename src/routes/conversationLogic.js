@@ -8,6 +8,7 @@ const { Vault } = require("../helpers/vault");
 const messageUtils = require("../service/messageUtil");
 const { Adapter } = require("../models/adapter");
 const { Transformer } = require("../models/transformer");
+const response = require("./response");
 const CLMessages = messageUtils.CONVERSATION_LOGIC;
 const programMessages = messageUtils.PROGRAM;
 const responseCode = messageUtils.RESPONSE_CODE;
@@ -38,22 +39,22 @@ async function update(req, res) {
       (await ConversationLogic.query().findById(req.params.id)) !== undefined;
 
     if (!isExisting) {
-      rspObj.errCode = CLMessages.UPDATE.MISSING_CODE_CL;
-      rspObj.errMsg = CLMessages.UPDATE.MISSING_CL_MESSAGE;
-      rspObj.responseCode = responseCode.CLIENT_ERROR;
-      return res
-        .status(400)
-        .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+      response.sendErrorRes(req,res,
+        CLMessages.UPDATE.MISSING_CODE_CL,
+        errorCode,
+        CLMessages.UPDATE.MISSING_CL_MESSAGE,
+        CLMessages.UPDATE.MISSING_CL_MESSAGE,
+        errCode)
     } else {
       if (data.adapter) {
         let adapter = await Adapter.query().findById(data.adapter);
         if (!adapter) {
-          rspObj.errCode = CLMessages.UPDATE.MISSING_CODE_ADAPTER;
-          rspObj.errMsg = CLMessages.UPDATE.MISSING_ADAPTER_MESSAGE;
-          rspObj.responseCode = responseCode.CLIENT_ERROR;
-          return res
-            .status(400)
-            .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+          response.sendErrorRes(req,res,
+            CLMessages.UPDATE.MISSING_CODE_ADAPTER,
+            errorCode,
+            CLMessages.UPDATE.MISSING_ADAPTER_MESSAGE,
+            CLMessages.UPDATE.MISSING_ADAPTER_MESSAGE,
+            errCode)
         }
       }
 
@@ -72,29 +73,27 @@ async function update(req, res) {
           .patch({ name: data.name, adapter: data.adapter })
           .findById(req.params.id);
         const d = await trx.commit();
-        rspObj.responseCode = responseCode.SUCCESS;
-        rspObj.result = inserted;
         loggerService.exitLog({ responseCode: rspObj.responseCode }, logObject);
-        return res.status(200).send(successResponse(rspObj));
+        response.sendSuccessRes(req,inserted,res);
       } else {
         await trx.rollback();
-        rspObj.errCode = CLMessages.UPDATE.MISSING_CODE_TRANSFORMER;
-        rspObj.errMsg = CLMessages.UPDATE.MISSING_TRANSFORMER_MESSAGE;
-        rspObj.responseCode = responseCode.CLIENT_ERROR;
-        return res
-          .status(400)
-          .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+        response.sendErrorRes(req,res,
+          CLMessages.UPDATE.MISSING_CODE_TRANSFORMER,
+          errorCode,
+          CLMessages.UPDATE.MISSING_TRANSFORMER_MESSAGE,
+          CLMessages.UPDATE.MISSING_TRANSFORMER_MESSAGE,
+          errCode)
       }
     }
   } catch (e) {
     console.error(e);
     await trx.rollback();
-    rspObj.errCode = CLMessages.UPDATE.UPDATE_FAILED_CODE;
-    rspObj.errMsg = CLMessages.UPDATE.UPDATE_FAILED_MESSAGE;
-    rspObj.responseCode = responseCode.CLIENT_ERROR;
-    return res
-      .status(400)
-      .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+    response.sendErrorRes(req,res,
+      CLMessages.UPDATE.UPDATE_FAILED_CODE,
+      errorCode,
+      CLMessages.UPDATE.UPDATE_FAILED_MESSAGE,
+      CLMessages.UPDATE.UPDATE_FAILED_MESSAGE,
+      errCode)
   }
 }
 
@@ -110,17 +109,23 @@ async function deleteByID(req, res) {
           programMessages.EXCEPTION_CODE +
           "_" +
           CLMessages.DELETE.EXCEPTION_CODE;
-        return res
-          .status(400)
-          .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+          response.sendErrorRes(req,res,
+            null,
+            errorCode,
+            null,
+            null,
+            errCode)
       }
     })
     .catch((e) => {
       const errCode =
         programMessages.EXCEPTION_CODE + "_" + CLMessages.DELETE.EXCEPTION_CODE;
-      return res
-        .status(400)
-        .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+        response.sendErrorRes(req,res,
+          null,
+          errorCode,
+          null,
+          null,
+          errCode)
     });
 }
 
@@ -136,21 +141,21 @@ async function insert(req, res) {
   const trx = await ConversationLogic.startTransaction();
   try {
     if (isExisting) {
-      rspObj.errCode = CLMessages.CREATE.ALREADY_EXIST_CODE;
-      rspObj.errMsg = CLMessages.CREATE.ALREADY_EXIST_MESSAGE;
-      rspObj.responseCode = responseCode.CLIENT_ERROR;
-      return res
-        .status(400)
-        .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+      response.sendErrorRes(req,res,
+        CLMessages.CREATE.ALREADY_EXIST_CODE,
+        errorCode,
+        CLMessages.CREATE.ALREADY_EXIST_MESSAGE,
+        CLMessages.CREATE.ALREADY_EXIST_MESSAGE,
+        errCode)
     } else {
       let adapter = await Adapter.query().findById(data.adapter);
       if (!(adapter instanceof Adapter)) {
-        rspObj.errCode = CLMessages.CREATE.MISSING_CODE_ADAPTER;
-        rspObj.errMsg = CLMessages.CREATE.MISSING_ADAPTER_MESSAGE;
-        rspObj.responseCode = responseCode.CLIENT_ERROR;
-        return res
-          .status(400)
-          .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+        response.sendErrorRes(req,res,
+          CLMessages.CREATE.MISSING_CODE_ADAPTER,
+          errorCode,
+          CLMessages.CREATE.MISSING_ADAPTER_MESSAGE,
+          CLMessages.CREATE.MISSING_ADAPTER_MESSAGE,
+          errCode)
       } else {
         // TODO: Verify data
         // Loop over transformers to verify if they exist or not.
@@ -171,65 +176,28 @@ async function insert(req, res) {
             ownerOrgID,
           });
           await trx.commit();
-          rspObj.responseCode = responseCode.SUCCESS;
-          rspObj.result = {
-            inserted,
-          };
-          return res.status(200).send(successResponse(rspObj));
+          response.sendSuccessRes(req,inserted,res);
         } else {
           await trx.rollback();
-          rspObj.errCode = CLMessages.CREATE.MISSING_CODE_TRANSFORMER;
-          rspObj.errMsg = CLMessages.CREATE.MISSING_TRANSFORMER_MESSAGE;
-          rspObj.responseCode = responseCode.CLIENT_ERROR;
-          return res
-            .status(400)
-            .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+          response.sendErrorRes(req,res,
+            CLMessages.CREATE.MISSING_CODE_TRANSFORMER,
+            errorCode,
+            CLMessages.CREATE.MISSING_TRANSFORMER_MESSAGE,
+            CLMessages.CREATE.MISSING_TRANSFORMER_MESSAGE,
+            errCode)
         }
       }
     }
   } catch (e) {
     console.error(e);
     await trx.rollback();
-    rspObj.errCode = CLMessages.CREATE.CREATE_FAILED_CODE;
-    rspObj.errMsg = CLMessages.CREATE.CREATE_FAILED_MESSAGE;
-    rspObj.responseCode = responseCode.CLIENT_ERROR;
-    return res
-      .status(400)
-      .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+    response.sendErrorRes(req,res,
+      CLMessages.CREATE.CREATE_FAILED_CODE,
+      errorCode,
+      CLMessages.CREATE.CREATE_FAILED_MESSAGE,
+      CLMessages.CREATE.CREATE_FAILED_MESSAGE,
+      errCode)
   }
-}
-
-function successResponse(data) {
-  var response = {};
-  response.id = data.apiId;
-  response.ver = data.apiVersion;
-  response.ts = new Date();
-  response.params = getParams(data.msgid, "successful", null, null);
-  response.responseCode = data.responseCode || "OK";
-  response.result = data.result;
-  return response;
-}
-
-function errorResponse(data, errCode) {
-  var response = {};
-  response.id = data.apiId;
-  response.ver = data.apiVersion;
-  response.ts = new Date();
-  response.params = getParams(data.msgId, "failed", data.errCode, data.errMsg);
-  response.responseCode = errCode + "_" + data.responseCode;
-  response.result = data.result;
-  return response;
-}
-
-function getParams(msgId, status, errCode, msg) {
-  var params = {};
-  params.resmsgid = uuid();
-  params.msgid = msgId || null;
-  params.status = status;
-  params.err = errCode;
-  params.errmsg = msg;
-
-  return params;
 }
 
 module.exports = function (app) {
