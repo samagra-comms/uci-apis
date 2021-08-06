@@ -22,7 +22,12 @@ const knexConfig = {
     debug: false,
     client: "pg",
     useNullAsDefault: true,
-    connection: process.env.PSQL_DB_URL_DEV,
+    connection: {
+      host: process.env.POSTGRES_HOST,
+      user: process.env.POSTGRES_USER,
+      password: process.env.POSTGRES_PASSWORD,
+      database: process.env.POSTGRES_DB,
+    },
     pool: {
       min: 2,
       max: 5,
@@ -67,10 +72,6 @@ knex
       });
   })
   .catch((err) => {
-    console.log(process.env);
-    console.log({ config });
-    console.log(process.env.PSQL_DB_URL);
-    console.log(process.env.PSQL_DB_URL_DEV);
     console.log("DB Connection: ❌");
     console.log("Config", config);
     console.error(err);
