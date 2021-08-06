@@ -22,7 +22,7 @@ const knexConfig = {
     debug: false,
     client: "pg",
     useNullAsDefault: true,
-    connection: process.env.PSQL_DB_URL,
+    connection: process.env.PSQL_DB_URL_DEV,
     pool: {
       min: 2,
       max: 5,
@@ -67,6 +67,7 @@ knex
       });
   })
   .catch((err) => {
+    console.log(process.env);
     console.log({ config });
     console.log(process.env.PSQL_DB_URL);
     console.log(process.env.PSQL_DB_URL_DEV);
