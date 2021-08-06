@@ -55,22 +55,28 @@ async function getByID(req, res) {
       }
       bot.userSegments = userSegments;
       bot.logic = conversationLogics;
-      response.sendSuccessRes(req,bot,res);      
+      response.sendSuccessRes(req, bot, res);
     } else {
-      response.sendErrorRes(req,res,
+      response.sendErrorRes(
+        req,
+        res,
         BotMessages.READ.MISSING_CODE,
         errorCode,
         BotMessages.READ.MISSING_MESSAGE,
         `Bot with id ${req.params.id} not found`,
-        errCode)      
+        errCode
+      );
     }
   } catch (e) {
-    response.sendErrorRes(req,res,
+    response.sendErrorRes(
+      req,
+      res,
       BotMessages.READ.FAILED_CODE,
       errorCode,
       BotMessages.READ.FAILED_MESSAGE,
       e,
-      errCode)
+      errCode
+    );
   }
 }
 
@@ -104,14 +110,17 @@ async function get(req, res) {
       data.push(bot);
     }
 
-    response.sendSuccessRes(req,{ data, total: botsData.total },res);
-    } catch (e) {
-    response.sendErrorRes(req,res,
+    response.sendSuccessRes(req, { data, total: botsData.total }, res);
+  } catch (e) {
+    response.sendErrorRes(
+      req,
+      res,
       BotMessages.READ.FAILED_CODE,
       errorCode,
       BotMessages.READ.FAILED_MESSAGE,
       e,
-      errCode)
+      errCode
+    );
   }
 }
 
@@ -124,23 +133,29 @@ async function startByID(req, res) {
     fetch(`${UCI_CORE_URL}/start?campaignId=${id}`)
       .then(async (s) => {
         await Bot.query().findById(req.params.id).patch({ status: "enabled" });
-        response.sendSuccessRes(req,{status: "Bot Triggered"},res);
+        response.sendSuccessRes(req, { status: "Bot Triggered" }, res);
       })
       .catch((e) => {
-        response.sendErrorRes(req,res,
+        response.sendErrorRes(
+          req,
+          res,
           BotMessages.START.FAILED_CODE,
           errorCode,
           BotMessages.START.FAILED_MESSAGE,
           e,
-          errCode)
+          errCode
+        );
       });
   } catch (e) {
-    response.sendErrorRes(req,res,
+    response.sendErrorRes(
+      req,
+      res,
       BotMessages.START.FAILED_CODE,
       errorCode,
       BotMessages.START.FAILED_MESSAGE,
       e,
-      errCode)
+      errCode
+    );
   }
 }
 
@@ -153,23 +168,29 @@ async function pauseByID(req, res) {
     fetch(`${UCI_CORE_URL}/pause?campaignId=${id}`)
       .then(async (s) => {
         await Bot.query().findById(req.params.id).patch({ status: "disabled" });
-        response.sendSuccessRes(req,{ status: "Bot Paused" },res);
+        response.sendSuccessRes(req, { status: "Bot Paused" }, res);
       })
       .catch((e) => {
-        response.sendErrorRes(req,res,
+        response.sendErrorRes(
+          req,
+          res,
           BotMessages.PAUSE.FAILED_CODE,
           errorCode,
           BotMessages.PAUSE.FAILED_MESSAGE,
           e,
-          errCode)
+          errCode
+        );
       });
   } catch (e) {
-    response.sendErrorRes(req,res,
+    response.sendErrorRes(
+      req,
+      res,
       BotMessages.PAUSE.FAILED_CODE,
       errorCode,
       BotMessages.PAUSE.FAILED_MESSAGE,
       e,
-      errCode)
+      errCode
+    );
   }
 }
 
@@ -185,14 +206,17 @@ async function getAllUsers(req, res) {
       .findByIds(bot.users)
       .withGraphFetched("[allService, byIDService, byPhoneService]");
     const allUsers = await userSegment[0].allService.resolve();
-    response.sendSuccessRes(req,allUsers,res);
+    response.sendSuccessRes(req, allUsers, res);
   } catch (e) {
-    response.sendErrorRes(req,res,
+    response.sendErrorRes(
+      req,
+      res,
       BotMessages.GET_BY_PARAM.FAILED_CODE,
       errorCode,
       BotMessages.GET_BY_PARAM.FAILED_MESSAGE,
       e,
-      errCode)
+      errCode
+    );
   }
 }
 
@@ -200,15 +224,22 @@ async function getByParam(req, res) {
   const rspObj = req.rspObj;
   const ownerID = req.body.ownerID;
   const ownerOrgID = req.body.ownerOrgID;
+  const isAdmin = req.body.isAdmin;
   const errCode =
     programMessages.EXCEPTION_CODE +
     "_" +
     BotMessages.GET_BY_PARAM.EXCEPTION_CODE;
   try {
     if (req.query.name) {
-      const bot = (
-        await Bot.query().where({ name: req.query.name, ownerID, ownerOrgID })
-      )[0];
+      let bot;
+      if (isAdmin) {
+        bot = (await Bot.query().where({ name: req.query.name }))[0];
+      } else {
+        bot = (
+          await Bot.query().where({ name: req.query.name, ownerID, ownerOrgID })
+        )[0];
+      }
+
       if (bot instanceof Bot) {
         // Add logic
         let logic = await ConversationLogic.query().findByIds(bot.logicIDs);
@@ -231,7 +262,6 @@ async function getByParam(req, res) {
           .status(400)
           .send(errorResponse(rspObj, errCode + errorCode.CODE1));
       } else {
-        console.log(req.query.startingMessage, { ownerOrgID, ownerID });
         const bot = (
           await Bot.query().where({
             startingMessage: req.query.startingMessage,
@@ -322,20 +352,26 @@ async function search(req, res) {
       rspObj.result = { data: botsModified, total: bots.total };
       return res.status(200).send(response.successResponse(rspObj));
     } else {
-      response.sendErrorRes(req,res,
+      response.sendErrorRes(
+        req,
+        res,
         BotMessages.SEARCH.MISSING_CODE,
         errorCode,
         BotMessages.SEARCH.MISSING_MESSAGE,
         BotMessages.SEARCH.MISSING_MESSAGE,
-        errCode)
+        errCode
+      );
     }
   } catch (e) {
-    response.sendErrorRes(req,res,
+    response.sendErrorRes(
+      req,
+      res,
       BotMessages.SEARCH.FAILED_CODE,
       errorCode,
       BotMessages.SEARCH.FAILED_MESSAGE,
       e,
-      errCode)
+      errCode
+    );
   }
 }
 
@@ -347,12 +383,15 @@ async function update(req, res) {
   const isExisting = (await Bot.query().findById(req.params.id)) !== undefined;
 
   if (!isExisting) {
-    response.sendErrorRes(req,res,
+    response.sendErrorRes(
+      req,
+      res,
       BotMessages.UPDATE.BOT_NOT_EXIST_CODE,
       errorCode,
       BotMessages.UPDATE.BOT_NOT_EXIST_MESSAGE,
       BotMessages.UPDATE.BOT_NOT_EXIST_MESSAGE,
-      errCode)
+      errCode
+    );
   } else {
     try {
       const trx = await Bot.startTransaction();
@@ -381,25 +420,31 @@ async function update(req, res) {
           .patch(data)
           .findById(req.params.id);
         await trx.commit();
-        response.sendSuccessRes(req,inserted,res);
+        response.sendSuccessRes(req, inserted, res);
       } else {
         await trx.rollback();
-        response.sendErrorRes(req,res,
+        response.sendErrorRes(
+          req,
+          res,
           BotMessages.UPDATE.INVALID_USER_SEGMENT_CODE,
           errorCode,
           BotMessages.UPDATE.INVALID_USER_SEGMENT_MESSAGE,
           BotMessages.UPDATE.INVALID_USER_SEGMENT_MESSAGE,
-          errCode)
+          errCode
+        );
       }
     } catch (e) {
       console.error(e);
       await trx.rollback();
-      response.sendErrorRes(req,res,
+      response.sendErrorRes(
+        req,
+        res,
         BotMessages.UPDATE.FAILED_CODE,
         errorCode,
         BotMessages.UPDATE.FAILED_MESSAGE,
         e,
-        errCode)
+        errCode
+      );
     }
   }
 }
@@ -411,22 +456,32 @@ async function deleteByID(req, res) {
   try {
     if (req.params.id) {
       const transformer = await Bot.query().deleteById(req.params.id);
-      response.sendSuccessRes(req,`Number of CLs deleted: ${transformer}`,res);
+      response.sendSuccessRes(
+        req,
+        `Number of CLs deleted: ${transformer}`,
+        res
+      );
     } else {
-      response.sendErrorRes(req,res,
+      response.sendErrorRes(
+        req,
+        res,
         BotMessages.DELETE.MISSING_CODE,
         errorCode,
         BotMessages.DELETE.MISSING_MESSAGE,
         BotMessages.DELETE.MISSING_MESSAGE,
-        errCode)
+        errCode
+      );
     }
   } catch (e) {
-    response.sendErrorRes(req,res,
+    response.sendErrorRes(
+      req,
+      res,
       BotMessages.DELETE.FAILED_CODE,
       errorCode,
       BotMessages.DELETE.FAILED_MESSAGE,
       e,
-      errCode)
+      errCode
+    );
   }
 }
 
@@ -442,12 +497,15 @@ async function insert(req, res) {
     const isExisting = (await Bot.query().where(data).length) > 0;
 
     if (isExisting) {
-      response.sendErrorRes(req,res,
+      response.sendErrorRes(
+        req,
+        res,
         BotMessages.CREATE.ALREADY_EXIST_CODE,
         errorCode,
         BotMessages.CREATE.ALREADY_EXIST_MESSAGE,
         BotMessages.CREATE.ALREADY_EXIST_MESSAGE,
-        errCode)
+        errCode
+      );
     } else {
       const trx = await Bot.startTransaction();
       try {
@@ -483,45 +541,57 @@ async function insert(req, res) {
             })
             .then(async (r) => {
               await trx.commit();
-              response.sendSuccessRes(req,inserted,res);
+              response.sendSuccessRes(req, inserted, res);
             })
             .catch(async (e) => {
               JSON.stringify(e);
               await trx.rollback();
-              response.sendErrorRes(req,res,
+              response.sendErrorRes(
+                req,
+                res,
                 BotMessages.CREATE.INVALID_TRANSFORMER_CODE,
                 errorCode,
                 BotMessages.CREATE.INVALID_TRANSFORMER_MESSAGE,
                 e.message,
-                errCode)
+                errCode
+              );
             });
         } else {
           await trx.rollback();
-          response.sendErrorRes(req,res,
+          response.sendErrorRes(
+            req,
+            res,
             BotMessages.CREATE.INVALID_USER_SEGMENT_CODE,
             errorCode,
             BotMessages.CREATE.INVALID_USER_SEGMENT_MESSAGE,
             BotMessages.CREATE.INVALID_USER_SEGMENT_MESSAGE,
-            errCode)
+            errCode
+          );
         }
       } catch (e) {
         console.error(e);
         await trx.rollback();
-        response.sendErrorRes(req,res,
+        response.sendErrorRes(
+          req,
+          res,
           BotMessages.CREATE.FAILED_CODE,
           errorCode,
           BotMessages.CREATE.INVALID_USER_SEGMENT_MESSAGE,
           e.message,
-          errCode)
+          errCode
+        );
       }
     }
   } catch (e) {
-    response.sendErrorRes(req,res,
+    response.sendErrorRes(
+      req,
+      res,
       BotMessages.CREATE.FAILED_CODE,
       errorCode,
       BotMessages.CREATE.FAILED_MESSAGE,
       e,
-      errCode)
+      errCode
+    );
   }
 }
 
@@ -564,6 +634,7 @@ module.exports = function (app) {
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.checkIfAdmin,
       getAll
     );
 
@@ -572,6 +643,7 @@ module.exports = function (app) {
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.checkIfAdmin,
       requestMiddleware.addOwnerInfo,
       get
     );
@@ -581,6 +653,7 @@ module.exports = function (app) {
     .post(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.checkIfAdmin,
       requestMiddleware.addOwnerInfo,
       insert
     );
@@ -590,6 +663,7 @@ module.exports = function (app) {
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.checkIfAdmin,
       requestMiddleware.addOwnerInfo,
       getByID
     );
@@ -599,6 +673,7 @@ module.exports = function (app) {
     .post(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.checkIfAdmin,
       requestMiddleware.addOwnerInfo,
       update
     );
@@ -608,6 +683,7 @@ module.exports = function (app) {
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.checkIfAdmin,
       requestMiddleware.addOwnerInfo,
       deleteByID
     );
@@ -617,6 +693,7 @@ module.exports = function (app) {
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.checkIfAdmin,
       requestMiddleware.addOwnerInfo,
       getByParam
     );
@@ -626,6 +703,7 @@ module.exports = function (app) {
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.checkIfAdmin,
       requestMiddleware.addOwnerInfo,
       search
     );
@@ -635,6 +713,7 @@ module.exports = function (app) {
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.checkIfAdmin,
       requestMiddleware.addOwnerInfo,
       startByID
     );
@@ -644,6 +723,7 @@ module.exports = function (app) {
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.checkIfAdmin,
       requestMiddleware.addOwnerInfo,
       pauseByID
     );
@@ -653,6 +733,7 @@ module.exports = function (app) {
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.checkIfAdmin,
       requestMiddleware.addOwnerInfo,
       getAllUsers
     );

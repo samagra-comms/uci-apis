@@ -665,7 +665,18 @@ function isValidReq(req, urlsWithVerification) {
   );
 }
 
+const checkIfAdmin = (req, res, next) => {
+  const token = req.headers["admin-token"];
+  if (process.env.ADMIN_TOKEN === token) {
+    req.body.isAdmin = true;
+  } else {
+    req.body.isAdmin = false;
+  }
+  next();
+};
+
 const addOwnerInfo = (req, res, next) => {
+  if (req.body.isAdmin) return next();
   const rspObj = req.rspObj;
   const errCode =
     programMessages.EXCEPTION_CODE +
@@ -735,3 +746,4 @@ module.exports.checkChannelID = checkChannelID;
 module.exports.validateUserToken = validateUserToken;
 module.exports.gzipCompression = gzipCompression;
 module.exports.addOwnerInfo = addOwnerInfo;
+module.exports.checkIfAdmin = checkIfAdmin;
