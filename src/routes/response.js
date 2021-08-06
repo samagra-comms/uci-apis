@@ -13,6 +13,7 @@ function successResponse(data) {
     return response;
   }
   
+
 function errorResponse(data, errCode) {
     var response = {};
     response.id = data.apiId;
@@ -53,9 +54,30 @@ function sendSuccessRes(rspObj,resData,res){
       return res.status(200).send(successResponse(rspObj)); 
   }
 
+function sendHealthSuccessRes(rspObj,resData,checks,res,success){
+    rspObj.responseCode = success;
+    rspObj.result = {checks: checks, healty: resData };
+    return res.status(200).send(successResponse(rspObj)); 
+}
+
+function sendHealthErrorRes(rspObj,res,errCode,errorCode,errMsg,error,errCode1){
+  rspObj.errCode = errCode;
+  rspObj.errMsg = errMsg;
+  rspObj.responseCode = responseCode.CLIENT_ERROR;
+  rspObj.result = {
+    healty: false,
+  };
+  return res  
+    .status(400)
+    .send(errorResponse(rspObj, errCode1 + errorCode.CODE1));
+}
+
+
   exports.sendErrorRes = sendErrorRes;
   exports.sendSuccessRes = sendSuccessRes;
   exports.successResponse = successResponse;
   exports.errorResponse = errorResponse;
+  exports.sendHealthSuccessRes = sendHealthSuccessRes;
+  exports.sendHealthErrorRes = sendHealthErrorRes
   
   
