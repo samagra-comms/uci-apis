@@ -67,6 +67,9 @@ knex
       });
   })
   .catch((err) => {
+    console.log({ config });
+    console.log(process.env.PSQL_DB_URL);
+    console.log(process.env.PSQL_DB_URL_DEV);
     console.log("DB Connection: ❌");
     console.log("Config", config);
     console.error(err);

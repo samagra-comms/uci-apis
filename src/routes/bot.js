@@ -225,13 +225,13 @@ async function getByParam(req, res) {
   const ownerID = req.body.ownerID;
   const ownerOrgID = req.body.ownerOrgID;
   const isAdmin = req.body.isAdmin;
+  let bot;
   const errCode =
     programMessages.EXCEPTION_CODE +
     "_" +
     BotMessages.GET_BY_PARAM.EXCEPTION_CODE;
   try {
     if (req.query.name) {
-      let bot;
       if (isAdmin) {
         bot = (await Bot.query().where({ name: req.query.name }))[0];
       } else {
@@ -262,13 +262,21 @@ async function getByParam(req, res) {
           .status(400)
           .send(errorResponse(rspObj, errCode + errorCode.CODE1));
       } else {
-        const bot = (
-          await Bot.query().where({
-            startingMessage: req.query.startingMessage,
-            ownerID: ownerID,
-            // ownerOrgID: ownerOrgID,
-          })
-        )[0];
+        if (isAdmin) {
+          bot = (
+            await Bot.query().where({
+              startingMessage: req.query.startingMessage,
+            })
+          )[0];
+        } else {
+          bot = (
+            await Bot.query().where({
+              startingMessage: req.query.startingMessage,
+              ownerID: ownerID,
+              ownerOrgID: ownerOrgID,
+            })
+          )[0];
+        }
         console.log({ bot });
         if (bot instanceof Bot) {
           // Add logic
@@ -489,6 +497,7 @@ async function insert(req, res) {
   const rspObj = req.rspObj;
   const ownerID = req.body.ownerID;
   const ownerOrgID = req.body.ownerOrgID;
+  const isAdmin = req.body.isAdmin;
   const errCode =
     programMessages.EXCEPTION_CODE + "_" + BotMessages.CREATE.EXCEPTION_CODE;
 

@@ -62,19 +62,21 @@ async function get(req, res) {
       return res.status(200).send(response.successResponse(rspObj));
     }
   } catch (e) {
-    response.sendErrorRes(req,res,
+    response.sendErrorRes(
+      req,
+      res,
       USMessages.READ.EXCEPTION_CODE,
       errorCode,
       USMessages.READ.FAILED_MESSAGE,
       e.message,
-      errCode)
+      errCode
+    );
   }
 }
 
 async function getByID(req, res) {
   const transformer = await UserSegment.query().findById(req.params.id);
-  if (transformer) response.sendSuccessRes(req,transformer,res);
-
+  if (transformer) response.sendSuccessRes(req, transformer, res);
 }
 
 async function search(req, res) {
@@ -98,28 +100,38 @@ async function search(req, res) {
         delete s.byPhoneService;
         return s;
       });
-      response.sendSuccessRes(req,segments,res);      
+      response.sendSuccessRes(req, segments, res);
     } catch (e) {
-      response.sendErrorRes(req,res,
+      response.sendErrorRes(
+        req,
+        res,
         USMessages.SEARCH.EXCEPTION_CODE,
         errorCode,
         USMessages.SEARCH.FAILED_MESSAGE,
         e.message,
-        errCode)      
+        errCode
+      );
     }
   } else {
-    response.sendErrorRes(req,res,
+    response.sendErrorRes(
+      req,
+      res,
       USMessages.SEARCH.EXCEPTION_CODE,
       errorCode,
       USMessages.SEARCH.FAILED_MESSAGE,
       USMessages.SEARCH.FAILED_MESSAGE,
-      errCode)    
+      errCode
+    );
   }
 }
 
 async function deleteByID(req, res) {
   const transformer = await UserSegment.query().deleteById(req.params.id);
-  response.sendSuccessRes(req,`Number of transformers deleted: ${transformer}`,res);
+  response.sendSuccessRes(
+    req,
+    `Number of transformers deleted: ${transformer}`,
+    res
+  );
 }
 
 async function dryRun(req, res) {
@@ -206,36 +218,45 @@ async function insert(req, res) {
           delete getAgain.allService;
           delete getAgain.byIDService;
           delete getAgain.byPhoneService;
-          response.sendSuccessRes(req,getAgain,res);          
+          response.sendSuccessRes(req, getAgain, res);
         } else {
           await trx.rollback();
           console.error(e);
           trx.rollback();
-          response.sendErrorRes(req,res,
+          response.sendErrorRes(
+            req,
+            res,
             USMessages.CREATE.EXCEPTION_CODE,
             errorCode,
             USMessages.CREATE.FAILED_MESSAGE,
             "UserSegment could not be registered. Services down.",
-            errCode)          
+            errCode
+          );
         }
       } catch (e) {
         console.error(e);
         trx.rollback();
-        response.sendErrorRes(req,res,
+        response.sendErrorRes(
+          req,
+          res,
           USMessages.CREATE.EXCEPTION_CODE,
           errorCode,
           USMessages.CREATE.FAILED_MESSAGE,
           e,
-          errCode)        
+          errCode
+        );
       }
     }
   } catch (e) {
-    response.sendErrorRes(req,res,
+    response.sendErrorRes(
+      req,
+      res,
       USMessages.CREATE.EXCEPTION_CODE,
       errorCode,
       USMessages.CREATE.FAILED_MESSAGE,
       e,
-      errCode)
+      errCode
+    );
   }
 }
 
@@ -303,7 +324,7 @@ async function update(req, res) {
       delete getAgain.allService;
       delete getAgain.byIDService;
       delete getAgain.byPhoneService;
-      response.sendSuccessRes(req,getAgain,res);
+      response.sendSuccessRes(req, getAgain, res);
     } else {
       await trx.rollback();
       return res.send({
@@ -406,12 +427,15 @@ async function queryBuilder(req, res) {
         .send(response.errorResponse(rspObj, errCode + errorCode.CODE1));
     }
   } catch (e) {
-    response.sendErrorRes(req,res,
+    response.sendErrorRes(
+      req,
+      res,
       USMessages.QUERY_BUILDER.EXCEPTION_CODE,
       errorCode,
       USMessages.QUERY_BUILDER.FAILED_MESSAGE,
       e,
-      errCode)    
+      errCode
+    );
   }
 }
 
@@ -595,6 +619,7 @@ module.exports = function (app) {
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.checkIfAdmin,
       requestMiddleware.addOwnerInfo,
       addUserToRegistry
     );
