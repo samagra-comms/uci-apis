@@ -686,6 +686,8 @@ const addOwnerInfo = (req, res, next) => {
   const ownerOrgID = req.headers.ownerorgid;
   const ownerID = req.headers.ownerid;
 
+  console.log({ asset, ownerID, ownerOrgID });
+
   if (isValidReq(req, urlsWithVerification)) {
     if (typeof asset === "string") next();
     else {

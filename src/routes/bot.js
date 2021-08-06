@@ -197,9 +197,14 @@ async function getAllUsers(req, res) {
 }
 
 async function getByParam(req, res) {
+  const rspObj = req.rspObj;
+  const ownerID = req.body.ownerID;
+  const ownerOrgID = req.body.ownerOrgID;
+  const errCode =
+    programMessages.EXCEPTION_CODE +
+    "_" +
+    BotMessages.GET_BY_PARAM.EXCEPTION_CODE;
   try {
-    const ownerID = req.body.ownerID;
-    const ownerOrgID = req.body.ownerOrgID;
     if (req.query.name) {
       const bot = (
         await Bot.query().where({ name: req.query.name, ownerID, ownerOrgID })
@@ -226,13 +231,15 @@ async function getByParam(req, res) {
           .status(400)
           .send(errorResponse(rspObj, errCode + errorCode.CODE1));
       } else {
+        console.log(req.query.startingMessage, { ownerOrgID, ownerID });
         const bot = (
           await Bot.query().where({
             startingMessage: req.query.startingMessage,
-            ownerID,
-            ownerOrgID,
+            ownerID: ownerID,
+            // ownerOrgID: ownerOrgID,
           })
         )[0];
+        console.log({ bot });
         if (bot instanceof Bot) {
           // Add logic
           let logic = await ConversationLogic.query().findByIds(bot.logicIDs);
@@ -258,6 +265,7 @@ async function getByParam(req, res) {
         .send(errorResponse(rspObj, errCode + errorCode.CODE1));
     }
   } catch (e) {
+    console.log(e);
     rspObj.errCode = BotMessages.GET_BY_PARAM.FAILED_CODE;
     rspObj.errMsg = BotMessages.GET_BY_PARAM.FAILED_MESSAGE;
     rspObj.responseCode = responseCode.CLIENT_ERROR;

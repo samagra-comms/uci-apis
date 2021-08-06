@@ -1256,5 +1256,4 @@ exports.MIDDLEWARE = {
     FAILED_MESSAGE: "Unable to get requested asset",
     INFO: "Add Owner",
   },
-
 };
