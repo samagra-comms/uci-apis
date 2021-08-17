@@ -13,7 +13,6 @@ try {
 }
 
 try {
-  const createError = require("http-errors");
   const express = require("express");
   path = require("path");
   http = require("http");
