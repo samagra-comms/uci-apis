@@ -1,6 +1,7 @@
 version: 2
 endpoint: http://homeserver:15003
 metadata_directory: metadata
+admin_secret: 
 actions:
   kind: synchronous
   handler_webhook_baseurl: http://localhost:3000

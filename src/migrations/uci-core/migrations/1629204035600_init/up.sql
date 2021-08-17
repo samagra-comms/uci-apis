@@ -1,3 +1,4 @@
+SET check_function_bodies = false;
 CREATE FUNCTION public.set_current_timestamp_updated_at() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
@@ -23,7 +24,6 @@ CREATE TABLE public.board (
     name text NOT NULL
 );
 CREATE SEQUENCE public.boards_id_seq
-    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -43,7 +43,9 @@ CREATE TABLE public.bot (
     description text,
     "startDate" date,
     "endDate" date,
-    purpose text
+    purpose text,
+    "ownerOrgID" text,
+    "ownerID" text
 );
 CREATE TABLE public."conversationLogic" (
     id uuid DEFAULT public.gen_random_uuid() NOT NULL,
@@ -52,7 +54,9 @@ CREATE TABLE public."conversationLogic" (
     name text NOT NULL,
     created_at timestamp with time zone DEFAULT now(),
     updated_at timestamp with time zone DEFAULT now(),
-    description text
+    description text,
+    "ownerOrgID" text,
+    "ownerID" text
 );
 CREATE TABLE public.organisation (
     state text,
@@ -98,7 +102,6 @@ CREATE TABLE public.role (
     name text NOT NULL
 );
 CREATE SEQUENCE public.roles_id_seq
-    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -131,7 +134,10 @@ CREATE TABLE public."userSegment" (
     created_at timestamp with time zone DEFAULT now(),
     updated_at timestamp with time zone DEFAULT now(),
     category text,
-    count integer DEFAULT 0
+    count integer DEFAULT 0,
+    description text,
+    "ownerOrgID" text,
+    "ownerID" text
 );
 ALTER TABLE ONLY public.board ALTER COLUMN id SET DEFAULT nextval('public.boards_id_seq'::regclass);
 ALTER TABLE ONLY public.role ALTER COLUMN id SET DEFAULT nextval('public.roles_id_seq'::regclass);
@@ -175,19 +181,19 @@ CREATE INDEX state_district ON public.organisation USING btree (state, district)
 CREATE INDEX state_district_block ON public.organisation USING btree (state, district, block);
 CREATE INDEX state_district_block_cluster ON public.organisation USING btree (state, district, block, cluster);
 CREATE INDEX state_index ON public.organisation USING btree (state);
-CREATE TRIGGER set_public_adapter_updated_at BEFORE UPDATE ON public.adapter FOR EACH ROW EXECUTE FUNCTION public.set_current_timestamp_updated_at();
+CREATE TRIGGER set_public_adapter_updated_at BEFORE UPDATE ON public.adapter FOR EACH ROW EXECUTE PROCEDURE public.set_current_timestamp_updated_at();
 COMMENT ON TRIGGER set_public_adapter_updated_at ON public.adapter IS 'trigger to set value of column "updated_at" to current timestamp on row update';
-CREATE TRIGGER set_public_bot_updated_at BEFORE UPDATE ON public.bot FOR EACH ROW EXECUTE FUNCTION public.set_current_timestamp_updated_at();
+CREATE TRIGGER set_public_bot_updated_at BEFORE UPDATE ON public.bot FOR EACH ROW EXECUTE PROCEDURE public.set_current_timestamp_updated_at();
 COMMENT ON TRIGGER set_public_bot_updated_at ON public.bot IS 'trigger to set value of column "updated_at" to current timestamp on row update';
-CREATE TRIGGER "set_public_conversationLogic_updated_at" BEFORE UPDATE ON public."conversationLogic" FOR EACH ROW EXECUTE FUNCTION public.set_current_timestamp_updated_at();
+CREATE TRIGGER "set_public_conversationLogic_updated_at" BEFORE UPDATE ON public."conversationLogic" FOR EACH ROW EXECUTE PROCEDURE public.set_current_timestamp_updated_at();
 COMMENT ON TRIGGER "set_public_conversationLogic_updated_at" ON public."conversationLogic" IS 'trigger to set value of column "updated_at" to current timestamp on row update';
-CREATE TRIGGER set_public_organisation_updated_at BEFORE UPDATE ON public.organisation FOR EACH ROW EXECUTE FUNCTION public.set_current_timestamp_updated_at();
+CREATE TRIGGER set_public_organisation_updated_at BEFORE UPDATE ON public.organisation FOR EACH ROW EXECUTE PROCEDURE public.set_current_timestamp_updated_at();
 COMMENT ON TRIGGER set_public_organisation_updated_at ON public.organisation IS 'trigger to set value of column "updated_at" to current timestamp on row update';
-CREATE TRIGGER set_public_service_updated_at BEFORE UPDATE ON public.service FOR EACH ROW EXECUTE FUNCTION public.set_current_timestamp_updated_at();
+CREATE TRIGGER set_public_service_updated_at BEFORE UPDATE ON public.service FOR EACH ROW EXECUTE PROCEDURE public.set_current_timestamp_updated_at();
 COMMENT ON TRIGGER set_public_service_updated_at ON public.service IS 'trigger to set value of column "updated_at" to current timestamp on row update';
-CREATE TRIGGER set_public_transformer_updated_at BEFORE UPDATE ON public.transformer FOR EACH ROW EXECUTE FUNCTION public.set_current_timestamp_updated_at();
+CREATE TRIGGER set_public_transformer_updated_at BEFORE UPDATE ON public.transformer FOR EACH ROW EXECUTE PROCEDURE public.set_current_timestamp_updated_at();
 COMMENT ON TRIGGER set_public_transformer_updated_at ON public.transformer IS 'trigger to set value of column "updated_at" to current timestamp on row update';
-CREATE TRIGGER "set_public_userSegment_updated_at" BEFORE UPDATE ON public."userSegment" FOR EACH ROW EXECUTE FUNCTION public.set_current_timestamp_updated_at();
+CREATE TRIGGER "set_public_userSegment_updated_at" BEFORE UPDATE ON public."userSegment" FOR EACH ROW EXECUTE PROCEDURE public.set_current_timestamp_updated_at();
 COMMENT ON TRIGGER "set_public_userSegment_updated_at" ON public."userSegment" IS 'trigger to set value of column "updated_at" to current timestamp on row update';
 ALTER TABLE ONLY public."conversationLogic"
     ADD CONSTRAINT "conversationLogic_adapter_fkey" FOREIGN KEY (adapter) REFERENCES public.adapter(id) ON UPDATE RESTRICT ON DELETE RESTRICT;

@@ -1,4 +1,3 @@
 -- Could not auto-generate a down migration.
 -- Please write an appropriate down migration for the SQL below:
--- alter table "public"."userSegment" add column "description" text
- null;
+-- DROP table "public"."pgbench_branches";
