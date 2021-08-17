@@ -1,5 +1,18 @@
-  try {
+try {
+  console.log("Checking for dotenv file");
   const env = require("dotenv").config();
+  if (env.error) {
+    throw env.error;
+  }
+} catch (e) {
+  const envStatus = process.env.ENV === "prod" ? `✅` : `❌`;
+  console.error(
+    "Possibly a production env?? The env variable looks - ",
+    envStatus
+  );
+}
+
+try {
   const createError = require("http-errors");
   const express = require("express");
   path = require("path");
@@ -20,10 +33,6 @@
   const { router } = require("bull-board");
   var proxy = require("express-http-proxy");
   const url = require("url");
-
-  if (env.error) {
-    throw env.error;
-  }
 
   const createAppServer = () => {
     const app = express();
@@ -51,16 +60,15 @@
     app.use(
       "/v1/graphql",
       proxy(`${process.env.GRAPHQL_BASE_URL}/v1/graphql`, {
-       
-        proxyReqOptDecorator: function (proxyReqOpts, srcReq) {         
+        proxyReqOptDecorator: function (proxyReqOpts, srcReq) {
           proxyReqOpts.headers = {
             "x-hasura-admin-secret": `${process.env.HASURA_GRAPHQL_ADMIN_SECRET}`,
-          };         
+          };
           return proxyReqOpts;
         },
 
         proxyReqPathResolver: (req) => {
-          console.log("log:",url.parse(req.baseUrl).path)
+          console.log("log:", url.parse(req.baseUrl).path);
           return url.parse(req.baseUrl).path;
         },
       })
