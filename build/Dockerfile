@@ -5,7 +5,6 @@ USER root
 COPY src/package.json src/yarn.lock /opt/uci/
 RUN npm install -g yarn --force
 RUN yarn -i
-RUN yarn cache clean
 COPY src /opt/uci
 WORKDIR /opt/uci
 CMD ["node", "app.js", "&"]
