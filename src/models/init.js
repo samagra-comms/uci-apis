@@ -74,7 +74,9 @@ knex
             path.resolve(__dirname, "./../helpers/vaultDataMock.txt"),
             "utf8"
           );
+          console.log(data);
           const decryptedText = VaultModel.decrypt(data).toString();
+          console.log(decryptedText);
           process.env["vault"] = decryptedText;
         }
 
