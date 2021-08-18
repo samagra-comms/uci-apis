@@ -69,13 +69,8 @@ knex
             });
         } catch (e) {
           console.log("Getting Vault data from path");
-          const path = require("path");
-          const data = fs.readFileSync(
-            path.resolve(__dirname, "./../helpers/vaultDataMock.txt"),
-            "utf8"
-          );
-          console.log(data);
-          const decryptedText = VaultModel.decrypt(data).toString();
+          const data = require("./../helpers/vaultDataMock2.json");
+          const decryptedText = VaultModel.decrypt(data.data).toString();
           console.log(decryptedText);
           process.env["vault"] = decryptedText;
         }
