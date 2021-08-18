@@ -3,7 +3,7 @@ const { result, forEach } = require("lodash");
 const requestMiddleware = require("../middlewares/request.middleware");
 const addOwnerInfo = require("../middlewares/request.middleware");
 const { FusionAuthClient } = require("fusionauth-node-client");
-
+const response = require("./response");
 const BASE_URL = "/admin/v1";
 const { Bot } = require("../models/bot");
 const { ConversationLogic } = require("../models/conversationLogic");
@@ -55,25 +55,28 @@ async function getByID(req, res) {
       }
       bot.userSegments = userSegments;
       bot.logic = conversationLogics;
-      rspObj.responseCode = responseCode.SUCCESS;
-      rspObj.result = { data: bot };
-      return res.status(200).send(successResponse(rspObj));
+      response.sendSuccessRes(req, bot, res);
     } else {
-      rspObj.errCode = BotMessages.READ.MISSING_CODE;
-      rspObj.errMsg = BotMessages.READ.MISSING_MESSAGE;
-      rspObj.responseCode = responseCode.CLIENT_ERROR;
-      return res
-        .status(400)
-        .send(errorResponse(rspObj, errCode + errorCode.CODE1));
-      res.send({ error: `Bot with id ${req.params.id} not found` });
+      response.sendErrorRes(
+        req,
+        res,
+        BotMessages.READ.MISSING_CODE,
+        errorCode,
+        BotMessages.READ.MISSING_MESSAGE,
+        `Bot with id ${req.params.id} not found`,
+        errCode
+      );
     }
   } catch (e) {
-    rspObj.errCode = BotMessages.READ.FAILED_CODE;
-    rspObj.errMsg = BotMessages.READ.FAILED_MESSAGE;
-    rspObj.responseCode = responseCode.CLIENT_ERROR;
-    return res
-      .status(400)
-      .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+    response.sendErrorRes(
+      req,
+      res,
+      BotMessages.READ.FAILED_CODE,
+      errorCode,
+      BotMessages.READ.FAILED_MESSAGE,
+      e,
+      errCode
+    );
   }
 }
 
@@ -106,17 +109,18 @@ async function get(req, res) {
       bot.userSegments = userSegments;
       data.push(bot);
     }
-    rspObj.responseCode = responseCode.SUCCESS;
-    rspObj.result = { data, total: botsData.total };
-    return res.status(200).send(successResponse(rspObj));
+
+    response.sendSuccessRes(req, { data, total: botsData.total }, res);
   } catch (e) {
-    console.log(e);
-    rspObj.errCode = BotMessages.READ.FAILED_CODE;
-    rspObj.errMsg = BotMessages.READ.FAILED_MESSAGE;
-    rspObj.responseCode = responseCode.CLIENT_ERROR;
-    return res
-      .status(400)
-      .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+    response.sendErrorRes(
+      req,
+      res,
+      BotMessages.READ.FAILED_CODE,
+      errorCode,
+      BotMessages.READ.FAILED_MESSAGE,
+      e,
+      errCode
+    );
   }
 }
 
@@ -129,25 +133,29 @@ async function startByID(req, res) {
     fetch(`${UCI_CORE_URL}/start?campaignId=${id}`)
       .then(async (s) => {
         await Bot.query().findById(req.params.id).patch({ status: "enabled" });
-        rspObj.responseCode = responseCode.SUCCESS;
-        rspObj.result = { status: "Bot Triggered" };
-        return res.status(200).send(successResponse(rspObj));
+        response.sendSuccessRes(req, { status: "Bot Triggered" }, res);
       })
       .catch((e) => {
-        rspObj.errCode = BotMessages.START.FAILED_CODE;
-        rspObj.errMsg = BotMessages.START.FAILED_MESSAGE;
-        rspObj.responseCode = responseCode.CLIENT_ERROR;
-        return res
-          .status(400)
-          .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+        response.sendErrorRes(
+          req,
+          res,
+          BotMessages.START.FAILED_CODE,
+          errorCode,
+          BotMessages.START.FAILED_MESSAGE,
+          e,
+          errCode
+        );
       });
   } catch (e) {
-    rspObj.errCode = BotMessages.START.FAILED_CODE;
-    rspObj.errMsg = BotMessages.START.FAILED_MESSAGE;
-    rspObj.responseCode = responseCode.CLIENT_ERROR;
-    return res
-      .status(400)
-      .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+    response.sendErrorRes(
+      req,
+      res,
+      BotMessages.START.FAILED_CODE,
+      errorCode,
+      BotMessages.START.FAILED_MESSAGE,
+      e,
+      errCode
+    );
   }
 }
 
@@ -160,25 +168,29 @@ async function pauseByID(req, res) {
     fetch(`${UCI_CORE_URL}/pause?campaignId=${id}`)
       .then(async (s) => {
         await Bot.query().findById(req.params.id).patch({ status: "disabled" });
-        rspObj.responseCode = responseCode.SUCCESS;
-        rspObj.result = { status: "Bot Paused" };
-        return res.status(200).send(successResponse(rspObj));
+        response.sendSuccessRes(req, { status: "Bot Paused" }, res);
       })
       .catch((e) => {
-        rspObj.errCode = BotMessages.PAUSE.FAILED_CODE;
-        rspObj.errMsg = BotMessages.PAUSE.FAILED_MESSAGE;
-        rspObj.responseCode = responseCode.CLIENT_ERROR;
-        return res
-          .status(400)
-          .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+        response.sendErrorRes(
+          req,
+          res,
+          BotMessages.PAUSE.FAILED_CODE,
+          errorCode,
+          BotMessages.PAUSE.FAILED_MESSAGE,
+          e,
+          errCode
+        );
       });
   } catch (e) {
-    rspObj.errCode = BotMessages.PAUSE.FAILED_CODE;
-    rspObj.errMsg = BotMessages.PAUSE.FAILED_MESSAGE;
-    rspObj.responseCode = responseCode.CLIENT_ERROR;
-    return res
-      .status(400)
-      .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+    response.sendErrorRes(
+      req,
+      res,
+      BotMessages.PAUSE.FAILED_CODE,
+      errorCode,
+      BotMessages.PAUSE.FAILED_MESSAGE,
+      e,
+      errCode
+    );
   }
 }
 
@@ -194,27 +206,40 @@ async function getAllUsers(req, res) {
       .findByIds(bot.users)
       .withGraphFetched("[allService, byIDService, byPhoneService]");
     const allUsers = await userSegment[0].allService.resolve();
-    rspObj.responseCode = responseCode.SUCCESS;
-    rspObj.result = { data: allUsers };
-    return res.status(200).send(successResponse(rspObj));
+    response.sendSuccessRes(req, allUsers, res);
   } catch (e) {
-    rspObj.errCode = BotMessages.GET_BY_PARAM.FAILED_CODE;
-    rspObj.errMsg = BotMessages.GET_BY_PARAM.FAILED_MESSAGE;
-    rspObj.responseCode = responseCode.CLIENT_ERROR;
-    return res
-      .status(400)
-      .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+    response.sendErrorRes(
+      req,
+      res,
+      BotMessages.GET_BY_PARAM.FAILED_CODE,
+      errorCode,
+      BotMessages.GET_BY_PARAM.FAILED_MESSAGE,
+      e,
+      errCode
+    );
   }
 }
 
 async function getByParam(req, res) {
+  const rspObj = req.rspObj;
+  const ownerID = req.body.ownerID;
+  const ownerOrgID = req.body.ownerOrgID;
+  const isAdmin = req.body.isAdmin;
+  let bot;
+  const errCode =
+    programMessages.EXCEPTION_CODE +
+    "_" +
+    BotMessages.GET_BY_PARAM.EXCEPTION_CODE;
   try {
-    const ownerID = req.body.ownerID;
-    const ownerOrgID = req.body.ownerOrgID;
     if (req.query.name) {
-      const bot = (
-        await Bot.query().where({ name: req.query.name, ownerID, ownerOrgID })
-      )[0];
+      if (isAdmin) {
+        bot = (await Bot.query().where({ name: req.query.name }))[0];
+      } else {
+        bot = (
+          await Bot.query().where({ name: req.query.name, ownerID, ownerOrgID })
+        )[0];
+      }
+
       if (bot instanceof Bot) {
         // Add logic
         let logic = await ConversationLogic.query().findByIds(bot.logicIDs);
@@ -237,13 +262,22 @@ async function getByParam(req, res) {
           .status(400)
           .send(errorResponse(rspObj, errCode + errorCode.CODE1));
       } else {
-        const bot = (
-          await Bot.query().where({
-            startingMessage: req.query.startingMessage,
-            ownerID,
-            ownerOrgID,
-          })
-        )[0];
+        if (isAdmin) {
+          bot = (
+            await Bot.query().where({
+              startingMessage: req.query.startingMessage,
+            })
+          )[0];
+        } else {
+          bot = (
+            await Bot.query().where({
+              startingMessage: req.query.startingMessage,
+              ownerID: ownerID,
+              ownerOrgID: ownerOrgID,
+            })
+          )[0];
+        }
+        console.log({ bot });
         if (bot instanceof Bot) {
           // Add logic
           let logic = await ConversationLogic.query().findByIds(bot.logicIDs);
@@ -269,6 +303,7 @@ async function getByParam(req, res) {
         .send(errorResponse(rspObj, errCode + errorCode.CODE1));
     }
   } catch (e) {
+    console.log(e);
     rspObj.errCode = BotMessages.GET_BY_PARAM.FAILED_CODE;
     rspObj.errMsg = BotMessages.GET_BY_PARAM.FAILED_MESSAGE;
     rspObj.responseCode = responseCode.CLIENT_ERROR;
@@ -320,24 +355,31 @@ async function search(req, res) {
           return bot;
         })
       );
+      // response.sendSuccessRes(req,{ data: botsModified, total: bots.total },res);
       rspObj.responseCode = responseCode.SUCCESS;
       rspObj.result = { data: botsModified, total: bots.total };
-      return res.status(200).send(successResponse(rspObj));
+      return res.status(200).send(response.successResponse(rspObj));
     } else {
-      rspObj.errCode = BotMessages.SEARCH.MISSING_CODE;
-      rspObj.errMsg = BotMessages.SEARCH.MISSING_MESSAGE;
-      rspObj.responseCode = responseCode.CLIENT_ERROR;
-      return res
-        .status(400)
-        .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+      response.sendErrorRes(
+        req,
+        res,
+        BotMessages.SEARCH.MISSING_CODE,
+        errorCode,
+        BotMessages.SEARCH.MISSING_MESSAGE,
+        BotMessages.SEARCH.MISSING_MESSAGE,
+        errCode
+      );
     }
   } catch (e) {
-    rspObj.errCode = BotMessages.SEARCH.FAILED_CODE;
-    rspObj.errMsg = BotMessages.SEARCH.FAILED_MESSAGE;
-    rspObj.responseCode = responseCode.CLIENT_ERROR;
-    return res
-      .status(400)
-      .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+    response.sendErrorRes(
+      req,
+      res,
+      BotMessages.SEARCH.FAILED_CODE,
+      errorCode,
+      BotMessages.SEARCH.FAILED_MESSAGE,
+      e,
+      errCode
+    );
   }
 }
 
@@ -349,12 +391,15 @@ async function update(req, res) {
   const isExisting = (await Bot.query().findById(req.params.id)) !== undefined;
 
   if (!isExisting) {
-    rspObj.errCode = BotMessages.UPDATE.BOT_NOT_EXIST_CODE;
-    rspObj.errMsg = BotMessages.UPDATE.BOT_NOT_EXIST_MESSAGE;
-    rspObj.responseCode = responseCode.CLIENT_ERROR;
-    return res
-      .status(400)
-      .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+    response.sendErrorRes(
+      req,
+      res,
+      BotMessages.UPDATE.BOT_NOT_EXIST_CODE,
+      errorCode,
+      BotMessages.UPDATE.BOT_NOT_EXIST_MESSAGE,
+      BotMessages.UPDATE.BOT_NOT_EXIST_MESSAGE,
+      errCode
+    );
   } else {
     try {
       const trx = await Bot.startTransaction();
@@ -383,27 +428,31 @@ async function update(req, res) {
           .patch(data)
           .findById(req.params.id);
         await trx.commit();
-        rspObj.responseCode = responseCode.SUCCESS;
-        rspObj.result = { data: inserted };
-        return res.status(200).send(successResponse(rspObj));
+        response.sendSuccessRes(req, inserted, res);
       } else {
         await trx.rollback();
-        rspObj.errCode = BotMessages.UPDATE.INVALID_USER_SEGMENT_CODE;
-        rspObj.errMsg = BotMessages.UPDATE.INVALID_USER_SEGMENT_MESSAGE;
-        rspObj.responseCode = responseCode.CLIENT_ERROR;
-        return res
-          .status(400)
-          .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+        response.sendErrorRes(
+          req,
+          res,
+          BotMessages.UPDATE.INVALID_USER_SEGMENT_CODE,
+          errorCode,
+          BotMessages.UPDATE.INVALID_USER_SEGMENT_MESSAGE,
+          BotMessages.UPDATE.INVALID_USER_SEGMENT_MESSAGE,
+          errCode
+        );
       }
     } catch (e) {
       console.error(e);
       await trx.rollback();
-      rspObj.errCode = BotMessages.UPDATE.FAILED_CODE;
-      rspObj.errMsg = BotMessages.UPDATE.FAILED_MESSAGE;
-      rspObj.responseCode = responseCode.CLIENT_ERROR;
-      return res
-        .status(400)
-        .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+      response.sendErrorRes(
+        req,
+        res,
+        BotMessages.UPDATE.FAILED_CODE,
+        errorCode,
+        BotMessages.UPDATE.FAILED_MESSAGE,
+        e,
+        errCode
+      );
     }
   }
 }
@@ -415,24 +464,32 @@ async function deleteByID(req, res) {
   try {
     if (req.params.id) {
       const transformer = await Bot.query().deleteById(req.params.id);
-      rspObj.responseCode = responseCode.SUCCESS;
-      rspObj.result = { data: `Number of CLs deleted: ${transformer}` };
-      return res.status(200).send(successResponse(rspObj));
+      response.sendSuccessRes(
+        req,
+        `Number of CLs deleted: ${transformer}`,
+        res
+      );
     } else {
-      rspObj.errCode = BotMessages.DELETE.MISSING_CODE;
-      rspObj.errMsg = BotMessages.DELETE.MISSING_MESSAGE;
-      rspObj.responseCode = responseCode.CLIENT_ERROR;
-      return res
-        .status(400)
-        .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+      response.sendErrorRes(
+        req,
+        res,
+        BotMessages.DELETE.MISSING_CODE,
+        errorCode,
+        BotMessages.DELETE.MISSING_MESSAGE,
+        BotMessages.DELETE.MISSING_MESSAGE,
+        errCode
+      );
     }
   } catch (e) {
-    rspObj.errCode = BotMessages.DELETE.FAILED_CODE;
-    rspObj.errMsg = BotMessages.DELETE.FAILED_MESSAGE;
-    rspObj.responseCode = responseCode.CLIENT_ERROR;
-    return res
-      .status(400)
-      .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+    response.sendErrorRes(
+      req,
+      res,
+      BotMessages.DELETE.FAILED_CODE,
+      errorCode,
+      BotMessages.DELETE.FAILED_MESSAGE,
+      e,
+      errCode
+    );
   }
 }
 
@@ -440,6 +497,7 @@ async function insert(req, res) {
   const rspObj = req.rspObj;
   const ownerID = req.body.ownerID;
   const ownerOrgID = req.body.ownerOrgID;
+  const isAdmin = req.body.isAdmin;
   const errCode =
     programMessages.EXCEPTION_CODE + "_" + BotMessages.CREATE.EXCEPTION_CODE;
 
@@ -448,12 +506,15 @@ async function insert(req, res) {
     const isExisting = (await Bot.query().where(data).length) > 0;
 
     if (isExisting) {
-      rspObj.errCode = BotMessages.CREATE.ALREADY_EXIST_CODE;
-      rspObj.errMsg = BotMessages.CREATE.ALREADY_EXIST_MESSAGE;
-      rspObj.responseCode = responseCode.CLIENT_ERROR;
-      return res
-        .status(400)
-        .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+      response.sendErrorRes(
+        req,
+        res,
+        BotMessages.CREATE.ALREADY_EXIST_CODE,
+        errorCode,
+        BotMessages.CREATE.ALREADY_EXIST_MESSAGE,
+        BotMessages.CREATE.ALREADY_EXIST_MESSAGE,
+        errCode
+      );
     } else {
       const trx = await Bot.startTransaction();
       try {
@@ -489,56 +550,57 @@ async function insert(req, res) {
             })
             .then(async (r) => {
               await trx.commit();
-              rspObj.responseCode = responseCode.SUCCESS;
-              rspObj.result = { data: inserted };
-              return res.status(200).send(successResponse(rspObj));
+              response.sendSuccessRes(req, inserted, res);
             })
             .catch(async (e) => {
               JSON.stringify(e);
               await trx.rollback();
-              rspObj.errCode = BotMessages.CREATE.INVALID_TRANSFORMER_CODE;
-              rspObj.errMsg = BotMessages.CREATE.INVALID_TRANSFORMER_MESSAGE;
-              rspObj.responseCode = responseCode.CLIENT_ERROR;
-              rspObj.result = {
-                error: e.message,
-              };
-              return res
-                .status(400)
-                .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+              response.sendErrorRes(
+                req,
+                res,
+                BotMessages.CREATE.INVALID_TRANSFORMER_CODE,
+                errorCode,
+                BotMessages.CREATE.INVALID_TRANSFORMER_MESSAGE,
+                e.message,
+                errCode
+              );
             });
         } else {
           await trx.rollback();
-          rspObj.errCode = BotMessages.CREATE.INVALID_USER_SEGMENT_CODE;
-          rspObj.errMsg = BotMessages.CREATE.INVALID_USER_SEGMENT_MESSAGE;
-          rspObj.responseCode = responseCode.CLIENT_ERROR;
-          rspObj.result = {
-            error: e.message,
-          };
-          return res
-            .status(400)
-            .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+          response.sendErrorRes(
+            req,
+            res,
+            BotMessages.CREATE.INVALID_USER_SEGMENT_CODE,
+            errorCode,
+            BotMessages.CREATE.INVALID_USER_SEGMENT_MESSAGE,
+            BotMessages.CREATE.INVALID_USER_SEGMENT_MESSAGE,
+            errCode
+          );
         }
       } catch (e) {
         console.error(e);
         await trx.rollback();
-        rspObj.errCode = BotMessages.CREATE.FAILED_CODE;
-        rspObj.errMsg = BotMessages.CREATE.INVALID_USER_SEGMENT;
-        rspObj.responseCode = responseCode.CLIENT_ERROR;
-        rspObj.result = {
-          error: e.message,
-        };
-        return res
-          .status(400)
-          .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+        response.sendErrorRes(
+          req,
+          res,
+          BotMessages.CREATE.FAILED_CODE,
+          errorCode,
+          BotMessages.CREATE.INVALID_USER_SEGMENT_MESSAGE,
+          e.message,
+          errCode
+        );
       }
     }
   } catch (e) {
-    rspObj.errCode = BotMessages.CREATE.FAILED_CODE;
-    rspObj.errMsg = BotMessages.CREATE.FAILED_MESSAGE;
-    rspObj.responseCode = responseCode.CLIENT_ERROR;
-    return res
-      .status(400)
-      .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+    response.sendErrorRes(
+      req,
+      res,
+      BotMessages.CREATE.FAILED_CODE,
+      errorCode,
+      BotMessages.CREATE.FAILED_MESSAGE,
+      e,
+      errCode
+    );
   }
 }
 
@@ -581,6 +643,7 @@ module.exports = function (app) {
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.checkIfAdmin,
       getAll
     );
 
@@ -589,6 +652,7 @@ module.exports = function (app) {
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.checkIfAdmin,
       requestMiddleware.addOwnerInfo,
       get
     );
@@ -598,6 +662,7 @@ module.exports = function (app) {
     .post(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.checkIfAdmin,
       requestMiddleware.addOwnerInfo,
       insert
     );
@@ -607,6 +672,7 @@ module.exports = function (app) {
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.checkIfAdmin,
       requestMiddleware.addOwnerInfo,
       getByID
     );
@@ -616,6 +682,7 @@ module.exports = function (app) {
     .post(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.checkIfAdmin,
       requestMiddleware.addOwnerInfo,
       update
     );
@@ -625,6 +692,7 @@ module.exports = function (app) {
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.checkIfAdmin,
       requestMiddleware.addOwnerInfo,
       deleteByID
     );
@@ -634,6 +702,7 @@ module.exports = function (app) {
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.checkIfAdmin,
       requestMiddleware.addOwnerInfo,
       getByParam
     );
@@ -643,6 +712,7 @@ module.exports = function (app) {
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.checkIfAdmin,
       requestMiddleware.addOwnerInfo,
       search
     );
@@ -652,6 +722,7 @@ module.exports = function (app) {
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.checkIfAdmin,
       requestMiddleware.addOwnerInfo,
       startByID
     );
@@ -661,6 +732,7 @@ module.exports = function (app) {
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.checkIfAdmin,
       requestMiddleware.addOwnerInfo,
       pauseByID
     );
@@ -670,6 +742,7 @@ module.exports = function (app) {
     .get(
       requestMiddleware.gzipCompression(),
       requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.checkIfAdmin,
       requestMiddleware.addOwnerInfo,
       getAllUsers
     );

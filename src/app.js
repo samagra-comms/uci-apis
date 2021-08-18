@@ -1,6 +1,18 @@
 try {
+  console.log("Checking for dotenv file");
   const env = require("dotenv").config();
-  const createError = require("http-errors");
+  if (env.error) {
+    throw env.error;
+  }
+} catch (e) {
+  const envStatus = process.env.ENV === "prod" ? `✅` : `❌`;
+  console.error(
+    "Possibly a production env?? The env variable looks - ",
+    envStatus
+  );
+}
+
+try {
   const express = require("express");
   path = require("path");
   http = require("http");
@@ -20,10 +32,6 @@ try {
   const { router } = require("bull-board");
   var proxy = require("express-http-proxy");
   const url = require("url");
-
-  if (env.error) {
-    throw env.error;
-  }
 
   const createAppServer = () => {
     const app = express();
@@ -57,7 +65,9 @@ try {
           };
           return proxyReqOpts;
         },
+
         proxyReqPathResolver: (req) => {
+          console.log("log:", url.parse(req.baseUrl).path);
           return url.parse(req.baseUrl).path;
         },
       })
@@ -71,6 +81,16 @@ try {
     require("./routes/conversationLogic")(app);
     require("./routes/bot")(app);
     require("./routes/odk")(app);
+    require("./healthCheck/DB")(app);
+    require("./healthCheck/kafka")(app);
+    require("./healthCheck/gql")(app);
+    require("./healthCheck/fusionAuth")(app);
+    require("./healthCheck/redis")(app);
+    require("./healthCheck/campagin")(app);
+    require("./healthCheck/test")(app);
+    require("./healthCheck/inbound")(app);
+    require("./healthCheck/transformer")(app);
+    require("./healthCheck/health")(app);
     module.exports = app;
     return app;
   };

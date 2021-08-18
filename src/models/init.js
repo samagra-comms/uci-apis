@@ -22,7 +22,12 @@ const knexConfig = {
     debug: false,
     client: "pg",
     useNullAsDefault: true,
-    connection: process.env.PSQL_DB_URL,
+    connection: {
+      host: process.env.POSTGRES_HOST,
+      user: process.env.POSTGRES_USER,
+      password: process.env.POSTGRES_PASSWORD,
+      database: process.env.POSTGRES_DB,
+    },
     pool: {
       min: 2,
       max: 5,

@@ -95,10 +95,16 @@ class DeviceManager {
     } else {
       //Register user to existing bot
       const user = isDeviceExisting.user;
-      const isUserRegistered = _.includes(
-        user.registrations.map((s) => s.applicationId),
-        botID
-      );
+      let isUserRegistered;
+      try {
+        isUserRegistered = _.includes(
+          user.registrations.map((s) => s.applicationId),
+          botID
+        );
+      } catch (e) {
+        isUserRegistered = false;
+      }
+
       if (isUserRegistered) return user.id;
       else {
         return await client
