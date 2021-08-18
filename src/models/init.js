@@ -5,6 +5,7 @@ const { Model } = require("objection");
 
 const { Transformer } = require("./transformer");
 const KafkaService = require("../helpers/kafkaUtil");
+const { Vault: VaultModel } = require("./vault");
 
 const knexConfig = {
   development: {
@@ -46,6 +47,23 @@ knex
     Model.knex(knex);
     Transformer.query()
       .then(async (ts) => {
+        await VaultModel.query()
+          .findById(1)
+          .then((d) => {
+            return JSON.parse(VaultModel.decrypt(d.data));
+          })
+          .catch((e) => {
+            const data = require("./../helpers/vaultDataMock.json");
+            const encryptedText = VaultModel.encrypt(
+              JSON.stringify(data)
+            ).toString();
+            return VaultModel.query()
+              .insert({ id: 1, data: encryptedText })
+              .then((s) => data);
+          })
+          .then((data) => {
+            process.env["vault"] = JSON.stringify(data);
+          });
         console.log(
           `Model Initialization: ${
             parseInt(s.rows[0].count) === ts.length ? "✅" : "❌"

@@ -2,8 +2,8 @@ const fs = require("fs");
 
 class Vault {
   constructor() {
-    const data = require("./vaultDataMock.json");
-    this.data = data;
+    this.data = JSON.parse(process.env.vault);
+    console.log(this.data);
   }
 
   getCredentials = (serviceType, credentials) => {
@@ -21,7 +21,7 @@ class Vault {
   };
 
   // for testing the mock class and nothing else [Will be removed]
-  __addCredentails = async (variableName, config) => {
+  __addCredentials = async (variableName, config) => {
     try {
       const fileName = "./vaultDataMock.json";
       const data = require(fileName);
@@ -46,8 +46,8 @@ class Vault {
   };
 
   // for testing the mock class and nothing else [Will be removed]
-  __updateCredentails = (variableName, config) => {
-    return this.addCredentails(variableName, config);
+  __updateCredentials = (variableName, config) => {
+    return this.addCredentials(variableName, config);
   };
 }
 
