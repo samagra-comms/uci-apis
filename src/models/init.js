@@ -6,6 +6,7 @@ const { Model } = require("objection");
 const { Transformer } = require("./transformer");
 const KafkaService = require("../helpers/kafkaUtil");
 const { Vault: VaultModel } = require("./vault");
+const fs = require("fs");
 
 const knexConfig = {
   development: {
@@ -47,23 +48,36 @@ knex
     Model.knex(knex);
     Transformer.query()
       .then(async (ts) => {
-        await VaultModel.query()
-          .findById(1)
-          .then((d) => {
-            return JSON.parse(VaultModel.decrypt(d.data));
-          })
-          .catch((e) => {
-            const data = require("./../helpers/vaultDataMock.json");
-            const encryptedText = VaultModel.encrypt(
-              JSON.stringify(data)
-            ).toString();
-            return VaultModel.query()
-              .insert({ id: 1, data: encryptedText })
-              .then((s) => data);
-          })
-          .then((data) => {
-            process.env["vault"] = JSON.stringify(data);
-          });
+        try {
+          throw "Vault Model is not a present!";
+          await VaultModel.query()
+            .findById(1)
+            .then((d) => {
+              return JSON.parse(VaultModel.decrypt(d.data));
+            })
+            .catch((e) => {
+              const data = require("./../helpers/vaultDataMock.json");
+              const encryptedText = VaultModel.encrypt(
+                JSON.stringify(data)
+              ).toString();
+              return VaultModel.query()
+                .insert({ id: 1, data: encryptedText })
+                .then((s) => data);
+            })
+            .then((data) => {
+              process.env["vault"] = JSON.stringify(data);
+            });
+        } catch (e) {
+          console.log("Getting Vault data from path");
+          const path = require("path");
+          const data = fs.readFileSync(
+            path.resolve(__dirname, "./../helpers/vaultDataMock.txt"),
+            "utf8"
+          );
+          const decryptedText = VaultModel.decrypt(data).toString();
+          process.env["vault"] = decryptedText;
+        }
+
         console.log(
           `Model Initialization: ${
             parseInt(s.rows[0].count) === ts.length ? "✅" : "❌"
