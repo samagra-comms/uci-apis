@@ -70,6 +70,7 @@ knex
         } catch (e) {
           console.log("Getting Vault data from path");
           const data = require("./../helpers/vaultDataMock2.json");
+          console.log(data.data);
           const decryptedText = VaultModel.decrypt(data.data).toString();
           console.log(decryptedText);
           process.env["vault"] = decryptedText;
