@@ -533,53 +533,53 @@ exports.HEALTH_CHECK = {
     FAILED_MESSAGE: "Cassandra db is not connected",
   },
   POSTGRES_DB: {
-    NAME : "postgres.db",
-    SUCCESS_CODE:"PSQL_UP",
-    FAILED_CODE:"POSTGRES_HEALTH_FAILED",
+    NAME: "postgres.db",
+    SUCCESS_CODE: "PSQL_UP",
+    FAILED_CODE: "POSTGRES_HEALTH_FAILED",
     FAILED_MESSAGE: "PostgreSQL db is not connected",
   },
   KAFKA: {
-    NAME : "kafka",
-    SUCCESS_CODE:"KAFKA_UP",
-    FAILED_CODE:"KAFKA_HEALTH_FAILED",
+    NAME: "kafka",
+    SUCCESS_CODE: "KAFKA_UP",
+    FAILED_CODE: "KAFKA_HEALTH_FAILED",
     FAILED_MESSAGE: "Kafka is not connected",
   },
   GQL: {
-    NAME : "graphql",
-    SUCCESS_CODE:"GQL_UP",
-    FAILED_CODE:"GQL_HEALTH_FAILED",
+    NAME: "graphql",
+    SUCCESS_CODE: "GQL_UP",
+    FAILED_CODE: "GQL_HEALTH_FAILED",
     FAILED_MESSAGE: "Graphql is not connected",
   },
   FUSION: {
-    NAME : "fusionAuth",
-    SUCCESS_CODE:"FUSIONAUTH_UP",
-    FAILED_CODE:"FUSIONAUTH_HEALTH_FAILED",
+    NAME: "fusionAuth",
+    SUCCESS_CODE: "FUSIONAUTH_UP",
+    FAILED_CODE: "FUSIONAUTH_HEALTH_FAILED",
     FAILED_MESSAGE: "FusionAuth is not connected",
   },
   REDIS: {
-    NAME : "redis",
-    SUCCESS_CODE:"REDIS_UP",
-    FAILED_CODE:"REDIS_HEALTH_FAILED",
+    NAME: "redis",
+    SUCCESS_CODE: "REDIS_UP",
+    FAILED_CODE: "REDIS_HEALTH_FAILED",
     FAILED_MESSAGE: "redis is not connected",
   },
   CAMPAIGN: {
-    NAME : "campaign",
-    SUCCESS_CODE:"CAMPAIGN_UP",
-    FAILED_CODE:"CAMPAIGN_HEALTH_FAILED",
+    NAME: "campaign",
+    SUCCESS_CODE: "CAMPAIGN_UP",
+    FAILED_CODE: "CAMPAIGN_HEALTH_FAILED",
     FAILED_MESSAGE: "campaign is not connected",
   },
   INBOUND: {
-    NAME : "inbound",
-    SUCCESS_CODE:"INOUND_UP",
-    FAILED_CODE:"INBOUND_HEALTH_FAILED",
+    NAME: "inbound",
+    SUCCESS_CODE: "INOUND_UP",
+    FAILED_CODE: "INBOUND_HEALTH_FAILED",
     FAILED_MESSAGE: "inbound is not connected",
   },
- TRANSFORMER: {
-    NAME : "transformer",
-    SUCCESS_CODE:"TRANSFORMER_UP",
-    FAILED_CODE:"TRANSFORMER_HEALTH_FAILED",
+  TRANSFORMER: {
+    NAME: "transformer",
+    SUCCESS_CODE: "TRANSFORMER_UP",
+    FAILED_CODE: "TRANSFORMER_HEALTH_FAILED",
     FAILED_MESSAGE: "transformer is not connected",
-  }
+  },
 };
 
 exports.DIALCODE = {
@@ -1106,6 +1106,14 @@ exports.USER_SEGMENT = {
     FAILED_MESSAGE: "Unable to create the query builder request",
     INFO: "Create bulk Job",
   },
+  ADD_USER_TO_REGISTRY: {
+    EXCEPTION_CODE: "USADU",
+    MISSING_CODE: "ERR_ADD_USER_TO_REGISTRY",
+    MISSING_MESSAGE: "Required fields to add user to registry are missing.",
+    FAILED_CODE: "ERR_CREATE_USER_FAILED",
+    FAILED_MESSAGE: "Unable to add user to registry.",
+    INFO: "Create bulk Job",
+  },
 };
 
 exports.BOT = {
@@ -1189,17 +1197,15 @@ exports.BOT = {
   },
 };
 
-
 exports.ODK = {
   UPLOAD: {
     EXCEPTION_CODE: "ODKUP",
     FAIL_CODE: "ERR_PARSE_FORM",
     FAIL_MESSAGE: "Error in uploading Form - Error in parsing form",
-    FORMID_FAIL_MESSAGE:"FormID could not be parsed. Please check the form",
+    FORMID_FAIL_MESSAGE: "FormID could not be parsed. Please check the form",
     UPLOAD_FAIL_ADMIN: "Error in uploading Form - Contact Admin",
     UPLOAD_FAIL_MESSAGE: "Error in uploading Form",
   },
-
 };
 
 exports.ADAPTER = {
@@ -1207,15 +1213,14 @@ exports.ADAPTER = {
     EXCEPTION_CODE: "ADAPTER_UP",
     FAIL_CODE: "ADAPTER_NOT_EXISTS",
     FAIL_MESSAGE: "Adapter does not exists",
-    FAIL_MESSAGE_1:"Adapter Cannot be Updated",
+    FAIL_MESSAGE_1: "Adapter Cannot be Updated",
   },
   INSERT: {
     EXCEPTION_CODE: "ADAPTER_IN",
     ALREADY_EXIST_CODE: "ADAPTER_ALREDAY_PRESENT",
     ALREADY_EXIST_MESSAGE: "Adapter already exists",
     CANNOT_CREATE: "Adapter Cannot be created",
-  }
-
+  },
 };
 
 exports.TRANSFORMER = {
@@ -1223,7 +1228,7 @@ exports.TRANSFORMER = {
     EXCEPTION_CODE: "TRANS_UP",
     FAIL_CODE: "TRANSFORMER_NOT_EXISTS",
     FAIL_MESSAGE: "Transformer does not exists",
-    FAIL_MESSAGE_1:"Transformer Cannot be Updated",
+    FAIL_MESSAGE_1: "Transformer Cannot be Updated",
   },
   INSERT: {
     EXCEPTION_CODE: "TRANS_IN",
@@ -1234,16 +1239,15 @@ exports.TRANSFORMER = {
   },
   FORM: {
     EXCEPTION_CODE: "TRANS_FORM",
-    FORM_FAIL_CODE:"NOT_ODK_TYPE",
-    FORM_FAIL_MESSAGE:"Transformer is not of ODK type",
+    FORM_FAIL_CODE: "NOT_ODK_TYPE",
+    FORM_FAIL_MESSAGE: "Transformer is not of ODK type",
   },
   DELETE: {
     EXCEPTION_CODE: "TRANS_DEL",
     DELETE_CODE: "ID_NOT_EXISTS",
-    DELETE_MESSAGE: "ID not present"
-  }
+    DELETE_MESSAGE: "ID not present",
+  },
 };
-
 
 exports.MIDDLEWARE = {
   ADD_OWNER: {

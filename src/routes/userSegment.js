@@ -440,6 +440,12 @@ async function queryBuilder(req, res) {
 }
 
 async function addUserToRegistry(req, res) {
+  const rspObj = req.rspObj;
+  const errCode =
+    programMessages.EXCEPTION_CODE +
+    "_" +
+    +USMessages.ADD_USER_TO_REGISTRY.EXCEPTION_CODE;
+
   const botID = req.params.botID;
   const username = req.params.userPhone;
 
@@ -483,11 +489,13 @@ async function addUserToRegistry(req, res) {
       deviceID = await deviceManager.addDeviceToRegistry(botID, dummyUser);
     }
   }
-  res.send({
+  rspObj.responseCode = responseCode.SUCCESS;
+  rspObj.result = {
     status: "Success",
     message: "User Added",
     userID: deviceID,
-  });
+  };
+  return res.status(200).send(response.successResponse(rspObj));
 }
 
 function successResponse(data) {
