@@ -667,6 +667,7 @@ function isValidReq(req, urlsWithVerification) {
 
 const checkIfAdmin = (req, res, next) => {
   const token = req.headers["admin-token"];
+  console.log("admin-token", token);
   if (process.env.ADMIN_TOKEN === token) {
     req.body.isAdmin = true;
   } else {
