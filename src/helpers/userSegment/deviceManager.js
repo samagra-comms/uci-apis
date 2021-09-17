@@ -9,8 +9,8 @@ const _ = require("lodash");
 CryptoJS.lib.WordArray.words;
 
 // For staging server
-const fusionAuthURL = process.env.FA_URL;
-const fusionAuthAPIKey = process.env.FA_API_KEY;
+const fusionAuthURL = process.env.FUSIONAUTH_URL;
+const fusionAuthAPIKey = process.env.FUSIONAUTH_KEY;
 const anonymousBotID = process.env.FA_ANONYMOUS_BOT_ID;
 
 const client = new FusionAuthClient(fusionAuthAPIKey, fusionAuthURL);
