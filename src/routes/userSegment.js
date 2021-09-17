@@ -449,6 +449,8 @@ async function addUserToRegistry(req, res) {
   const botID = req.params.botID;
   const username = req.params.userPhone;
 
+  console.log("Registration Request", botID, username);
+
   const deviceManager = new DeviceManager();
   let deviceID = "";
 
@@ -461,6 +463,8 @@ async function addUserToRegistry(req, res) {
     const userSegments = await UserSegment.query()
       .findByIds(bot.users)
       .withGraphFetched("[allService, byIDService, byPhoneService]");
+
+    console.log(userSegments);
 
     let found = false;
     let user;
