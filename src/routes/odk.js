@@ -64,46 +64,58 @@ async function uploadForm(req, res) {
             fetch(process.env.TRANSFORMER_BASE_URL);
             fs.readFile(req.file.path, (error, data) => {
               if (error) {
-                response.sendErrorRes(req,res,
+                response.sendErrorRes(
+                  req,
+                  res,
                   OdkMessages.UPLOAD.FAIL_CODE,
                   errorCode,
                   OdkMessages.UPLOAD.UPLOAD_FAIL_MESSAGE,
                   error,
-                  errCode)
+                  errCode
+                );
               }
               const formDef = JSON.parse(parser.toJson(data.toString()));
               let formID = "";
               try {
                 formID = formDef["h:html"]["h:head"].model.instance.data.id;
-                response.sendSuccessRes(req,formID,res);
+                response.sendSuccessRes(req, formID, res);
               } catch (e) {
-                response.sendErrorRes(req,res,
+                response.sendErrorRes(
+                  req,
+                  res,
                   OdkMessages.UPLOAD.EXCEPTION_CODE,
                   errorCode,
                   OdkMessages.UPLOAD.UPLOAD_FAIL_MESSAGE,
                   e.message,
-                  errCode)
+                  errCode
+                );
               }
             });
           } else {
             console.log("Form Uploaded Failed");
             console.log(result);
-            response.sendErrorRes(req,res,
+            response.sendErrorRes(
+              req,
+              res,
               OdkMessages.UPLOAD.FAIL_CODE,
               errorCode,
               OdkMessages.UPLOAD.UPLOAD_FAIL_MESSAGE,
               "Form Uploaded Failed",
-              errCode)
+              errCode
+            );
           }
         })
         .catch((error) => {
           console.log("error", error);
-          response.sendErrorRes(req,res,
+          response.sendErrorRes(
+            req,
+            res,
             OdkMessages.UPLOAD.EXCEPTION_CODE,
             errorCode,
             OdkMessages.UPLOAD.UPLOAD_FAIL_MESSAGE,
             error,
-            errCode)
+            errCode
+          );
         });
     },
     function (errorCode) {
@@ -115,5 +127,5 @@ async function uploadForm(req, res) {
 }
 
 module.exports = function (app) {
-   app.route(BASE_URL + "/forms/upload").post(upload.single("form"), uploadForm);
+  app.route(BASE_URL + "/forms/upload").post(upload.single("form"), uploadForm);
 };

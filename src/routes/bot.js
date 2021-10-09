@@ -24,7 +24,7 @@ const anonymousBotID = process.env.FA_ANONYMOUS_BOT_ID;
 
 const client = new FusionAuthClient(fusionAuthAPIKey, fusionAuthURL);
 
-const UCI_CORE_URL = `http://${process.env.UCI_CORE_BASE_URL}/campaign`;
+const UCI_CORE_URL = `${process.env.UCI_CORE_BASE_URL}/campaign`;
 
 // BOT status = "enabled", "disabled", "draft";
 
@@ -343,6 +343,7 @@ async function search(req, res) {
           const userSegments = await UserSegment.query()
             .findByIds(bot.users)
             .withGraphFetched("[allService, byIDService, byPhoneService]");
+          console.log({ conversationLogics });
           for (let j = 0; j < conversationLogics.length; j++) {
             const adapterID = conversationLogics[j].adapter;
             conversationLogics[j].adapter = await Adapter.query().findById(
