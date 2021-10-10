@@ -110,7 +110,11 @@ async function get(req, res) {
       data.push(bot);
     }
 
-    response.sendSuccessRes(req, { data, total: botsData.total }, res);
+    rspObj.responseCode = responseCode.SUCCESS;
+    rspObj.result = { data, total: botsData.total };
+    return res.status(200).send(successResponse(rspObj));
+
+    // response.sendSuccessRes(req, { data, total: botsData.total }, res);
   } catch (e) {
     response.sendErrorRes(
       req,
