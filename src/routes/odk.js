@@ -20,7 +20,7 @@ var storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 const uuid = require("uuid/v1");
 const BASE_URL = "/admin/v1";
-const ODK_BASE_URL = "https://agg.staging.saksham.samagra.io";
+const ODK_BASE_URL = process.env.ODK_BASE_URL;
 const messageUtils = require("../service/messageUtil");
 const OdkMessages = messageUtils.ODK;
 const programMessages = messageUtils.PROGRAM;
@@ -31,7 +31,11 @@ async function uploadForm(req, res) {
   const errCode =
     programMessages.EXCEPTION_CODE + "_" + OdkMessages.UPLOAD.EXCEPTION_CODE;
   const vault = new Vault();
-  const credentials = vault.getCredentials("", { variable: "ODK" });
+  let credentials = vault.getCredentials("", { variable: "ODK" });
+  credentials = {
+    username: process.env.ODK_USERNAME,
+    password: process.env.ODK_PASSWORD,
+  };
 
   const ODK_FILTER_URL = `${ODK_BASE_URL}/Aggregate.html#submissions/filter///`;
   const ODK_FORM_UPLOAD_URL = `${ODK_BASE_URL}/formUpload`;
