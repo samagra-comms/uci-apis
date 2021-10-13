@@ -77,9 +77,15 @@ async function uploadForm(req, res) {
               const formDef = JSON.parse(parser.toJson(data.toString()));
               let formID = "";
               try {
-                formID = formDef["h:html"]["h:head"].model.instance.data.id;
+                if (Array.isArray(formDef["h:html"]["h:head"].model.instance)) {
+                  formID =
+                    formDef["h:html"]["h:head"].model.instance[0].data.id;
+                } else {
+                  formID = formDef["h:html"]["h:head"].model.instance.data.id;
+                }
                 response.sendSuccessRes(req, formID, res);
               } catch (e) {
+                console.log("CP-2", { e });
                 response.sendErrorRes(
                   req,
                   res,
@@ -106,7 +112,7 @@ async function uploadForm(req, res) {
           }
         })
         .catch((error) => {
-          console.log("error", error);
+          console.log("CP-3", { error });
           response.sendErrorRes(
             req,
             res,
@@ -119,6 +125,7 @@ async function uploadForm(req, res) {
         });
     },
     function (errorCode) {
+      console.log({ errorCode });
       res.status(400).send({
         status: "Error in uploading Form" + error,
       });
