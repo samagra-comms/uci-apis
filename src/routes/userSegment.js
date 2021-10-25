@@ -455,7 +455,7 @@ async function addUserToRegistry(req, res) {
   let deviceID = "";
 
   const globalBot = (await Bot.query().where("name", "Global Bot"))[0];
-  if (globalBot.id === botID) {
+  if (globalBot && globalBot.id === botID) {
     deviceID = await deviceManager.addAnonymousDeviceToRegistry(username);
   } else {
     // Check if user is in UserSegments for the particular bot.
