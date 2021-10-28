@@ -690,6 +690,7 @@ const addOwnerInfo = (req, res, next) => {
     "bot/delete",
     "bot/update",
     "bot/get",
+    "bot/search",
     "bot/getByParam",
     "conversationLogic/update/",
     "conversationLogic/delete/",
