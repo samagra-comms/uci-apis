@@ -266,36 +266,44 @@ async function getByParam(req, res) {
           .status(400)
           .send(errorResponse(rspObj, errCode + errorCode.CODE1));
       } else {
-        if (isAdmin) {
-          bot = (
-            await Bot.query().where({
-              startingMessage: req.query.startingMessage,
-            })
-          )[0];
-        } else {
-          bot = (
-            await Bot.query().where({
-              startingMessage: req.query.startingMessage,
-              ownerID: ownerID,
-              ownerOrgID: ownerOrgID,
-            })
-          )[0];
-        }
-        console.log({ bot });
-        if (bot instanceof Bot) {
-          // Add logic
-          let logic = await ConversationLogic.query().findByIds(bot.logicIDs);
-          bot.logic = logic;
-          rspObj.responseCode = responseCode.SUCCESS;
-          rspObj.result = { data: bot };
-          return res.status(200).send(successResponse(rspObj));
-        } else {
+        // if (isAdmin) {
+        const bots = await Bot.query().where({
+          startingMessage: req.query.startingMessage,
+        });
+        // } else {
+        //   bot = (
+        //     await Bot.query().where({
+        //       startingMessage: req.query.startingMessage,
+        //       ownerID: ownerID,
+        //       ownerOrgID: ownerOrgID,
+        //     })
+        //   )[0];
+        // }
+        if (bots.length === 0) {
           rspObj.errCode = BotMessages.GET_BY_PARAM.FAILED_CODE;
           rspObj.errMsg = BotMessages.GET_BY_PARAM.FAILED_MESSAGE;
           rspObj.responseCode = responseCode.CLIENT_ERROR;
           return res
             .status(400)
             .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+        } else {
+          bot = bots[0];
+          console.log({ bot });
+          if (bot instanceof Bot) {
+            // Add logic
+            let logic = await ConversationLogic.query().findByIds(bot.logicIDs);
+            bot.logic = logic;
+            rspObj.responseCode = responseCode.SUCCESS;
+            rspObj.result = { data: bot };
+            return res.status(200).send(successResponse(rspObj));
+          } else {
+            rspObj.errCode = BotMessages.GET_BY_PARAM.FAILED_CODE;
+            rspObj.errMsg = BotMessages.GET_BY_PARAM.FAILED_MESSAGE;
+            rspObj.responseCode = responseCode.CLIENT_ERROR;
+            return res
+              .status(400)
+              .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+          }
         }
       }
     } else {
