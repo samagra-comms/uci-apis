@@ -1,0 +1,113 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Adapter {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  channel  String
+  provider String
+  config   Json
+  name     String @unique
+
+  ConversationLogic ConversationLogic[]
+}
+
+model Board {
+  id   Int    @id @default(autoincrement())
+  name String
+}
+
+model Service {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  type               String
+  config             Json?
+  name               String?
+  Transformer        Transformer[]
+  UserSegmentByID    UserSegment[] @relation("UserSegmentByID")
+  UserSegmentByPhone UserSegment[] @relation("UserSegmentByPhone")
+  UserSegmentAll     UserSegment[] @relation("UserSegmentAll")
+}
+
+model Transformer {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name                String
+  tags                String[]
+  config              Json
+  service             Service            @relation(fields: [serviceId], references: [id])
+  serviceId           String             @unique @db.Uuid
+  ConversationLogic   ConversationLogic? @relation(fields: [conversationLogicId], references: [id])
+  conversationLogicId String?            @db.Uuid
+}
+
+model Bot {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name            String              @unique
+  startingMessage String
+  users           UserSegment[]
+  logicIDs        ConversationLogic[]
+  ownerID         String
+  ownerOrgID      String
+  purpose         String
+  description     String
+  startDate       DateTime
+  endDate         DateTime
+}
+
+model UserSegment {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name        String  @unique
+  ownerID     String
+  ownerOrgID  String
+  description String
+  count       Int     @default(0)
+  category    String
+  all         Service @relation(fields: [allServiceID], references: [id], name: "UserSegmentAll")
+  byID        Service @relation(fields: [byIDServiceID], references: [id], name: "UserSegmentByID")
+  byPhone     Service @relation(fields: [byPhoneServiceID], references: [id], name: "UserSegmentByPhone")
+
+  allServiceID     String @unique @db.Uuid
+  byPhoneServiceID String @unique @db.Uuid
+  byIDServiceID    String @unique @db.Uuid
+
+  Bot   Bot?    @relation(fields: [botId], references: [id])
+  botId String? @db.Uuid
+}
+
+model ConversationLogic {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  description  String?
+  ownerID      String?
+  ownerOrgID   String?
+  transformers Transformer[]
+
+  adapter   Adapter @relation(fields: [adapterId], references: [id])
+  adapterId String  @db.Uuid
+  Bot       Bot?    @relation(fields: [botId], references: [id])
+  botId     String? @db.Uuid
+}
