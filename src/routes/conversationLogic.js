@@ -119,13 +119,22 @@ async function update(req, res) {
 }
 
 async function deleteByID(req, res) {
-  const rspObj = req.rspObj;
+  console.log(req.params.id);
   return ConversationLogic.query()
     .deleteById(req.params.id)
     .then((results) => {
-      if (result) {
-        res.send({ data: `Number of CLs deleted: ${transformer}` });
+      console.log({ results }, results == 1);
+      if (results == 1) {
+        console.log("Inside if");
+        response.sendSuccessRes(
+          req,
+          {
+            data: `Number of CLs deleted: ${results}`,
+          },
+          res
+        );
       } else {
+        console.log("Error", { results });
         const errCode =
           programMessages.EXCEPTION_CODE +
           "_" +
