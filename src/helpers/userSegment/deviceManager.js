@@ -9,8 +9,8 @@ const _ = require("lodash");
 CryptoJS.lib.WordArray.words;
 
 // For staging server
-const fusionAuthURL = process.env.FA_URL;
-const fusionAuthAPIKey = process.env.FA_API_KEY;
+const fusionAuthURL = process.env.FUSIONAUTH_URL;
+const fusionAuthAPIKey = process.env.FUSIONAUTH_KEY;
 const anonymousBotID = process.env.FA_ANONYMOUS_BOT_ID;
 
 const client = new FusionAuthClient(fusionAuthAPIKey, fusionAuthURL);
@@ -41,7 +41,27 @@ class DeviceManager {
   };
 
   addBotToRegistry = async (botID) => {
-    return await client.createApplication(botID, {});
+    return await client
+      .createApplication(botID, { application: { name: botID } })
+      .then((response) => {
+        console.log(JSON.stringify(response));
+      })
+      .catch((e) => {
+        console.log(JSON.stringify(e));
+      });
+  };
+
+  botExists = async (botID) => {
+    return client
+      .retrieveApplication(botID)
+      .then((response) => {
+        console.log({ response });
+        return { status: true, user: response.successResponse };
+      })
+      .catch((e) => {
+        console.log(e);
+        return { status: false, user: null };
+      });
   };
 
   isDeviceAlreadyExisting = async (username) => {
@@ -56,10 +76,20 @@ class DeviceManager {
 
   addDeviceToRegistry = async (botID, user) => {
     // TODO: Encrypt
+    console.log({ botID, user });
     const deviceString = user.device.type + ":" + user.device.deviceID;
     const username = this.encrypt(deviceString).toString();
 
+    console.log("CP-1");
     const isDeviceExisting = await this.isDeviceAlreadyExisting(username);
+    console.log("CP-2");
+    const isBotExisting = await this.botExists(botID);
+    console.log("CP-3", isBotExisting);
+
+    if (!isBotExisting.status) {
+      await this.addBotToRegistry(botID);
+    }
+
     if (!isDeviceExisting.status) {
       let fullName = "";
       if (user.firstName && user.lastName)
@@ -83,7 +113,7 @@ class DeviceManager {
 
       if (fullName === "") delete userRequestJSON.user.fullName;
       return await client
-        .createUser(null, userRequestJSON)
+        .register(null, userRequestJSON)
         .then((response) => {
           console.log("User Added Successfully");
           console.log({ response });

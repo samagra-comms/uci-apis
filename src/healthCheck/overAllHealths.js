@@ -10,7 +10,7 @@ const { InMemoryCache } = require("apollo-cache-inmemory");
 
 async function checkFusion() {
   let checks = [];
-  let result = await fetch(`${process.env.FA_URL}/api/status`);
+  let result = await fetch(`${process.env.FUSIONAUTH_URL}/api/status`);
   if (result.statusText === "OK") {
     checks = { name: "Fusion Auth", healthy: true };
     return checks;
@@ -87,16 +87,15 @@ async function checkDB() {
 }
 
 async function checkRedis() {
-    let checks;
-    let result = await fetch(`http://localhost:9999/admin/v1/health/redis`);
-    if (result.status === 200) {
-      checks = { name: "Redis cache", healthy: true };
-      return checks;
-    } else {
-      checks = { name: "Redis cache", healthy: false };
-      return checks;
-    }
- 
+  let checks;
+  let result = await fetch(`http://localhost:9999/admin/v1/health/redis`);
+  if (result.status === 200) {
+    checks = { name: "Redis cache", healthy: true };
+    return checks;
+  } else {
+    checks = { name: "Redis cache", healthy: false };
+    return checks;
+  }
 }
 async function checkKafka() {
   let kafka;
@@ -120,33 +119,31 @@ async function checkKafka() {
   const consumer = kafka.consumer({ groupId: "api-group" });
   let result = consumer.connect();
   if (result) {
-    return checks = { name: "Kafka", healthy: true };
-  } else{
-    return checks = { name: "Kafka", healthy: false };
+    return (checks = { name: "Kafka", healthy: true });
+  } else {
+    return (checks = { name: "Kafka", healthy: false });
   }
 }
 
-async function checkGQL(req, res){ 
-    let checks;  
-    const client = getGQLClient() 
-    if (client) {
-       return checks = {"name":"GQL",
-        "healthy":true}   
-    }
-    
-    } 
+async function checkGQL(req, res) {
+  let checks;
+  const client = getGQLClient();
+  if (client) {
+    return (checks = { name: "GQL", healthy: true });
+  }
+}
 function getGQLClient() {
-    return new ApolloClient({
-      link: new HttpLink({
-        uri:`${process.env.GRAPHQL_BASE_URL}/v1/graphql`,  
-        fetch:fetch ,
-        headers:     {
-            "x-hasura-admin-secret": `${process.env.HASURA_GRAPHQL_ADMIN_SECRET}`,
-          }                       
-      }),
-      cache: new InMemoryCache(),
-    });
-  } 
+  return new ApolloClient({
+    link: new HttpLink({
+      uri: `${process.env.GRAPHQL_BASE_URL}/v1/graphql`,
+      fetch: fetch,
+      headers: {
+        "x-hasura-admin-secret": `${process.env.HASURA_GRAPHQL_ADMIN_SECRET}`,
+      },
+    }),
+    cache: new InMemoryCache(),
+  });
+}
 
 module.exports = {
   checkFusion,
@@ -156,6 +153,5 @@ module.exports = {
   checkRedis,
   checkKafka,
   checkGQL,
-  getGQLClient
-
+  getGQLClient,
 };

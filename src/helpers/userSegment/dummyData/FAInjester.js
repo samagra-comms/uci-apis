@@ -3,8 +3,8 @@ const { FusionAuthClient } = require("fusionauth-node-client");
 const env = require("dotenv").config();
 
 // For staging server
-const fusionAuthURL = process.env.FA_URL;
-const fusionAuthAPIKey = process.env.FA_API_KEY;
+const fusionAuthURL = process.env.FUSIONAUTH_URL;
+const fusionAuthAPIKey = process.env.FUSIONAUTH_KEY;
 const applicationId = "281c68c4-97f0-4aba-8b2e-cff59fbc038f";
 
 const registerSingleClient = (data, counter) => {

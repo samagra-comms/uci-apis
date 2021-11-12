@@ -10,20 +10,19 @@ const fetch = require("node-fetch");
 
 async function checkFusion(req, res) {
   let checks = [];
-  fetch(`${process.env.FA_URL}/api/status`)
+  fetch(`${process.env.FUSIONAUTH_URL}/api/status`)
     .then(async (s) => {
-      console.log("Result:", s.status)
-      if(s.statusText === 'OK'){
-      checks.push({"name":"connection",
-      "healthy":" true"})
-      response.sendHealthSuccessRes(
-        req,
-        true,
-        checks,
-        res,
-        HealthMessages.FUSION.SUCCESS_CODE
-      );
-      } else{
+      console.log("Result:", s.status);
+      if (s.statusText === "OK") {
+        checks.push({ name: "connection", healthy: " true" });
+        response.sendHealthSuccessRes(
+          req,
+          true,
+          checks,
+          res,
+          HealthMessages.FUSION.SUCCESS_CODE
+        );
+      } else {
         response.sendHealthErrorRes(
           req,
           res,

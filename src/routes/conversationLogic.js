@@ -39,22 +39,28 @@ async function update(req, res) {
       (await ConversationLogic.query().findById(req.params.id)) !== undefined;
 
     if (!isExisting) {
-      response.sendErrorRes(req,res,
+      response.sendErrorRes(
+        req,
+        res,
         CLMessages.UPDATE.MISSING_CODE_CL,
         errorCode,
         CLMessages.UPDATE.MISSING_CL_MESSAGE,
         CLMessages.UPDATE.MISSING_CL_MESSAGE,
-        errCode)
+        errCode
+      );
     } else {
       if (data.adapter) {
         let adapter = await Adapter.query().findById(data.adapter);
         if (!adapter) {
-          response.sendErrorRes(req,res,
+          response.sendErrorRes(
+            req,
+            res,
             CLMessages.UPDATE.MISSING_CODE_ADAPTER,
             errorCode,
             CLMessages.UPDATE.MISSING_ADAPTER_MESSAGE,
             CLMessages.UPDATE.MISSING_ADAPTER_MESSAGE,
-            errCode)
+            errCode
+          );
         }
       }
 
@@ -69,63 +75,77 @@ async function update(req, res) {
             Transformer;
       }
       if (isValid) {
-        const inserted = await ConversationLogic.query(trx)
-          .patch({ name: data.name, adapter: data.adapter })
+        console.log("Reached here in CL Update");
+        const updated = await ConversationLogic.query(trx)
+          .patch({
+            name: data.name,
+            adapter: data.adapter,
+            description: data.description,
+          })
           .findById(req.params.id);
-        const d = await trx.commit();
-        loggerService.exitLog({ responseCode: rspObj.responseCode }, logObject);
-        response.sendSuccessRes(req,inserted,res);
+
+        await trx.commit();
+        const getAgain = await ConversationLogic.query().findById(
+          req.params.id
+        );
+        console.log({ getAgain });
+        response.sendSuccessRes(req, getAgain, res);
       } else {
         await trx.rollback();
-        response.sendErrorRes(req,res,
+        response.sendErrorRes(
+          req,
+          res,
           CLMessages.UPDATE.MISSING_CODE_TRANSFORMER,
           errorCode,
           CLMessages.UPDATE.MISSING_TRANSFORMER_MESSAGE,
           CLMessages.UPDATE.MISSING_TRANSFORMER_MESSAGE,
-          errCode)
+          errCode
+        );
       }
     }
   } catch (e) {
     console.error(e);
     await trx.rollback();
-    response.sendErrorRes(req,res,
+    response.sendErrorRes(
+      req,
+      res,
       CLMessages.UPDATE.UPDATE_FAILED_CODE,
       errorCode,
       CLMessages.UPDATE.UPDATE_FAILED_MESSAGE,
       CLMessages.UPDATE.UPDATE_FAILED_MESSAGE,
-      errCode)
+      errCode
+    );
   }
 }
 
 async function deleteByID(req, res) {
-  const rspObj = req.rspObj;
+  console.log(req.params.id);
   return ConversationLogic.query()
     .deleteById(req.params.id)
     .then((results) => {
-      if (result) {
-        res.send({ data: `Number of CLs deleted: ${transformer}` });
+      console.log({ results }, results == 1);
+      if (results == 1) {
+        console.log("Inside if");
+        response.sendSuccessRes(
+          req,
+          {
+            data: `Number of CLs deleted: ${results}`,
+          },
+          res
+        );
       } else {
+        console.log("Error", { results });
         const errCode =
           programMessages.EXCEPTION_CODE +
           "_" +
           CLMessages.DELETE.EXCEPTION_CODE;
-          response.sendErrorRes(req,res,
-            null,
-            errorCode,
-            null,
-            null,
-            errCode)
+        response.sendErrorRes(req, res, null, errorCode, null, null, errCode);
       }
     })
     .catch((e) => {
       const errCode =
         programMessages.EXCEPTION_CODE + "_" + CLMessages.DELETE.EXCEPTION_CODE;
-        response.sendErrorRes(req,res,
-          null,
-          errorCode,
-          null,
-          null,
-          errCode)
+      response.sendErrorRes(req, res, null, errorCode, null, null, errCode);
     });
 }
 
@@ -141,21 +161,27 @@ async function insert(req, res) {
   const trx = await ConversationLogic.startTransaction();
   try {
     if (isExisting) {
-      response.sendErrorRes(req,res,
+      response.sendErrorRes(
+        req,
+        res,
         CLMessages.CREATE.ALREADY_EXIST_CODE,
         errorCode,
         CLMessages.CREATE.ALREADY_EXIST_MESSAGE,
         CLMessages.CREATE.ALREADY_EXIST_MESSAGE,
-        errCode)
+        errCode
+      );
     } else {
       let adapter = await Adapter.query().findById(data.adapter);
       if (!(adapter instanceof Adapter)) {
-        response.sendErrorRes(req,res,
+        response.sendErrorRes(
+          req,
+          res,
           CLMessages.CREATE.MISSING_CODE_ADAPTER,
           errorCode,
           CLMessages.CREATE.MISSING_ADAPTER_MESSAGE,
           CLMessages.CREATE.MISSING_ADAPTER_MESSAGE,
-          errCode)
+          errCode
+        );
       } else {
         // TODO: Verify data
         // Loop over transformers to verify if they exist or not.
@@ -172,31 +198,38 @@ async function insert(req, res) {
             transformers: JSON.stringify(data.transformers),
             adapter: data.adapter,
             name: data.name,
+            description: data.description,
             ownerID,
             ownerOrgID,
           });
           await trx.commit();
-          response.sendSuccessRes(req,inserted,res);
+          response.sendSuccessRes(req, inserted, res);
         } else {
           await trx.rollback();
-          response.sendErrorRes(req,res,
+          response.sendErrorRes(
+            req,
+            res,
             CLMessages.CREATE.MISSING_CODE_TRANSFORMER,
             errorCode,
             CLMessages.CREATE.MISSING_TRANSFORMER_MESSAGE,
             CLMessages.CREATE.MISSING_TRANSFORMER_MESSAGE,
-            errCode)
+            errCode
+          );
         }
       }
     }
   } catch (e) {
     console.error(e);
     await trx.rollback();
-    response.sendErrorRes(req,res,
+    response.sendErrorRes(
+      req,
+      res,
       CLMessages.CREATE.CREATE_FAILED_CODE,
       errorCode,
       CLMessages.CREATE.CREATE_FAILED_MESSAGE,
       CLMessages.CREATE.CREATE_FAILED_MESSAGE,
-      errCode)
+      errCode
+    );
   }
 }
 

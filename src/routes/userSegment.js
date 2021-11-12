@@ -440,14 +440,22 @@ async function queryBuilder(req, res) {
 }
 
 async function addUserToRegistry(req, res) {
+  const rspObj = req.rspObj;
+  const errCode =
+    programMessages.EXCEPTION_CODE +
+    "_" +
+    +USMessages.ADD_USER_TO_REGISTRY.EXCEPTION_CODE;
+
   const botID = req.params.botID;
   const username = req.params.userPhone;
+
+  console.log("Registration Request", botID, username);
 
   const deviceManager = new DeviceManager();
   let deviceID = "";
 
   const globalBot = (await Bot.query().where("name", "Global Bot"))[0];
-  if (globalBot.id === botID) {
+  if (globalBot && globalBot.id === botID) {
     deviceID = await deviceManager.addAnonymousDeviceToRegistry(username);
   } else {
     // Check if user is in UserSegments for the particular bot.
@@ -455,6 +463,8 @@ async function addUserToRegistry(req, res) {
     const userSegments = await UserSegment.query()
       .findByIds(bot.users)
       .withGraphFetched("[allService, byIDService, byPhoneService]");
+
+    console.log(userSegments);
 
     let found = false;
     let user;
@@ -483,11 +493,13 @@ async function addUserToRegistry(req, res) {
       deviceID = await deviceManager.addDeviceToRegistry(botID, dummyUser);
     }
   }
-  res.send({
+  rspObj.responseCode = responseCode.SUCCESS;
+  rspObj.result = {
     status: "Success",
     message: "User Added",
     userID: deviceID,
-  });
+  };
+  return res.status(200).send(response.successResponse(rspObj));
 }
 
 function successResponse(data) {

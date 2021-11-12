@@ -20,18 +20,19 @@ var storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 const uuid = require("uuid/v1");
 const BASE_URL = "/admin/v1";
-const ODK_BASE_URL = "https://agg.staging.saksham.samagra.io";
+const ODK_BASE_URL = process.env.ODK_SERVICE;
 const messageUtils = require("../service/messageUtil");
 const OdkMessages = messageUtils.ODK;
 const programMessages = messageUtils.PROGRAM;
 const errorCode = messageUtils.ERRORCODES;
 
 async function uploadForm(req, res) {
-  // const rspObj = req;
   const errCode =
     programMessages.EXCEPTION_CODE + "_" + OdkMessages.UPLOAD.EXCEPTION_CODE;
-  const vault = new Vault();
-  const credentials = vault.getCredentials("", { variable: "ODK" });
+  const credentials = {
+    username: process.env.ODK_USERNAME,
+    password: process.env.ODK_PASSWORD,
+  };
 
   const ODK_FILTER_URL = `${ODK_BASE_URL}/Aggregate.html#submissions/filter///`;
   const ODK_FORM_UPLOAD_URL = `${ODK_BASE_URL}/formUpload`;
@@ -44,7 +45,6 @@ async function uploadForm(req, res) {
   );
   getRequest.request(
     function (data) {
-      //console.log("req:",rspObj)
       var formData = new FormData();
       const file = fs.createReadStream(req.file.path);
       formData.append("form_def_file", file, req.file.originalname);
@@ -64,49 +64,68 @@ async function uploadForm(req, res) {
             fetch(process.env.TRANSFORMER_BASE_URL);
             fs.readFile(req.file.path, (error, data) => {
               if (error) {
-                response.sendErrorRes(req,res,
+                response.sendErrorRes(
+                  req,
+                  res,
                   OdkMessages.UPLOAD.FAIL_CODE,
                   errorCode,
                   OdkMessages.UPLOAD.UPLOAD_FAIL_MESSAGE,
                   error,
-                  errCode)
+                  errCode
+                );
               }
               const formDef = JSON.parse(parser.toJson(data.toString()));
               let formID = "";
               try {
-                formID = formDef["h:html"]["h:head"].model.instance.data.id;
-                response.sendSuccessRes(req,formID,res);
+                if (Array.isArray(formDef["h:html"]["h:head"].model.instance)) {
+                  formID =
+                    formDef["h:html"]["h:head"].model.instance[0].data.id;
+                } else {
+                  formID = formDef["h:html"]["h:head"].model.instance.data.id;
+                }
+                response.sendSuccessRes(req, formID, res);
               } catch (e) {
-                response.sendErrorRes(req,res,
+                console.log("CP-2", { e });
+                response.sendErrorRes(
+                  req,
+                  res,
                   OdkMessages.UPLOAD.EXCEPTION_CODE,
                   errorCode,
                   OdkMessages.UPLOAD.UPLOAD_FAIL_MESSAGE,
                   e.message,
-                  errCode)
+                  errCode
+                );
               }
             });
           } else {
             console.log("Form Uploaded Failed");
             console.log(result);
-            response.sendErrorRes(req,res,
+            response.sendErrorRes(
+              req,
+              res,
               OdkMessages.UPLOAD.FAIL_CODE,
               errorCode,
               OdkMessages.UPLOAD.UPLOAD_FAIL_MESSAGE,
               "Form Uploaded Failed",
-              errCode)
+              errCode
+            );
           }
         })
         .catch((error) => {
-          console.log("error", error);
-          response.sendErrorRes(req,res,
+          console.log("CP-3", { error });
+          response.sendErrorRes(
+            req,
+            res,
             OdkMessages.UPLOAD.EXCEPTION_CODE,
             errorCode,
             OdkMessages.UPLOAD.UPLOAD_FAIL_MESSAGE,
             error,
-            errCode)
+            errCode
+          );
         });
     },
     function (errorCode) {
+      console.log({ errorCode });
       res.status(400).send({
         status: "Error in uploading Form" + error,
       });
@@ -115,5 +134,5 @@ async function uploadForm(req, res) {
 }
 
 module.exports = function (app) {
-   app.route(BASE_URL + "/forms/upload").post(upload.single("form"), uploadForm);
+  app.route(BASE_URL + "/forms/upload").post(upload.single("form"), uploadForm);
 };
