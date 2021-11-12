@@ -506,6 +506,14 @@ async function deleteByID(req, res) {
   }
 }
 
+const isExact = async (data) => (await Bot.query().where(data).length) > 0;
+const isStartingMessageUnique = async (data) => {
+  const botsWithStartingMessage = await Bot.query().where({
+    startingMessage: data.startingMessage,
+  });
+  return botsWithStartingMessage.length === 0;
+};
+
 async function insert(req, res) {
   const rspObj = req.rspObj;
   const ownerID = req.body.ownerID;
@@ -516,92 +524,119 @@ async function insert(req, res) {
 
   try {
     const data = req.body.data;
-    const isExisting = (await Bot.query().where(data).length) > 0;
+    const isExisting = await isExact(data);
+    console.log("isExisting", isExisting);
+    const isStartingMessageNew = await isStartingMessageUnique(data);
 
-    if (isExisting) {
+    if (!isStartingMessageNew) {
       response.sendErrorRes(
         req,
         res,
-        BotMessages.CREATE.ALREADY_EXIST_CODE,
+        BotMessages.CREATE.START_MSG_ALREADY_EXIST_CODE,
         errorCode,
-        BotMessages.CREATE.ALREADY_EXIST_MESSAGE,
-        BotMessages.CREATE.ALREADY_EXIST_MESSAGE,
+        BotMessages.CREATE.START_MSG_ALREADY_EXIST_MESSAGE,
+        BotMessages.CREATE.START_MSG_ALREADY_EXIST_MESSAGE,
         errCode
       );
     } else {
-      const trx = await Bot.startTransaction();
-      try {
-        // Loop over transformers to verify if they exist or not.
-        const userSegments = data.users;
-        let isValidUserSegment = true;
-        for (let i = 0; i < userSegments.length; i++) {
-          isValidUserSegment =
-            isValidUserSegment &&
-            (await UserSegment.query().findById(userSegments[i])) instanceof
-              UserSegment;
-        }
-        const CLs = data.logic;
-        let isValidCL = true;
-        for (let i = 0; i < CLs.length; i++) {
-          isValidCL =
-            isValidCL &&
-            (await ConversationLogic.query().findById(CLs[i])) instanceof
-              ConversationLogic;
-        }
+      if (isExisting) {
+        response.sendErrorRes(
+          req,
+          res,
+          BotMessages.CREATE.ALREADY_EXIST_CODE,
+          errorCode,
+          BotMessages.CREATE.ALREADY_EXIST_MESSAGE,
+          BotMessages.CREATE.ALREADY_EXIST_MESSAGE,
+          errCode
+        );
+      } else {
+        const trx = await Bot.startTransaction();
+        try {
+          // Loop over transformers to verify if they exist or not.
+          const userSegments = data.users;
+          let isValidUserSegment = true;
+          for (let i = 0; i < userSegments.length; i++) {
+            isValidUserSegment =
+              isValidUserSegment &&
+              (await UserSegment.query().findById(userSegments[i])) instanceof
+                UserSegment;
+          }
+          const CLs = data.logic;
+          let isValidCL = true;
+          for (let i = 0; i < CLs.length; i++) {
+            isValidCL =
+              isValidCL &&
+              (await ConversationLogic.query().findById(CLs[i])) instanceof
+                ConversationLogic;
+          }
 
-        data.logicIDs = data.logic;
-        data.ownerID = ownerID;
-        data.ownerOrgID = ownerOrgID;
-        delete data.logic;
-        if (isValidUserSegment && isValidCL) {
-          const inserted = await Bot.query(trx).insert(data);
-          await client
-            .createApplication(inserted.id, {
-              application: {
-                name: inserted.name,
-              },
-            })
-            .then(async (r) => {
-              await trx.commit();
-              response.sendSuccessRes(req, inserted, res);
-            })
-            .catch(async (e) => {
-              JSON.stringify(e);
-              await trx.rollback();
+          data.logicIDs = data.logic;
+          data.ownerID = ownerID;
+          data.ownerOrgID = ownerOrgID;
+          delete data.logic;
+          if (isValidUserSegment && isValidCL) {
+            const inserted = await Bot.query(trx).insert(data);
+            await client
+              .createApplication(inserted.id, {
+                application: {
+                  name: inserted.name,
+                },
+              })
+              .then(async (r) => {
+                await trx.commit();
+                response.sendSuccessRes(req, inserted, res);
+              })
+              .catch(async (e) => {
+                JSON.stringify(e);
+                await trx.rollback();
+                response.sendErrorRes(
+                  req,
+                  res,
+                  BotMessages.CREATE.INVALID_TRANSFORMER_CODE,
+                  errorCode,
+                  BotMessages.CREATE.INVALID_TRANSFORMER_MESSAGE,
+                  e.message,
+                  errCode
+                );
+              });
+          } else {
+            await trx.rollback();
+            console.log({ isValidUserSegment, isValidCL });
+            if (!isValidCL) {
               response.sendErrorRes(
                 req,
                 res,
-                BotMessages.CREATE.INVALID_TRANSFORMER_CODE,
+                BotMessages.CREATE.INVALID_CL_CODE,
                 errorCode,
-                BotMessages.CREATE.INVALID_TRANSFORMER_MESSAGE,
-                e.message,
+                BotMessages.CREATE.INVALID_CL_MESSAGE,
+                BotMessages.CREATE.INVALID_CL_MESSAGE,
                 errCode
               );
-            });
-        } else {
+            } else {
+              response.sendErrorRes(
+                req,
+                res,
+                BotMessages.CREATE.INVALID_USER_SEGMENT_CODE,
+                errorCode,
+                BotMessages.CREATE.INVALID_USER_SEGMENT_MESSAGE,
+                BotMessages.CREATE.INVALID_USER_SEGMENT_MESSAGE,
+                errCode
+              );
+            }
+          }
+        } catch (e) {
+          console.error(e);
           await trx.rollback();
           response.sendErrorRes(
             req,
             res,
-            BotMessages.CREATE.INVALID_USER_SEGMENT_CODE,
+            BotMessages.CREATE.FAILED_CODE,
             errorCode,
             BotMessages.CREATE.INVALID_USER_SEGMENT_MESSAGE,
-            BotMessages.CREATE.INVALID_USER_SEGMENT_MESSAGE,
+            e.message,
             errCode
           );
         }
-      } catch (e) {
-        console.error(e);
-        await trx.rollback();
-        response.sendErrorRes(
-          req,
-          res,
-          BotMessages.CREATE.FAILED_CODE,
-          errorCode,
-          BotMessages.CREATE.INVALID_USER_SEGMENT_MESSAGE,
-          e.message,
-          errCode
-        );
       }
     }
   } catch (e) {
