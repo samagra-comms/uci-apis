@@ -587,7 +587,7 @@ async function insert(req, res) {
                 response.sendSuccessRes(req, inserted, res);
               })
               .catch(async (e) => {
-                JSON.stringify(e);
+                console.log(JSON.stringify(e));
                 await trx.rollback();
                 response.sendErrorRes(
                   req,
