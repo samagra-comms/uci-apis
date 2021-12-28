@@ -209,6 +209,8 @@ async function getAllUsers(req, res) {
     const userSegment = await UserSegment.query()
       .findByIds(bot.users)
       .withGraphFetched("[allService, byIDService, byPhoneService]");
+    console.log({ userSegment });
+
     const allUsers = await userSegment[0].allService.resolve();
     response.sendSuccessRes(req, allUsers, res);
   } catch (e) {
@@ -652,6 +654,42 @@ async function insert(req, res) {
   }
 }
 
+async function getFederatedUsersByPhone(req, res) {
+  const rspObj = req.rspObj;
+  const errCode =
+    programMessages.EXCEPTION_CODE +
+    "_" +
+    BotMessages.GET_BY_PARAM.EXCEPTION_CODE;
+  try {
+    const bot = await Bot.query().findById(req.params.id);
+    const userSegment = await UserSegment.query()
+      .findByIds(bot.users)
+      .withGraphFetched("[allService, byIDService, byPhoneService]");
+    console.log({ userSegment });
+
+    const user = await userSegment[0].byPhoneService.getUserByGQL({
+      phoneNo: req.params.phoneNo,
+    });
+
+    response.sendSuccessRes(req, user, res);
+  } catch (e) {
+    response.sendErrorRes(
+      req,
+      res,
+      BotMessages.GET_BY_PARAM.FAILED_CODE,
+      errorCode,
+      BotMessages.GET_BY_PARAM.FAILED_MESSAGE,
+      e,
+      errCode
+    );
+  }
+
+  console.log(req.params);
+  const userSegment = await UserSegment.query()
+    .findById(req.params.id)
+    .withGraphFetched("[allService, byIDService, byPhoneService]");
+}
+
 function successResponse(data) {
   var response = {};
   response.id = data.apiId;
@@ -793,5 +831,15 @@ module.exports = function (app) {
       requestMiddleware.checkIfAdmin,
       requestMiddleware.addOwnerInfo,
       getAllUsers
+    );
+
+  app
+    .route(BASE_URL + "/bot/getFederatedUsersByPhone/:id/:phoneNo")
+    .get(
+      requestMiddleware.gzipCompression(),
+      requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.checkIfAdmin,
+      requestMiddleware.addOwnerInfo,
+      getFederatedUsersByPhone
     );
 };

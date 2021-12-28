@@ -149,6 +149,15 @@ async function getAllUsers(req, res) {
   res.send({ data: allUsers });
 }
 
+async function getFederatedUsersByPhone(req, res) {
+  console.log(req.params);
+  const userSegment = await UserSegment.query()
+    .findById(req.params.id)
+    .withGraphFetched("[allService, byIDService, byPhoneService]");
+  const user = await userSegment.byPhoneService.resolve();
+  res.send({ data: user });
+}
+
 async function insert(req, res) {
   const rspObj = req.rspObj;
   const ownerID = req.body.ownerID;
@@ -615,6 +624,16 @@ module.exports = function (app) {
       requestMiddleware.createAndValidateRequestBody,
       requestMiddleware.addOwnerInfo,
       getAllUsers
+    );
+
+  app
+    .route(BASE_URL + "/userSegment/getFederatedUsersByPhone/:id")
+    .get(
+      requestMiddleware.gzipCompression(),
+      requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.checkIfAdmin,
+      requestMiddleware.addOwnerInfo,
+      getFederatedUsersByPhone
     );
 
   app

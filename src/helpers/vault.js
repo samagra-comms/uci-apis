@@ -3,7 +3,6 @@ const fs = require("fs");
 class Vault {
   constructor() {
     this.data = JSON.parse(process.env.vault);
-    console.log(this.data);
   }
 
   getCredentials = (serviceType, credentials) => {

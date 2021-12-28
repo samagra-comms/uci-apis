@@ -49,7 +49,7 @@ knex
     Transformer.query()
       .then(async (ts) => {
         try {
-          throw "Vault Model is not a present!";
+          throw "Vault Model is not present!";
           await VaultModel.query()
             .findById(1)
             .then((d) => {
@@ -68,12 +68,17 @@ knex
               process.env["vault"] = JSON.stringify(data);
             });
         } catch (e) {
-          console.log("Getting Vault data from path");
-          const data = require("./../helpers/vaultDataMock2.json");
-          console.log(data.data);
-          const decryptedText = VaultModel.decrypt(data.data).toString();
-          console.log(decryptedText);
-          process.env["vault"] = decryptedText;
+          if (process.env.ENV === "dev") {
+            const data = require("./../helpers/vaultDataMock.json");
+            process.env["vault"] = JSON.stringify(data);
+          } else {
+            console.log("Getting Vault data from path");
+            const data = require("./../helpers/vaultDataMock2.json");
+            console.log(data.data);
+            const decryptedText = VaultModel.decrypt(data.data).toString();
+            console.log(decryptedText);
+            process.env["vault"] = decryptedText;
+          }
         }
 
         console.log(
