@@ -473,8 +473,6 @@ async function addUserToRegistry(req, res) {
       .findByIds(bot.users)
       .withGraphFetched("[allService, byIDService, byPhoneService]");
 
-    console.log(userSegments);
-
     let found = false;
     let user;
     for (let i = 0; i < userSegments.length; i++) {

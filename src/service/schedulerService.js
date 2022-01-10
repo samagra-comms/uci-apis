@@ -24,7 +24,9 @@ try {
   // const queue = new Queue(queueID, queueConfig);
   // const resultQueue = new Queue("resultQueue", queueConfig);
 
-  setQueues([new BullAdapter(queue), new BullAdapter(resultQueue)]);
+  if (queue !== undefined) {
+    setQueues([new BullAdapter(queue), new BullAdapter(resultQueue)]);
+  }
 
   const fetchTimeout = (url, ms, { signal, ...options } = {}) => {
     const controller = new AbortController();
@@ -52,7 +54,7 @@ try {
           let serviceHeaders = {};
           try {
             serviceHeaders = service.config.credentials.headers;
-          } catch (e) {}
+          } catch (e) { }
           const headers = {
             "Content-Type": "application/json",
             ...serviceHeaders,
@@ -196,9 +198,9 @@ try {
     data: '"<?xml version=\\"1.0\\" encoding=\\"UTF-8\\" standalone=\\"yes\\"?>\\n<xMessage>\\n    <app>Sam-Bitly [B-TC]</app>\\n    <channel>WhatsApp</channel>\\n    <channelURI>WhatsApp</channelURI>\\n    <conversationStage>\\n        <stage>0</stage>\\n        <state>STARTING</state>\\n    </conversationStage>\\n    <from>\\n        <bot>false</bot>\\n        <broadcast>false</broadcast>\\n        <meta>\\n            <entry>\\n                <key>senderID</key>\\n                <value>HPGOVT</value>\\n            </entry>\\n        </meta>\\n        <userID>hpgovt-hpssa</userID>\\n    </from>\\n    <messageState>NOT_SENT</messageState>\\n    <messageType>HSM_WITH_BUTTON</messageType>\\n    <payload>\\n        <text>नमस्कार प्रिय शिक्षा अधिकारी, \\n\\nविद्यालय शिक्षा विभाग के *समीक्षा ऐप* पर आवशयक सूचना I\\n\\nपिछ्ले हफ्ते आपके स्कूल / खंड के कई स्कूलों में *Attendance और Temperature रिकॉर्डिंग के लिए अनुपालन कम था* I\\n\\nरिपोर्ट देखने के लिए नीचे दिए गए नीले बटन *Hi SamikshaBot* पर क्लिक करें ।</text>\\n    </payload>\\n    <provider>gupshup</provider>\\n    <providerURI>gupshup</providerURI>\\n    <timestamp>1615423372987</timestamp>\\n    <to>\\n        <bot>false</bot>\\n        <broadcast>false</broadcast>\\n        <groups>82c95b41-22e5-445c-b5ff-1d383bc8a7df</groups>\\n        <userID>9415787824</userID>\\n    </to>\\n    <transformers>\\n        <id>1</id>\\n    </transformers>\\n</xMessage>\\n"',
   });
 
-  worker.on("completed", (job, returnvalue) => {});
+  worker.on("completed", (job, returnvalue) => { });
 
-  worker.on("progress", (job, progress) => {});
+  worker.on("progress", (job, progress) => { });
 
   worker.on("failed", (job, failedReason) => {
     console.log(failedReason);

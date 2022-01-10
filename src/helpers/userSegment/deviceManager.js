@@ -80,11 +80,8 @@ class DeviceManager {
     const deviceString = user.device.type + ":" + user.device.deviceID;
     const username = this.encrypt(deviceString).toString();
 
-    console.log("CP-1");
     const isDeviceExisting = await this.isDeviceAlreadyExisting(username);
-    console.log("CP-2");
     const isBotExisting = await this.botExists(botID);
-    console.log("CP-3", isBotExisting);
 
     if (!isBotExisting.status) {
       await this.addBotToRegistry(botID);

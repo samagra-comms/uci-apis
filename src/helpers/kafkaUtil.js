@@ -1,5 +1,6 @@
 const { ConsumerGroupStream } = require("kafka-node");
 const { Kafka, logLevel } = require("kafkajs");
+const fetch = require("node-fetch");
 let kafka;
 if (process.env.ENV === "dev") {
   kafka = new Kafka({
@@ -22,14 +23,49 @@ const _ = require("lodash");
 const logger = require("sb_logger_util_v2");
 const envVariables = require("../envVariables");
 const consumer = kafka.consumer({ groupId: "api-group" });
-consumer
-  .connect()
-  .then((c) => {
-    console.log("Kafka Connection Status: ✅");
-  })
-  .catch((e) => {
-    console.error("Kafka Connection Status: ❌", e);
+const telemetryConsumer = kafka.consumer({ groupId: 'telemetry-group' })
+
+telemetryConsumer.connect().then(async c => {
+  telemetryConsumer.subscribe({ topic: "telemetry", fromBeginning: false }).then(async s => {
+    console.log("Kafka Telemetry Subscription Status: ✅");
+    telemetryConsumer.run({
+      autoCommit: false,
+      eachMessage: async ({ topic, partition, message }) => {
+        console.log("Kafka Telemetry Subscription Status: ✅✅✅");
+        console.log(JSON.parse(JSON.parse(message.value.toString())))
+
+        const telemetryResponse = await fetch(process.env.TELEMETRY_BASE_URL + "/v1/telemetry", {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.parse(message.value.toString())
+        });
+        console.log("Kafka Telemetry Subscription Status: ✅✅✅");
+        console.log({ telemetryResponse });
+      }
+    }).then(s => {
+      console.log("success in run");
+    }).catch(e => {
+      console.log("error in run");
+    });
+  }).catch(e => {
+    console.log("error in subscriber");
   });
+
+}).catch(e => {
+  console.log("error in connect");
+  console.error(e);
+})
+
+// consumer
+//   .connect()
+//   .then((c) => {
+//     console.log("Kafka Connection Status: ✅");
+//   })
+//   .catch((e) => {
+//     console.error("Kafka Connection Status: ❌", e);
+//   });
 
 const sendRecord = async (data, callback) => {
   if (_.isEmpty(data)) {

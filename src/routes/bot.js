@@ -339,7 +339,6 @@ async function search(req, res) {
     if (req.query.name) {
       let bots;
       if (req.query.match === "true") {
-        console.log("Here");
         bots = await Bot.query()
           .where("name", req.query.name)
           .page(page, batchSize);
@@ -357,14 +356,12 @@ async function search(req, res) {
           const userSegments = await UserSegment.query()
             .findByIds(bot.users)
             .withGraphFetched("[allService, byIDService, byPhoneService]");
-          console.log({ conversationLogics });
           for (let j = 0; j < conversationLogics.length; j++) {
             const adapterID = conversationLogics[j].adapter;
             conversationLogics[j].adapter = await Adapter.query().findById(
               adapterID
             );
           }
-          console.log({ userSegments, conversationLogics });
           bot.userSegments = userSegments;
           bot.logic = conversationLogics;
           return bot;
@@ -425,7 +422,7 @@ async function update(req, res) {
         isValidUserSegment =
           isValidUserSegment &&
           (await UserSegment.query().findById(userSegments[i])) instanceof
-            UserSegment;
+          UserSegment;
       }
       const CLs = data.logic;
       let isValidCL = true;
@@ -433,7 +430,7 @@ async function update(req, res) {
         isValidCL =
           isValidCL &&
           (await ConversationLogic.query().findById(CLs[i])) instanceof
-            ConversationLogic;
+          ConversationLogic;
       }
       data.logicIDs = data.logic;
       delete data.logic;
@@ -561,7 +558,7 @@ async function insert(req, res) {
             isValidUserSegment =
               isValidUserSegment &&
               (await UserSegment.query().findById(userSegments[i])) instanceof
-                UserSegment;
+              UserSegment;
           }
           const CLs = data.logic;
           let isValidCL = true;
@@ -569,7 +566,7 @@ async function insert(req, res) {
             isValidCL =
               isValidCL &&
               (await ConversationLogic.query().findById(CLs[i])) instanceof
-                ConversationLogic;
+              ConversationLogic;
           }
 
           data.logicIDs = data.logic;
