@@ -22,10 +22,11 @@ if (process.env.ENV === "dev") {
 const _ = require("lodash");
 const logger = require("sb_logger_util_v2");
 const envVariables = require("../envVariables");
-const consumer = kafka.consumer({ groupId: "api-group" });
+// const consumer = kafka.consumer({ groupId: "api-group" });
 const telemetryConsumer = kafka.consumer({ groupId: 'telemetry-group' })
 
 telemetryConsumer.connect().then(async c => {
+  console.log("Kafka Telemetry Consumer is connected: ✅");
   telemetryConsumer.subscribe({ topic: "sunbird.dev.telemetry", fromBeginning: false }).then(async s => {
     console.log("Kafka Telemetry Subscription Status: ✅");
     telemetryConsumer.run({
@@ -109,49 +110,49 @@ const KafkaService = {
   },
 
   refreshSubscribers: async (transformers) => {
-    const { queue } = require("../service/schedulerService");
-    for (let i = 0; i < transformers.length; i++) {
-      let topic = `com.${transformers[i].service.type}.${transformers[i].name}`;
-      await consumer.stop();
-      await consumer.subscribe({ topic, fromBeginning: true });
-      await consumer.run({
-        eachMessage: async ({ topic, partition, message }) => {
-          const { Transformer } = require("../models/transformer");
-          const { Service } = require("../models/service");
-          const data = message.value.toString();
+    // const { queue } = require("../service/schedulerService");
+    // for (let i = 0; i < transformers.length; i++) {
+    //   let topic = `com.${transformers[i].service.type}.${transformers[i].name}`;
+    //   await consumer.stop();
+    //   await consumer.subscribe({ topic, fromBeginning: true });
+    //   await consumer.run({
+    //     eachMessage: async ({ topic, partition, message }) => {
+    //       const { Transformer } = require("../models/transformer");
+    //       const { Service } = require("../models/service");
+    //       const data = message.value.toString();
 
-          const transformerServiceType = topic.split(".")[1];
-          if (transformerServiceType === "odk") return; //Ignore ODK messages.
+    //       const transformerServiceType = topic.split(".")[1];
+    //       if (transformerServiceType === "odk") return; //Ignore ODK messages.
 
-          const transformerName = topic.split(".")[2];
-          const transformer = await Transformer.query().where(
-            "name",
-            transformerName
-          );
-          const service = await Service.query().findById(
-            transformer[0].service
-          );
-          queue.add(
-            service.type,
-            {
-              transformer,
-              service,
-              data,
-              sendRecord,
-              kafka,
-            },
-            {
-              attempts: service.cadence.retries + 1,
-              backoff: {
-                type: "fixed",
-                delay: 1000 * parseInt(service.cadence["retries-interval"]),
-              },
-            }
-          );
-          console.log("Scheduled Successfully");
-        },
-      });
-    }
+    //       const transformerName = topic.split(".")[2];
+    //       const transformer = await Transformer.query().where(
+    //         "name",
+    //         transformerName
+    //       );
+    //       const service = await Service.query().findById(
+    //         transformer[0].service
+    //       );
+    //       queue.add(
+    //         service.type,
+    //         {
+    //           transformer,
+    //           service,
+    //           data,
+    //           sendRecord,
+    //           kafka,
+    //         },
+    //         {
+    //           attempts: service.cadence.retries + 1,
+    //           backoff: {
+    //             type: "fixed",
+    //             delay: 1000 * parseInt(service.cadence["retries-interval"]),
+    //           },
+    //         }
+    //       );
+    //       console.log("Scheduled Successfully");
+    //     },
+    //   });
+    // }
   },
 };
 
