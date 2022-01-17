@@ -582,13 +582,10 @@ async function insert(req, res) {
                 },
               })
               .then(async (r) => {
-                await trx.commit().catch(e => {
-                  console.error("CP-1-Error", e);
-                });
+                await trx.commit();
                 response.sendSuccessRes(req, inserted, res);
               })
               .catch(async (e) => {
-                JSON.stringify(e);
                 console.error("CP-2-Error", e);
                 await trx.rollback();
                 response.sendErrorRes(
