@@ -35,12 +35,20 @@ telemetryConsumer.connect().then(async c => {
         console.log("Kafka Telemetry Subscription Status: ✅✅✅");
         console.log(JSON.parse(JSON.parse(message.value.toString())))
 
+        const event = {
+          "id": "ekstep.telemetry",
+          "ver": "3.0",
+          "ets": Math.floor(Date.now() / 1000),
+          "events": []
+        }
+        event.events.push(JSON.parse(message.value.toString()))
+
         const telemetryResponse = await fetch(process.env.TELEMETRY_BASE_URL + "/v1/telemetry", {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.parse(message.value.toString())
+          body: event
         });
         console.log("Kafka Telemetry Subscription Status: ✅✅✅");
         console.log({ telemetryResponse });
