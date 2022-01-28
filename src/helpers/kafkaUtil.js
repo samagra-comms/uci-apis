@@ -41,7 +41,7 @@ telemetryConsumer.connect().then(async c => {
           "ets": Math.floor(Date.now() / 1000),
           "events": []
         }
-        event.events.push(JSON.parse(message.value.toString()))
+        event.events.push(JSON.parse(JSON.parse(message.value.toString())))
 
         console.log({ event });
 
