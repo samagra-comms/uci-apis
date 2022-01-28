@@ -8,8 +8,8 @@ services:
     restart: unless-stopped
     volumes:
       - ./src/helpers/vaultDataMock.json:/opt/uci/src/helpers/vaultDataMock.json
-    networks:
-      - deployments_core
+    # networks:
+    #   - deployments_core
     env_file:
       - src/.env
     ports:
@@ -18,8 +18,8 @@ services:
   comms:
     container_name: comms
     image: postgres:12
-    networks:
-      - deployments_core
+    # networks:
+    #   - deployments_core
     env_file:
       - src/.env
     command: "postgres -c max_connections=1000 -c shared_buffers=300MB"
@@ -30,8 +30,8 @@ services:
 
   gql:
     image: hasura/graphql-engine:v2.0.0-alpha.1
-    networks:
-      - deployments_core
+    # networks:
+    #   - deployments_core
     env_file:
       - src/.env
     ports:
@@ -42,8 +42,8 @@ services:
 
   scheduler-db:
     container_name: scheduler-db
-    networks:
-      - deployments_core
+    # networks:
+    #   - deployments_core
     image: redis:latest
     ports:
       - "6379:6379"
@@ -52,7 +52,6 @@ services:
     volumes:
       - ./redis-data:/data
       - ./redis.conf:/usr/local/etc/redis/redis.conf
-
-networks:
-  deployments_core:
-    external: true
+# networks:
+#   deployments_core:
+#     external: true

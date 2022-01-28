@@ -43,6 +43,8 @@ telemetryConsumer.connect().then(async c => {
         }
         event.events.push(JSON.parse(message.value.toString()))
 
+        console.log({ event });
+
         const telemetryResponse = await fetch(process.env.TELEMETRY_BASE_URL + "/v1/telemetry", {
           method: 'POST',
           headers: {
