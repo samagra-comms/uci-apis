@@ -33,7 +33,7 @@ telemetryConsumer.connect().then(async c => {
       autoCommit: false,
       eachMessage: async ({ topic, partition, message }) => {
         console.log("Kafka Telemetry Subscription Status: ✅✅✅");
-        console.log(JSON.parse(JSON.parse(message.value.toString())))
+        console.log("Message that I got", JSON.parse(JSON.parse(message.value.toString())))
 
         const event = {
           "id": "ekstep.telemetry",
@@ -43,7 +43,7 @@ telemetryConsumer.connect().then(async c => {
         }
         event.events.push(JSON.parse(JSON.parse(message.value.toString())))
 
-        console.log({ event });
+        console.log("Events", event.events);
 
         const telemetryResponse = await fetch(process.env.TELEMETRY_BASE_URL + "/v1/telemetry", {
           method: 'POST',
