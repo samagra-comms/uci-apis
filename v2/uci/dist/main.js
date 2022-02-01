@@ -1,15 +1,15 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const platform_fastify_1 = require("@nestjs/platform-fastify");
 const app_module_1 = require("./app.module");
 const core_1 = require("@nestjs/core");
 const prisma_service_1 = require("./services/prisma.service");
 const swagger_1 = require("@nestjs/swagger");
 const common_1 = require("@nestjs/common");
 async function bootstrap() {
-    const app = await core_1.NestFactory.create(app_module_1.AppModule);
+    const app = await core_1.NestFactory.create(app_module_1.AppModule, new platform_fastify_1.FastifyAdapter());
     const prismaService = app.get(prisma_service_1.PrismaService);
     prismaService.enableShutdownHooks(app);
-    app.enableCors();
     app.setGlobalPrefix('admin');
     app.enableVersioning({
         type: common_1.VersioningType.URI,

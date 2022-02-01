@@ -12,6 +12,7 @@ const config_1 = require("@nestjs/config");
 const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
 const prisma_service_1 = require("./services/prisma.service");
+const adapter_controller_1 = require("./controllers/adapter/adapter.controller");
 let AppModule = class AppModule {
 };
 AppModule = __decorate([
@@ -19,7 +20,7 @@ AppModule = __decorate([
         imports: [config_1.ConfigModule.forRoot({
                 isGlobal: true,
             })],
-        controllers: [app_controller_1.AppController],
+        controllers: [app_controller_1.AppController, adapter_controller_1.AdapterController],
         providers: [app_service_1.AppService, prisma_service_1.PrismaService],
     })
 ], AppModule);

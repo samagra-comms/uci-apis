@@ -148,6 +148,9 @@
                         <li class="list-group-item">
                             <a href="../controllers/AppController.html">AppController</a>
                         </li>
+                        <li class="list-group-item">
+                            <a href="../controllers/AdapterController.html">AdapterController</a>
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -163,12 +166,13 @@ import { ConfigModule } from &#x27;@nestjs/config&#x27;;
 import { AppController } from &#x27;./app.controller&#x27;;
 import { AppService } from &#x27;./app.service&#x27;;
 import { PrismaService } from &#x27;./services/prisma.service&#x27;;
+import { AdapterController } from &#x27;./controllers/adapter/adapter.controller&#x27;;
 
 @Module({
   imports: [ConfigModule.forRoot({
     isGlobal: true,
   })],
-  controllers: [AppController],
+  controllers: [AppController, AdapterController],
   providers: [AppService, PrismaService],
 })
 export class AppModule {}
