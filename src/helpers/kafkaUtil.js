@@ -27,7 +27,7 @@ const telemetryConsumer = kafka.consumer({ groupId: 'telemetry-group' })
 
 telemetryConsumer.connect().then(async c => {
   console.log("Kafka Telemetry Consumer is connected: ✅");
-  telemetryConsumer.subscribe({ topic: "sunbirddev.uci.telemetry", fromBeginning: false }).then(async s => {
+  telemetryConsumer.subscribe({ topic: process.env.KAFKA_TELEMETRY_TOPIC, fromBeginning: false }).then(async s => {
     console.log("Kafka Telemetry Subscription Status: ✅");
     telemetryConsumer.run({
       autoCommit: false,
