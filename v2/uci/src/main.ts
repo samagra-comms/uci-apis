@@ -6,7 +6,7 @@ import { AppModule } from './app.module';
 import { NestFactory } from '@nestjs/core';
 import { PrismaService } from './services/prisma.service';
 import { DocumentBuilder, FastifySwaggerCustomOptions, SwaggerModule } from '@nestjs/swagger';
-import { VersioningType } from '@nestjs/common';
+import { ValidationPipe, VersioningType } from '@nestjs/common';
 
 async function bootstrap() {
   /** Fastify Application */
@@ -14,6 +14,7 @@ async function bootstrap() {
     AppModule,
     new FastifyAdapter(),
   );
+  
   /** Register Prismaservice LifeCycle hooks */
   const prismaService: PrismaService = app.get(PrismaService);
   prismaService.enableShutdownHooks(app);
@@ -26,6 +27,7 @@ async function bootstrap() {
     type: VersioningType.URI,
     defaultVersion: '1',
   });
+  app.useGlobalPipes(new ValidationPipe());
 
   /** OpenApi spec Document builder for Swagger Api Explorer  */
   const config = new DocumentBuilder()

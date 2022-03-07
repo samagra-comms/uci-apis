@@ -6,8 +6,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
+generator nestjsDto {
+  provider                        = "prisma-generator-nestjs-dto"
+  output                          = "../src/generated/nestjs-dto"
+  outputToNestJsResourceStructure = "false"
+  exportRelationModifierClasses   = "true"
+  reExport                        = "false"
+  createDtoPrefix                 = "Create"
+  updateDtoPrefix                 = "Update"
+  dtoSuffix                       = "Dto"
+  entityPrefix                    = ""
+  entitySuffix                    = ""
+  fileNamingStyle                 = "camel"
 }
 
 model Adapter {
@@ -52,10 +62,8 @@ model Transformer {
   config              Json
   service             Service            @relation(fields: [serviceId], references: [id])
   serviceId           String             @unique @db.Uuid
-  ConversationLogic   ConversationLogic? @relation(fields: [conversationLogicId], references: [id])
-  conversationLogicId String?            @db.Uuid
+  ConversationLogics   ConversationLogic[]
 }
-
 model Bot {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt DateTime @default(now())
@@ -92,7 +100,7 @@ model UserSegment {
   byPhoneServiceID String @unique @db.Uuid
   byIDServiceID    String @unique @db.Uuid
 
-  Bot   Bot?    @relation(fields: [botId], references: [id])
+  bots   Bot[]
   botId String? @db.Uuid
 }
 
@@ -108,6 +116,5 @@ model ConversationLogic {
 
   adapter   Adapter @relation(fields: [adapterId], references: [id])
   adapterId String  @db.Uuid
-  Bot       Bot?    @relation(fields: [botId], references: [id])
-  botId     String? @db.Uuid
+  bots       Bot[]
 }

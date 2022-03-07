@@ -12,16 +12,20 @@ const config_1 = require("@nestjs/config");
 const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
 const prisma_service_1 = require("./services/prisma.service");
-const adapter_controller_1 = require("./controllers/adapter/adapter.controller");
+const adapters_module_1 = require("./adapters/adapters.module");
+const bot_module_1 = require("./bot/bot.module");
+const user_segment_module_1 = require("./user-segment/user-segment.module");
+const conversation_logic_module_1 = require("./conversation-logic/conversation-logic.module");
+const request_interceptor_1 = require("./interceptors/request.interceptor");
 let AppModule = class AppModule {
 };
 AppModule = __decorate([
     (0, common_1.Module)({
         imports: [config_1.ConfigModule.forRoot({
                 isGlobal: true,
-            })],
-        controllers: [app_controller_1.AppController, adapter_controller_1.AdapterController],
-        providers: [app_service_1.AppService, prisma_service_1.PrismaService],
+            }), adapters_module_1.AdaptersModule, bot_module_1.BotModule, user_segment_module_1.UserSegmentModule, conversation_logic_module_1.ConversationLogicModule],
+        controllers: [app_controller_1.AppController],
+        providers: [app_service_1.AppService, prisma_service_1.PrismaService, request_interceptor_1.RequestInterceptor],
     })
 ], AppModule);
 exports.AppModule = AppModule;

@@ -15,6 +15,7 @@ async function bootstrap() {
         type: common_1.VersioningType.URI,
         defaultVersion: '1',
     });
+    app.useGlobalPipes(new common_1.ValidationPipe());
     const config = new swagger_1.DocumentBuilder()
         .setTitle('UCI')
         .setDescription('UCI API description')
