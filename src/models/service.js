@@ -43,19 +43,32 @@ class Service extends Model {
         );
         const client = this.__getGQLClient(credentials);
         const variables = this.config.verificationParams;
+        const query = {
+          query: gql`
+            ${userQuery}
+          `,
+          variables,
+        };
+        console.log(query);
+        if (query.variables === undefined) {
+          console.log("AllService Query");
+          delete query.variables;
+        }
         return client
-          .query({
-            query: gql`
-              ${userQuery}
-            `,
-            variables,
-          })
+          .query(query)
           .then(async (resp) => {
+            console.log({ resp });
             return resp.data.users;
           });
       } catch (e) {
         return [];
       }
+    } else if (this.type === "GET") {
+
+    } else if (this.type === "POST") {
+
+    } else {
+      return null;
     }
   }
 

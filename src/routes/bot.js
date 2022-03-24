@@ -210,7 +210,7 @@ async function getAllUsers(req, res) {
       .findByIds(bot.users)
       .withGraphFetched("[allService, byIDService, byPhoneService]");
     console.log({ userSegment });
-
+    delete userSegment[0].allService.config.verificationParams;
     const allUsers = await userSegment[0].allService.resolve();
     response.sendSuccessRes(req, allUsers, res);
   } catch (e) {
