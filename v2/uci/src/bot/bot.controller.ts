@@ -1,6 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { CreateBotDto } from 'src/generated/nestjs-dto/create-bot.dto';
-import { UpdateBotDto } from 'src/generated/nestjs-dto/update-bot.dto';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
+import { CreateBotDto } from '../generated/nestjs-dto/create-bot.dto';
+import { UpdateBotDto } from '../generated/nestjs-dto/update-bot.dto';
 import { BotService } from './bot.service';
 
 @Controller('bot')

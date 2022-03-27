@@ -1,4 +1,4 @@
-import { Adapter, Prisma } from '@prisma/client';
+import { Adapter, Prisma } from '../../prisma/generated/prisma-client-js';
 import { PrismaService } from './prisma.service';
 export declare class UserService {
     private prisma;

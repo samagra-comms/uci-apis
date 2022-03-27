@@ -1,0 +1,303 @@
+{
+  "data": {
+    "userSegment": [
+      {
+        "all": "427f2cdf-c129-403c-84fe-73af867b1274",
+        "byID": "056d0f87-8287-4c1e-8b2d-19f8f9d7e419",
+        "category": null,
+        "byPhone": "515a6028-b5f0-4381-ad97-e8651b820412",
+        "count": 0,
+        "created_at": "2021-06-16T06:04:02.358448+00:00",
+        "description": null,
+        "id": "0ed82f44-e857-443c-9010-90d3ab1b6793",
+        "name": "SamagraX-Team-Users"
+      },
+      {
+        "all": "65020b3a-1582-4a2d-8d7c-70615a14d112",
+        "byID": "9aa1a713-e01a-497a-84b7-7a9ad58078ea",
+        "category": null,
+        "byPhone": "683cda34-67e5-4314-addb-52bf713c2d03",
+        "count": 0,
+        "created_at": "2021-06-16T06:04:02.358448+00:00",
+        "description": null,
+        "id": "89bda9d4-a905-43a9-966f-6c2442c67681",
+        "name": "SamagraX-Team-Users-Test"
+      },
+      {
+        "all": "40a8a8ab-5b66-440e-852b-454483bdb06d",
+        "byID": "bd6c42a6-e3f2-4516-b6cd-3d45ae623cae",
+        "category": null,
+        "byPhone": "262d7e74-a06f-4273-9395-3d32166bdca1",
+        "count": 0,
+        "created_at": "2021-06-16T06:04:02.358448+00:00",
+        "description": null,
+        "id": "d056d341-75a1-4445-8739-af92ad7f5237",
+        "name": "SamagraX-Team-Users-Test-2"
+      },
+      {
+        "all": "39d297a8-a5a5-434e-be2f-166d83f7c417",
+        "byID": "7c113a19-32e5-4c52-9bd5-26a90b316db5",
+        "category": null,
+        "byPhone": "f59038e4-8c7e-4b79-a368-ab1200d5c566",
+        "count": 0,
+        "created_at": "2021-06-16T06:04:02.358448+00:00",
+        "description": null,
+        "id": "d0aaadfb-676b-4611-831e-25d15e46fb0c",
+        "name": "SamagraX-Team-Users-Test-3"
+      },
+      {
+        "all": "032774e8-1af6-4e97-8eda-a613dbb74753",
+        "byID": "73dcab05-e81d-47ba-91f7-c49ce52d1c73",
+        "category": null,
+        "byPhone": "3f12be55-2962-4166-bb73-96a78950b72c",
+        "count": 0,
+        "created_at": "2021-06-16T06:04:02.358448+00:00",
+        "description": null,
+        "id": "7d5b635a-d372-4bb1-8c00-da1b43cc6d0b",
+        "name": "SamagraX-Team-Users-Test-5"
+      },
+      {
+        "all": "8aff5172-7e7d-43be-a75f-c038ad6b40e1",
+        "byID": "84863dba-d4bd-46d3-aecb-c38b845b2e80",
+        "category": null,
+        "byPhone": "95dc77c9-184e-444b-8930-d5ff7d94bd39",
+        "count": 0,
+        "created_at": "2021-06-16T06:04:02.358448+00:00",
+        "description": null,
+        "id": "7dfa4a70-6aae-4eaf-8b0c-41690c90548d",
+        "name": "SamagraX-Team-Users-Test-8"
+      },
+      {
+        "all": "f5d0df5b-f97a-4d7d-880f-27d8fade3ced",
+        "byID": "0583bda2-feb3-4cf8-b76f-0b4b7e00bb55",
+        "category": null,
+        "byPhone": "d97ca587-f513-4c8a-9ff4-05d2bc8b3d00",
+        "count": 0,
+        "created_at": "2021-06-16T06:04:02.358448+00:00",
+        "description": null,
+        "id": "e2a56c7f-0df3-40d1-8b48-5f89629582f9",
+        "name": "SamagraX-Team-Users-Test-19"
+      },
+      {
+        "all": "cab5ccee-88ad-4818-a8d5-fb8adcc76d8a",
+        "byID": "d13380b1-056b-4449-9e80-170e2e4e891f",
+        "category": null,
+        "byPhone": "555f6739-e770-4c99-b40e-420b4a92af0e",
+        "count": 0,
+        "created_at": "2021-06-16T06:04:02.358448+00:00",
+        "description": null,
+        "id": "7b1a87bc-fd34-435a-94c8-ad0222306384",
+        "name": "SamagraX-Team-Users-Test-20"
+      },
+      {
+        "all": "11488102-448c-4a55-8d2d-8cb388946a56",
+        "byID": "aa53af62-6b41-4ee4-9fc6-eeaaa60584e7",
+        "category": null,
+        "byPhone": "571f4849-798e-4806-b068-77b3d37bce9d",
+        "count": 0,
+        "created_at": "2021-06-16T06:04:02.358448+00:00",
+        "description": null,
+        "id": "fb5799ca-22b0-4e2e-a00d-e96464c8ebfb",
+        "name": "SamagraX-Team-Users-Test-21"
+      },
+      {
+        "all": "1e2580f4-2fc3-4e5f-89b3-8c470e4be8c2",
+        "byID": "f9489adc-e725-4e72-8b38-a25f30181b6c",
+        "category": "Teacher",
+        "byPhone": "3b954c1d-8411-4134-af2d-222eff7288fc",
+        "count": 5000,
+        "created_at": "2021-06-22T00:04:37.404748+00:00",
+        "description": null,
+        "id": "20f1c782-4a9e-4eb1-ad85-126c5d9f7849",
+        "name": "Saksham Skills - vID: 15, threshold: 16"
+      },
+      {
+        "all": "1a905d52-265c-4370-92cb-1e75db834881",
+        "byID": "4320c89b-b111-4b30-be38-37a949d4453d",
+        "category": "Teacher",
+        "byPhone": "ecb0a27b-587f-4575-a1de-7b7d44abba96",
+        "count": 5000,
+        "created_at": "2021-06-29T08:11:49.171293+00:00",
+        "description": null,
+        "id": "64190a70-dbcd-4c3d-926f-e1690bf6abbc",
+        "name": "SamagraX-Team-Users-007"
+      },
+      {
+        "all": "4f102bb1-61c6-4cea-a157-411b107f0ada",
+        "byID": "057087a6-10ec-4e60-8904-f3184b73d5b2",
+        "category": "Teacher",
+        "byPhone": "7e0462d9-7009-4861-adf4-2e545b65506e",
+        "count": 5000,
+        "created_at": "2021-07-05T06:59:49.744644+00:00",
+        "description": null,
+        "id": "d3d1d6ce-805b-4423-b3dc-8a7c59b96133",
+        "name": "Saksham Skills New - vID: 15, threshold: 16"
+      },
+      {
+        "all": "93ed4043-b812-40a1-b1bc-b24e457a2143",
+        "byID": "fec5ac3e-10ce-474e-95a1-06efb02cadd7",
+        "category": "student",
+        "byPhone": "b4a18b1d-4d50-4531-adec-3327e16a716b",
+        "count": 2586,
+        "created_at": "2021-07-08T12:39:27.361568+00:00",
+        "description": "HI abcd",
+        "id": "81f7c4b4-c682-4b3c-be1c-1a1e80a7aa65",
+        "name": "Tester"
+      },
+      {
+        "all": "93ed4043-b812-40a1-b1bc-b24e457a2143",
+        "byID": "e7774a21-d16b-41ab-bebf-a5c8bd5ac85a",
+        "category": "student",
+        "byPhone": "c4a94310-66f6-44fa-892d-013e1a4ddb36",
+        "count": 2586,
+        "created_at": "2021-07-08T12:42:27.289797+00:00",
+        "description": "HI abcd",
+        "id": "3980d3ad-7e2b-4054-a8ff-51a5046c62a1",
+        "name": "Testerx"
+      },
+      {
+        "all": "93ed4043-b812-40a1-b1bc-b24e457a2143",
+        "byID": "4325224c-90f2-4fa0-a15c-fd7721befa8e",
+        "category": "student",
+        "byPhone": "96cc2670-6c7d-42f3-9051-409067285bb9",
+        "count": 2586,
+        "created_at": "2021-07-08T12:44:33.476789+00:00",
+        "description": "abcd",
+        "id": "f49f9cb5-42bb-45ad-9e77-d4644f756590",
+        "name": "userSegment1"
+      },
+      {
+        "all": "93ed4043-b812-40a1-b1bc-b24e457a2143",
+        "byID": "97d7f045-c7d1-4cd7-9a89-17a2d71a984c",
+        "category": "student",
+        "byPhone": "ba353725-c27c-4adf-b154-634ed5dc0184",
+        "count": 2586,
+        "created_at": "2021-07-08T12:54:22.268349+00:00",
+        "description": "hiiii",
+        "id": "bbb6c48d-61d7-40d7-9d04-a36b1788141c",
+        "name": "Anup001"
+      },
+      {
+        "all": "7d426d37-ea3e-42c7-b739-09e3cbec8be8",
+        "byID": "8d6a12f7-7820-428f-a2f4-001f054ff98e",
+        "category": "student",
+        "byPhone": "ad3e8427-8286-42fc-8a11-0c3977d9194f",
+        "count": 911,
+        "created_at": "2021-07-08T13:11:14.196882+00:00",
+        "description": "hi this is tester",
+        "id": "8d04f0ee-1156-4b6e-8dd9-5d4097520717",
+        "name": "tester0012"
+      },
+      {
+        "all": "1c56e232-74b0-4bc6-9fb9-b94d16e64969",
+        "byID": "bf7f1c95-9e98-49b1-aaf0-a86f55e9be77",
+        "category": "student",
+        "byPhone": "7d016d07-f7ae-4e06-963c-fd31a29c14f4",
+        "count": 379,
+        "created_at": "2021-07-08T13:45:09.46021+00:00",
+        "description": "abcd sjskd sdsd sd s",
+        "id": "073540ea-3812-4082-902d-f039940019e0",
+        "name": "TestSegemnt1"
+      },
+      {
+        "all": "7d426d37-ea3e-42c7-b739-09e3cbec8be8",
+        "byID": "b2ca7511-b707-4261-ad26-1242e4ed2deb",
+        "category": "student",
+        "byPhone": "b71ab062-bfb8-485b-8421-eda72f0ea496",
+        "count": 911,
+        "created_at": "2021-07-08T16:40:53.962879+00:00",
+        "description": "Demo100",
+        "id": "a620a0c9-1271-44fa-99a5-4481394eee31",
+        "name": "Demo100"
+      },
+      {
+        "all": "b6cc0f09-6b3a-4467-9ad7-28dd67a408f1",
+        "byID": "02816797-2d6c-4fda-8200-4de886998e46",
+        "category": "student",
+        "byPhone": "5ca8bdfa-7b57-4f8f-949f-51b9faa89c69",
+        "count": 291,
+        "created_at": "2021-07-08T16:42:03.910808+00:00",
+        "description": "Demo200",
+        "id": "5aad61ba-9c11-4cf4-83bb-12ecce9d495a",
+        "name": "Demo200"
+      },
+      {
+        "all": "9397d5d3-d607-49db-8d61-446e0b675854",
+        "byID": "37a3955d-2d39-4535-97bb-2060b32d0002",
+        "category": "student",
+        "byPhone": "737d44fd-d3e7-4d82-8a6e-09f401feb817",
+        "count": 911,
+        "created_at": "2021-07-08T16:59:19.114395+00:00",
+        "description": "Demo22",
+        "id": "7fbcc8c6-347c-4791-8648-a4438b3be853",
+        "name": "Demo22"
+      },
+      {
+        "all": "ec1c73a3-f6b6-4a99-81fc-4ae24373ae26",
+        "byID": "838f8a31-64cf-4b39-87d0-6b4c3f628233",
+        "category": "student",
+        "byPhone": "c22ea850-b4ec-47d5-bdc5-e5ba6433b51d",
+        "count": 1,
+        "created_at": "2021-07-08T18:24:36.441385+00:00",
+        "description": "UCIDemo",
+        "id": "9251022a-68db-4c9f-859e-0e923e7656be",
+        "name": "UCIDemo"
+      },
+      {
+        "all": "ec1c73a3-f6b6-4a99-81fc-4ae24373ae26",
+        "byID": "8657c864-88f6-4e8f-8ce9-7e3e7bf6958c",
+        "category": "student",
+        "byPhone": "13b5498a-7227-4e2f-a870-c525619fd5ba",
+        "count": 1,
+        "created_at": "2021-07-08T18:37:17.072523+00:00",
+        "description": "https://vidyadaan.sunbird.samagra.io/uci",
+        "id": "13398718-c015-4f1c-b77c-f8fc73534908",
+        "name": "MGNREGS"
+      },
+      {
+        "all": "7d426d37-ea3e-42c7-b739-09e3cbec8be8",
+        "byID": "da0f17ca-d9d0-4658-9b8a-c94de94d576b",
+        "category": "student",
+        "byPhone": "27e46dc5-9669-4c77-a65b-d145c38e9282",
+        "count": 911,
+        "created_at": "2021-07-08T18:46:04.62998+00:00",
+        "description": "UCI Demo",
+        "id": "b265d8e0-be4a-4105-9339-46078c093944",
+        "name": "UCI Demo"
+      },
+      {
+        "all": "9397d5d3-d607-49db-8d61-446e0b675854",
+        "byID": "f9299338-c43f-45af-b593-7c43f4cc887c",
+        "category": "student",
+        "byPhone": "4951f07e-e88c-4fa0-9d82-e40fe80256c6",
+        "count": 911,
+        "created_at": "2021-07-09T08:51:43.530545+00:00",
+        "description": "segment new ",
+        "id": "1111df80-9d04-46ab-8cda-d0159e31e45e",
+        "name": "Rozor segment"
+      },
+      {
+        "all": "8f40dd4f-147a-4c6c-8166-3ff731fad84e",
+        "byID": "8f40dd4f-147a-4c6c-8166-3ff731fad84e",
+        "category": null,
+        "byPhone": "8f40dd4f-147a-4c6c-8166-3ff731fad84e",
+        "count": 0,
+        "created_at": "2022-01-31T05:20:30.238273+00:00",
+        "description": null,
+        "id": "7031e51a-6081-4bd2-ad9e-f2fd05aa4223",
+        "name": "Rozgar Candidate Segment"
+      },
+      {
+        "all": "21e86402-d030-4315-8120-647e38cbd01e",
+        "byID": "e873a7dc-87e9-44e7-af7f-2e05c8bb33be",
+        "category": null,
+        "byPhone": "e873a7dc-87e9-44e7-af7f-2e05c8bb33be",
+        "count": 0,
+        "created_at": "2022-01-31T05:18:53.433424+00:00",
+        "description": null,
+        "id": "10a3bea7-8801-4d1f-820b-3d28e3faf115",
+        "name": "Rozgar Recruiter Segment"
+      }
+    ]
+  }
+}

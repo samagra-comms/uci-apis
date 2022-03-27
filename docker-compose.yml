@@ -15,8 +15,8 @@ services:
     ports:
       - 9998:9999
 
-  comms:
-    container_name: comms
+  uci-db:
+    container_name: uci-db
     image: postgres:12
     networks:
       - deployments_core

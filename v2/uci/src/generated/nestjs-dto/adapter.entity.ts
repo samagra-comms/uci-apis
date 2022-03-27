@@ -1,7 +1,5 @@
-
-import { Prisma } from '@prisma/client'
-import { ConversationLogic } from './conversationLogic.entity'
-
+import { Prisma } from '../../../prisma/generated/prisma-client-js';
+import { ConversationLogic } from './conversationLogic.entity';
 
 export class Adapter {
   id: string;

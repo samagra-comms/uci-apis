@@ -1,6 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { CreateUserSegmentDto } from 'src/generated/nestjs-dto/create-userSegment.dto';
-import { UpdateUserSegmentDto } from 'src/generated/nestjs-dto/update-userSegment.dto';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
+import { CreateUserSegmentDto } from '../generated/nestjs-dto/create-userSegment.dto';
+import { UpdateUserSegmentDto } from '../generated/nestjs-dto/update-userSegment.dto';
 import { UserSegmentService } from './user-segment.service';
 
 @Controller('user-segment')
@@ -23,7 +31,10 @@ export class UserSegmentController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserSegmentDto: UpdateUserSegmentDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateUserSegmentDto: UpdateUserSegmentDto,
+  ) {
     return this.userSegmentService.update(id, updateUserSegmentDto);
   }
 

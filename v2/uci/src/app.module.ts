@@ -8,12 +8,21 @@ import { BotModule } from './bot/bot.module';
 import { UserSegmentModule } from './user-segment/user-segment.module';
 import { ConversationLogicModule } from './conversation-logic/conversation-logic.module';
 import { RequestInterceptor } from './interceptors/request.interceptor';
+import { MigrationModule } from './migration/migration.module';
+import { MigrationService } from './migration/migration.service';
 
 @Module({
-  imports: [ConfigModule.forRoot({
-    isGlobal: true,
-  }), AdaptersModule, BotModule, UserSegmentModule, ConversationLogicModule],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    AdaptersModule,
+    BotModule,
+    MigrationModule,
+    UserSegmentModule,
+    ConversationLogicModule,
+  ],
   controllers: [AppController],
-  providers: [AppService, PrismaService, RequestInterceptor],
+  providers: [AppService, PrismaService, MigrationService, RequestInterceptor],
 })
 export class AppModule {}

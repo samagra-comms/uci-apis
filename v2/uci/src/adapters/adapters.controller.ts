@@ -1,19 +1,27 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Version } from '@nestjs/common';
-import { PrismaService } from 'src/services/prisma.service';
-import { AdaptersService } from './adapters.service'; 
 import {
-  Prisma
-} from '@prisma/client';
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Version,
+} from '@nestjs/common';
+import { PrismaService } from '../services/prisma.service';
+import { AdaptersService } from './adapters.service';
 import { ApiTags } from '@nestjs/swagger';
-import { UpdateAdapterDto } from 'src/generated/nestjs-dto/update-adapter.dto';
-import { CreateAdapterDto } from 'src/generated/nestjs-dto/create-adapter.dto';
-import { Adapter } from 'src/generated/nestjs-dto/adapter.entity';
+import { UpdateAdapterDto } from '../generated/nestjs-dto/update-adapter.dto';
+import { CreateAdapterDto } from '../generated/nestjs-dto/create-adapter.dto';
+import { Adapter } from '../generated/nestjs-dto/adapter.entity';
 
 @ApiTags('Adapters')
 @Controller('adapters')
 export class AdaptersController {
-  
-  constructor(private prisma: PrismaService, private readonly adaptersService: AdaptersService) {}
+  constructor(
+    private prisma: PrismaService,
+    private readonly adaptersService: AdaptersService,
+  ) {}
 
   @Post()
   create(@Body() adapter: CreateAdapterDto): Promise<Adapter | null> {

@@ -1,0 +1,1807 @@
+{
+  "data": {
+    "service": [
+      {
+        "config": {
+          "gql": "query Query {users: getUsersByQuery(queryString: \"(((data.userLocation.state : 'Haryana') AND (data.userLocation.district : 'Ambala')) OR ((data.userLocation.state : 'Haryana') AND (data.userLocation.district : 'Panipat') AND (data.userLocation.block : 'Panipat'))) AND (data.roles : PUBLIC) AND (data.userType.type : student)\") {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "dummygql" }
+        },
+        "created_at": "2021-07-08T12:39:27.361568+00:00",
+        "id": "93ed4043-b812-40a1-b1bc-b24e457a2143",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-07-08T12:39:27.361568+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($id: String) {users: getUsersByQuery(queryString: $id) {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType }}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "dummygql" },
+          "verificationParams": {
+            "id": "(data.device.deviceID : '96102c3f-2c22-4614-8dcc-6b130cefe586')"
+          }
+        },
+        "created_at": "2021-07-08T12:39:27.361568+00:00",
+        "id": "b4a18b1d-4d50-4531-adec-3327e16a716b",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-07-08T12:39:27.361568+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($id: String) {users: getUsersByQuery(queryString: $id) {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType }}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "dummygql" },
+          "verificationParams": {
+            "id": "(data.device.deviceID : '96102c3f-2c22-4614-8dcc-6b130cefe586')"
+          }
+        },
+        "created_at": "2021-07-08T12:39:27.361568+00:00",
+        "id": "fec5ac3e-10ce-474e-95a1-06efb02cadd7",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-07-08T12:39:27.361568+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($id: String) {users: getUsersByQuery(queryString: $id) {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType }}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "dummygql" },
+          "verificationParams": {
+            "id": "(data.device.deviceID : '96102c3f-2c22-4614-8dcc-6b130cefe586')"
+          }
+        },
+        "created_at": "2021-07-08T12:54:22.268349+00:00",
+        "id": "ba353725-c27c-4adf-b154-634ed5dc0184",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-07-08T12:54:22.268349+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($id: String) {users: getUsersByQuery(queryString: $id) {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType }}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "dummygql" },
+          "verificationParams": {
+            "id": "(data.device.deviceID : '96102c3f-2c22-4614-8dcc-6b130cefe586')"
+          }
+        },
+        "created_at": "2021-07-08T12:54:22.268349+00:00",
+        "id": "97d7f045-c7d1-4cd7-9a89-17a2d71a984c",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-07-08T12:54:22.268349+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query {users: getUsersByQuery(queryString: \"((data.userLocation.state : 'Haryana') AND (data.userLocation.district : 'Ambala') AND (data.userLocation.block : 'Ambala-I (City)')) AND (data.roles : PUBLIC) AND (data.userType.type : student)\") {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "dummygql" }
+        },
+        "created_at": "2021-07-08T13:11:14.196882+00:00",
+        "id": "7d426d37-ea3e-42c7-b739-09e3cbec8be8",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-07-08T13:11:14.196882+00:00"
+      },
+      {
+        "config": {
+          "gql": "query getMissionPrernaUsers {users: getUsersByApplication(application: \"SamagraX Testing App\", limit: 2000) {id full_name mobilePhone data: jdata}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "commsgql" }
+        },
+        "created_at": "2021-06-16T06:03:06.00972+00:00",
+        "id": "427f2cdf-c129-403c-84fe-73af867b1274",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-06-16T06:03:12.609182+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($phoneNo: String) {users: getUsersByQuery(queryString: $phoneNo) {id username mobilePhone data: jdata}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "commsgql" },
+          "verificationParams": { "phoneNo": "9415787824" }
+        },
+        "created_at": "2021-06-16T06:03:06.00972+00:00",
+        "id": "515a6028-b5f0-4381-ad97-e8651b820412",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-06-16T06:03:12.609182+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($id: String) {users: getUsersByQuery(queryString: $id) {id username mobilePhone data: jdata}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "commsgql" },
+          "verificationParams": { "id": "f5c49bcc-b96c-4206-950e-a2ba4319f149" }
+        },
+        "created_at": "2021-06-16T06:03:06.00972+00:00",
+        "id": "056d0f87-8287-4c1e-8b2d-19f8f9d7e419",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-06-16T06:03:12.609182+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($id: String) {users: getUsersByQuery(queryString: $id) {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType }}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "dummygql" },
+          "verificationParams": {
+            "id": "(data.device.deviceID : '96102c3f-2c22-4614-8dcc-6b130cefe586')"
+          }
+        },
+        "created_at": "2021-07-08T13:11:14.196882+00:00",
+        "id": "ad3e8427-8286-42fc-8a11-0c3977d9194f",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-07-08T13:11:14.196882+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($id: String) {users: getUsersByQuery(queryString: $id) {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType }}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "dummygql" },
+          "verificationParams": {
+            "id": "(data.device.deviceID : '96102c3f-2c22-4614-8dcc-6b130cefe586')"
+          }
+        },
+        "created_at": "2021-07-08T13:11:14.196882+00:00",
+        "id": "8d6a12f7-7820-428f-a2f4-001f054ff98e",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-07-08T13:11:14.196882+00:00"
+      },
+      {
+        "config": {
+          "gql": "query getMissionPrernaUsers {users: getUsersByApplication(application: \"SamagraX Testing App\", limit: 2000) {id full_name mobilePhone data: jdata}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "commsgql" }
+        },
+        "created_at": "2021-06-16T06:03:06.00972+00:00",
+        "id": "39d297a8-a5a5-434e-be2f-166d83f7c417",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-06-16T06:03:12.609182+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($phoneNo: String) {users: getUsersByQuery(queryString: $phoneNo) {id username mobilePhone data: jdata}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "commsgql" },
+          "verificationParams": { "phoneNo": "9415787824" }
+        },
+        "created_at": "2021-06-16T06:03:06.00972+00:00",
+        "id": "f59038e4-8c7e-4b79-a368-ab1200d5c566",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-06-16T06:03:12.609182+00:00"
+      },
+      {
+        "config": {
+          "url": "http://localhost:8888",
+          "cadence": {
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "retries-interval": 10
+          },
+          "credentials": {
+            "vault": "diksha",
+            "variable": "tranformerHeadersRasa"
+          }
+        },
+        "created_at": "2021-06-16T06:03:06.00972+00:00",
+        "id": "3fb0e35f-46dc-44cf-95cc-43d1df1c9a11",
+        "name": null,
+        "type": "rest-service",
+        "updated_at": "2021-06-16T06:03:12.609182+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($id: String) {users: getUsersByQuery(queryString: $id) {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType }}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "dummygql" },
+          "verificationParams": {
+            "id": "(data.device.deviceID : '96102c3f-2c22-4614-8dcc-6b130cefe586')"
+          }
+        },
+        "created_at": "2021-07-08T12:42:27.289797+00:00",
+        "id": "c4a94310-66f6-44fa-892d-013e1a4ddb36",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-07-08T12:42:27.289797+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($id: String) {users: getUsersByQuery(queryString: $id) {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType }}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "dummygql" },
+          "verificationParams": {
+            "id": "(data.device.deviceID : '96102c3f-2c22-4614-8dcc-6b130cefe586')"
+          }
+        },
+        "created_at": "2021-07-08T12:42:27.289797+00:00",
+        "id": "e7774a21-d16b-41ab-bebf-a5c8bd5ac85a",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-07-08T12:42:27.289797+00:00"
+      },
+      {
+        "config": {
+          "cadence": {
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "retries-interval": 10
+          },
+          "credentials": { "vault": "samagra", "variable": "samagraMainODK" }
+        },
+        "created_at": "2021-06-16T06:03:06.00972+00:00",
+        "id": "94b7c56a-6537-49e3-88e5-4ea548b2f075",
+        "name": null,
+        "type": "odk",
+        "updated_at": "2021-06-16T06:03:12.609182+00:00"
+      },
+      {
+        "config": {
+          "gql": "query getMissionPrernaUsers {users: getUsersByApplication(application: \"SamagraX Testing App\", limit: 2000) {id full_name mobilePhone data: jdata}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "commsgql" }
+        },
+        "created_at": "2021-06-16T06:03:06.00972+00:00",
+        "id": "65020b3a-1582-4a2d-8d7c-70615a14d112",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-06-16T06:03:12.609182+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($phoneNo: String) {users: getUsersByQuery(queryString: $phoneNo) {id username mobilePhone data: jdata}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "commsgql" },
+          "verificationParams": { "phoneNo": "9415787824" }
+        },
+        "created_at": "2021-06-16T06:03:06.00972+00:00",
+        "id": "683cda34-67e5-4314-addb-52bf713c2d03",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-06-16T06:03:12.609182+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($id: String) {users: getUsersByQuery(queryString: $id) {id username mobilePhone data: jdata}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "commsgql" },
+          "verificationParams": { "id": "f5c49bcc-b96c-4206-950e-a2ba4319f149" }
+        },
+        "created_at": "2021-06-16T06:03:06.00972+00:00",
+        "id": "9aa1a713-e01a-497a-84b7-7a9ad58078ea",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-06-16T06:03:12.609182+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($id: String) {users: getUsersByQuery(queryString: $id) {id username mobilePhone data: jdata}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "commsgql" },
+          "verificationParams": { "id": "f5c49bcc-b96c-4206-950e-a2ba4319f149" }
+        },
+        "created_at": "2021-06-16T06:03:06.00972+00:00",
+        "id": "7c113a19-32e5-4c52-9bd5-26a90b316db5",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-06-16T06:03:12.609182+00:00"
+      },
+      {
+        "config": {
+          "gql": "query getMissionPrernaUsers {users: getUsersByApplication(application: \"SamagraX Testing App\", limit: 2000) {id full_name mobilePhone data: jdata}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "commsgql" }
+        },
+        "created_at": "2021-06-16T06:03:06.00972+00:00",
+        "id": "f5d0df5b-f97a-4d7d-880f-27d8fade3ced",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-06-16T06:03:12.609182+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($phoneNo: String) {users: getUsersByQuery(queryString: $phoneNo) {id username mobilePhone data: jdata}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "commsgql" },
+          "verificationParams": { "phoneNo": "9415787824" }
+        },
+        "created_at": "2021-06-16T06:03:06.00972+00:00",
+        "id": "d97ca587-f513-4c8a-9ff4-05d2bc8b3d00",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-06-16T06:03:12.609182+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($id: String) {users: getUsersByQuery(queryString: $id) {id username mobilePhone data: jdata}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "commsgql" },
+          "verificationParams": { "id": "f5c49bcc-b96c-4206-950e-a2ba4319f149" }
+        },
+        "created_at": "2021-06-16T06:03:06.00972+00:00",
+        "id": "0583bda2-feb3-4cf8-b76f-0b4b7e00bb55",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-06-16T06:03:12.609182+00:00"
+      },
+      {
+        "config": {
+          "gql": "query getMissionPrernaUsers {users: getUsersByApplication(application: \"SamagraX Testing App\", limit: 2000) {id full_name mobilePhone data: jdata}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "commsgql" }
+        },
+        "created_at": "2021-06-16T06:03:06.00972+00:00",
+        "id": "11488102-448c-4a55-8d2d-8cb388946a56",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-06-16T06:03:12.609182+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($phoneNo: String) {users: getUsersByQuery(queryString: $phoneNo) {id username mobilePhone data: jdata}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "commsgql" },
+          "verificationParams": { "phoneNo": "9415787824" }
+        },
+        "created_at": "2021-06-16T06:03:06.00972+00:00",
+        "id": "571f4849-798e-4806-b068-77b3d37bce9d",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-06-16T06:03:12.609182+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($id: String) {users: getUsersByQuery(queryString: $id) {id username mobilePhone data: jdata}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "commsgql" },
+          "verificationParams": { "id": "f5c49bcc-b96c-4206-950e-a2ba4319f149" }
+        },
+        "created_at": "2021-06-16T06:03:06.00972+00:00",
+        "id": "aa53af62-6b41-4ee4-9fc6-eeaaa60584e7",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-06-16T06:03:12.609182+00:00"
+      },
+      {
+        "config": {
+          "gql": "query getChakshu {users: candidate_profile(where: {id: {_eq: 27}}) {id name mobilePhone: whatsapp_mobile_number}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "rozgarBotGQL" }
+        },
+        "created_at": "2021-06-16T19:27:55.991909+00:00",
+        "id": "c69466da-943c-49ab-ab88-a87f5fa76185",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-06-16T19:27:55.991909+00:00"
+      },
+      {
+        "config": {
+          "gql": "query getChakshu($phoneNo: String!) {users: candidate_profile(where: {whatsapp_mobile_number: {_eq: $phoneNo}}) { id: uuid name phone: whatsapp_mobile_number}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "rozgarBotGQL" },
+          "verificationParams": { "phoneNo": "9415787824" }
+        },
+        "created_at": "2021-06-16T19:27:55.991909+00:00",
+        "id": "4943e900-2ada-42b0-9e76-c76bc31a8aef",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-06-16T19:27:55.991909+00:00"
+      },
+      {
+        "config": {
+          "gql": "query getChakshu($id: uuid!) {users: candidate_profile(where: {uuid: {_eq: $id}}) {id: uuid name phone: whatsapp_mobile_number}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "rozgarBotGQL" },
+          "verificationParams": { "id": "f5c49bcc-b96c-4206-950e-a2ba4319f149" }
+        },
+        "created_at": "2021-06-16T19:27:55.991909+00:00",
+        "id": "fb1ba557-5511-47ff-829d-13ff7ae17be9",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-06-16T19:27:55.991909+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($id: String) {users: getUsersByQuery(queryString: $id) {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType }}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "dummygql" },
+          "verificationParams": {
+            "id": "(data.device.deviceID : '96102c3f-2c22-4614-8dcc-6b130cefe586')"
+          }
+        },
+        "created_at": "2021-07-08T12:44:33.476789+00:00",
+        "id": "96cc2670-6c7d-42f3-9051-409067285bb9",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-07-08T12:44:33.476789+00:00"
+      },
+      {
+        "config": {
+          "gql": "query getMissionPrernaUsers {users: getUsersByApplication(application: \"SamagraX Testing App\", limit: 2000) {id full_name mobilePhone data: jdata}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "commsgql" }
+        },
+        "created_at": "2021-06-16T06:03:06.00972+00:00",
+        "id": "5d35524d-75df-45f9-8cad-e16d561c79c9",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-06-16T06:03:12.609182+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($phoneNo: String) {users: getUsersByQuery(queryString: $phoneNo) {id username mobilePhone data: jdata}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "commsgql" },
+          "verificationParams": { "phoneNo": "9415787824" }
+        },
+        "created_at": "2021-06-16T06:03:06.00972+00:00",
+        "id": "06fa6ffd-7bde-4910-b039-910a20459280",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-06-16T06:03:12.609182+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($id: String) {users: getUsersByQuery(queryString: $id) {id username mobilePhone data: jdata}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "commsgql" },
+          "verificationParams": { "id": "f5c49bcc-b96c-4206-950e-a2ba4319f149" }
+        },
+        "created_at": "2021-06-16T06:03:06.00972+00:00",
+        "id": "e93e82ba-28e2-46a0-9a05-8259420ca60e",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-06-16T06:03:12.609182+00:00"
+      },
+      {
+        "config": {
+          "gql": "query getMissionPrernaUsers {users: getUsersByApplication(application: \"SamagraX Testing App\", limit: 2000) {id full_name mobilePhone data: jdata}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "commsgql" }
+        },
+        "created_at": "2021-06-16T06:03:06.00972+00:00",
+        "id": "40a8a8ab-5b66-440e-852b-454483bdb06d",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-06-16T06:03:12.609182+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($phoneNo: String) {users: getUsersByQuery(queryString: $phoneNo) {id username mobilePhone data: jdata}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "commsgql" },
+          "verificationParams": { "phoneNo": "9415787824" }
+        },
+        "created_at": "2021-06-16T06:03:06.00972+00:00",
+        "id": "262d7e74-a06f-4273-9395-3d32166bdca1",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-06-16T06:03:12.609182+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($id: String) {users: getUsersByQuery(queryString: $id) {id username mobilePhone data: jdata}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "commsgql" },
+          "verificationParams": { "id": "f5c49bcc-b96c-4206-950e-a2ba4319f149" }
+        },
+        "created_at": "2021-06-16T06:03:06.00972+00:00",
+        "id": "bd6c42a6-e3f2-4516-b6cd-3d45ae623cae",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-06-16T06:03:12.609182+00:00"
+      },
+      {
+        "config": {
+          "gql": "query getMissionPrernaUsers {users: getUsersByApplication(application: \"SamagraX Testing App\", limit: 2000) {id full_name mobilePhone data: jdata}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "commsgql" }
+        },
+        "created_at": "2021-06-16T06:03:06.00972+00:00",
+        "id": "032774e8-1af6-4e97-8eda-a613dbb74753",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-06-16T06:03:12.609182+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($phoneNo: String) {users: getUsersByQuery(queryString: $phoneNo) {id username mobilePhone data: jdata}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "commsgql" },
+          "verificationParams": { "phoneNo": "9415787824" }
+        },
+        "created_at": "2021-06-16T06:03:06.00972+00:00",
+        "id": "3f12be55-2962-4166-bb73-96a78950b72c",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-06-16T06:03:12.609182+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($id: String) {users: getUsersByQuery(queryString: $id) {id username mobilePhone data: jdata}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "commsgql" },
+          "verificationParams": { "id": "f5c49bcc-b96c-4206-950e-a2ba4319f149" }
+        },
+        "created_at": "2021-06-16T06:03:06.00972+00:00",
+        "id": "73dcab05-e81d-47ba-91f7-c49ce52d1c73",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-06-16T06:03:12.609182+00:00"
+      },
+      {
+        "config": {
+          "gql": "query getMissionPrernaUsers {users: getUsersByApplication(application: \"SamagraX Testing App\", limit: 2000) {id full_name mobilePhone data: jdata}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "commsgql" }
+        },
+        "created_at": "2021-06-16T06:03:06.00972+00:00",
+        "id": "8aff5172-7e7d-43be-a75f-c038ad6b40e1",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-06-16T06:03:12.609182+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($phoneNo: String) {users: getUsersByQuery(queryString: $phoneNo) {id username mobilePhone data: jdata}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "commsgql" },
+          "verificationParams": { "phoneNo": "9415787824" }
+        },
+        "created_at": "2021-06-16T06:03:06.00972+00:00",
+        "id": "95dc77c9-184e-444b-8930-d5ff7d94bd39",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-06-16T06:03:12.609182+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($id: String) {users: getUsersByQuery(queryString: $id) {id username mobilePhone data: jdata}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "commsgql" },
+          "verificationParams": { "id": "f5c49bcc-b96c-4206-950e-a2ba4319f149" }
+        },
+        "created_at": "2021-06-16T06:03:06.00972+00:00",
+        "id": "84863dba-d4bd-46d3-aecb-c38b845b2e80",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-06-16T06:03:12.609182+00:00"
+      },
+      {
+        "config": {
+          "gql": "query getMissionPrernaUsers {users: getUsersByApplication(application: \"SamagraX Testing App\", limit: 2000) {id full_name mobilePhone data: jdata}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "commsgql" }
+        },
+        "created_at": "2021-06-16T06:03:06.00972+00:00",
+        "id": "cab5ccee-88ad-4818-a8d5-fb8adcc76d8a",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-06-16T06:03:12.609182+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($phoneNo: String) {users: getUsersByQuery(queryString: $phoneNo) {id username mobilePhone data: jdata}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "commsgql" },
+          "verificationParams": { "phoneNo": "9415787824" }
+        },
+        "created_at": "2021-06-16T06:03:06.00972+00:00",
+        "id": "555f6739-e770-4c99-b40e-420b4a92af0e",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-06-16T06:03:12.609182+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($id: String) {users: getUsersByQuery(queryString: $id) {id username mobilePhone data: jdata}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "commsgql" },
+          "verificationParams": { "id": "f5c49bcc-b96c-4206-950e-a2ba4319f149" }
+        },
+        "created_at": "2021-06-16T06:03:06.00972+00:00",
+        "id": "d13380b1-056b-4449-9e80-170e2e4e891f",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-06-16T06:03:12.609182+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query {users: getCandidatesForVacancy(vacancyID: 15, threshold: 16) {id name whatsapp_mobile_number mobile_number vacancyData marks }}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "skills" }
+        },
+        "created_at": "2021-06-22T00:04:37.404748+00:00",
+        "id": "1e2580f4-2fc3-4e5f-89b3-8c470e4be8c2",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-06-22T00:04:37.404748+00:00"
+      },
+      {
+        "config": {
+          "gql": "query getChakshu($phoneNo: String!) {users: candidate_profile(where: {whatsapp_mobile_number: {_eq: $phoneNo}}) { id: uuid name phone: whatsapp_mobile_number}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "skills" },
+          "verificationParams": { "phoneNo": "9415787824" }
+        },
+        "created_at": "2021-06-22T00:04:37.404748+00:00",
+        "id": "3b954c1d-8411-4134-af2d-222eff7288fc",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-06-22T00:04:37.404748+00:00"
+      },
+      {
+        "config": {
+          "gql": "query getChakshu($id: uuid!) {users: candidate_profile(where: {uuid: {_eq: $id}}) {id: uuid name phone: whatsapp_mobile_number}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "skills" },
+          "verificationParams": { "id": "f5c49bcc-b96c-4206-950e-a2ba4319f149" }
+        },
+        "created_at": "2021-06-22T00:04:37.404748+00:00",
+        "id": "f9489adc-e725-4e72-8b38-a25f30181b6c",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-06-22T00:04:37.404748+00:00"
+      },
+      {
+        "config": {
+          "gql": "query getChakshu {users: candidate_profile(where: {id: {_eq: 27}}) {id name mobilePhone: whatsapp_mobile_number}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "rozgarBotGQL" }
+        },
+        "created_at": "2021-06-29T08:11:49.171293+00:00",
+        "id": "1a905d52-265c-4370-92cb-1e75db834881",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-06-29T08:11:49.171293+00:00"
+      },
+      {
+        "config": {
+          "gql": "query getChakshu($phoneNo: String!) {users: candidate_profile(where: {whatsapp_mobile_number: {_eq: $phoneNo}}) { id: uuid name phone: whatsapp_mobile_number}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "rozgarBotGQL" },
+          "verificationParams": { "phoneNo": "9415787824" }
+        },
+        "created_at": "2021-06-29T08:11:49.171293+00:00",
+        "id": "ecb0a27b-587f-4575-a1de-7b7d44abba96",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-06-29T08:11:49.171293+00:00"
+      },
+      {
+        "config": {
+          "gql": "query getChakshu($id: uuid!) {users: candidate_profile(where: {uuid: {_eq: $id}}) {id: uuid name phone: whatsapp_mobile_number}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "rozgarBotGQL" },
+          "verificationParams": { "id": "f5c49bcc-b96c-4206-950e-a2ba4319f149" }
+        },
+        "created_at": "2021-06-29T08:11:49.171293+00:00",
+        "id": "4320c89b-b111-4b30-be38-37a949d4453d",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-06-29T08:11:49.171293+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query {users: getCandidatesForVacancy(vacancyID: 15, threshold: 16) {id name whatsapp_mobile_number mobile_number vacancyData marks }}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "skills" }
+        },
+        "created_at": "2021-07-05T06:59:49.744644+00:00",
+        "id": "4f102bb1-61c6-4cea-a157-411b107f0ada",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-07-05T06:59:49.744644+00:00"
+      },
+      {
+        "config": {
+          "gql": "query getChakshu($phoneNo: String!) {users: candidate_profile(where: {whatsapp_mobile_number: {_eq: $phoneNo}}) { id: uuid name phone: whatsapp_mobile_number}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "skills" },
+          "verificationParams": { "phoneNo": "9415787824" }
+        },
+        "created_at": "2021-07-05T06:59:49.744644+00:00",
+        "id": "7e0462d9-7009-4861-adf4-2e545b65506e",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-07-05T06:59:49.744644+00:00"
+      },
+      {
+        "config": {
+          "gql": "query getChakshu($id: uuid!) {users: candidate_profile(where: {uuid: {_eq: $id}}) {id: uuid name phone: whatsapp_mobile_number}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "skills" },
+          "verificationParams": { "id": "f5c49bcc-b96c-4206-950e-a2ba4319f149" }
+        },
+        "created_at": "2021-07-05T06:59:49.744644+00:00",
+        "id": "057087a6-10ec-4e60-8904-f3184b73d5b2",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-07-05T06:59:49.744644+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($id: String) {users: getUsersByQuery(queryString: $id) {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType }}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "dummygql" },
+          "verificationParams": {
+            "id": "(data.device.deviceID : '96102c3f-2c22-4614-8dcc-6b130cefe586')"
+          }
+        },
+        "created_at": "2021-07-08T12:44:33.476789+00:00",
+        "id": "4325224c-90f2-4fa0-a15c-fd7721befa8e",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-07-08T12:44:33.476789+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query {users: getUsersByQuery(queryString: \"((data.userLocation.state : 'Haryana') AND (data.userLocation.district : 'Charkhi Dadri') AND (data.userLocation.block : 'Badhra')) AND (data.roles : PUBLIC) AND (data.userType.type : student)\") {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "dummygql" }
+        },
+        "created_at": "2021-07-08T13:45:09.46021+00:00",
+        "id": "1c56e232-74b0-4bc6-9fb9-b94d16e64969",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-07-08T13:45:09.46021+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($id: String) {users: getUsersByQuery(queryString: $id) {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType }}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "dummygql" },
+          "verificationParams": {
+            "id": "(data.device.deviceID : '96102c3f-2c22-4614-8dcc-6b130cefe586')"
+          }
+        },
+        "created_at": "2021-07-08T13:45:09.46021+00:00",
+        "id": "7d016d07-f7ae-4e06-963c-fd31a29c14f4",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-07-08T13:45:09.46021+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($id: String) {users: getUsersByQuery(queryString: $id) {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType }}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "dummygql" },
+          "verificationParams": {
+            "id": "(data.device.deviceID : '96102c3f-2c22-4614-8dcc-6b130cefe586')"
+          }
+        },
+        "created_at": "2021-07-08T13:45:09.46021+00:00",
+        "id": "bf7f1c95-9e98-49b1-aaf0-a86f55e9be77",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-07-08T13:45:09.46021+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($id: String) {users: getUsersByQuery(queryString: $id) {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType }}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "dummygql" },
+          "verificationParams": {
+            "id": "(data.device.deviceID : '96102c3f-2c22-4614-8dcc-6b130cefe586')"
+          }
+        },
+        "created_at": "2021-07-08T16:40:53.962879+00:00",
+        "id": "b71ab062-bfb8-485b-8421-eda72f0ea496",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-07-08T16:40:53.962879+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($id: String) {users: getUsersByQuery(queryString: $id) {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType }}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "dummygql" },
+          "verificationParams": {
+            "id": "(data.device.deviceID : '96102c3f-2c22-4614-8dcc-6b130cefe586')"
+          }
+        },
+        "created_at": "2021-07-08T16:40:53.962879+00:00",
+        "id": "b2ca7511-b707-4261-ad26-1242e4ed2deb",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-07-08T16:40:53.962879+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query {users: getUsersByQuery(queryString: \"((data.userLocation.state : 'Haryana') AND (data.userLocation.district : 'Bhiwani') AND (data.userLocation.block : 'Bawani Khera')) AND (data.roles : PUBLIC) AND (data.userType.type : student)\") {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "dummygql" }
+        },
+        "created_at": "2021-07-08T16:42:03.910808+00:00",
+        "id": "b6cc0f09-6b3a-4467-9ad7-28dd67a408f1",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-07-08T16:42:03.910808+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($id: String) {users: getUsersByQuery(queryString: $id) {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType }}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "dummygql" },
+          "verificationParams": {
+            "id": "(data.device.deviceID : '96102c3f-2c22-4614-8dcc-6b130cefe586')"
+          }
+        },
+        "created_at": "2021-07-08T16:42:03.910808+00:00",
+        "id": "5ca8bdfa-7b57-4f8f-949f-51b9faa89c69",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-07-08T16:42:03.910808+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($id: String) {users: getUsersByQuery(queryString: $id) {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType }}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "dummygql" },
+          "verificationParams": {
+            "id": "(data.device.deviceID : '96102c3f-2c22-4614-8dcc-6b130cefe586')"
+          }
+        },
+        "created_at": "2021-07-08T16:42:03.910808+00:00",
+        "id": "02816797-2d6c-4fda-8200-4de886998e46",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-07-08T16:42:03.910808+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query {users: getUsersByQuery(queryString: \"((data.userLocation.state : 'Haryana') AND (data.userLocation.district : 'Ambala') AND (data.userLocation.block : 'Ambala-II (Cantt)')) AND (data.roles : PUBLIC) AND (data.userType.type : student)\") {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "dummygql" }
+        },
+        "created_at": "2021-07-08T16:59:19.114395+00:00",
+        "id": "9397d5d3-d607-49db-8d61-446e0b675854",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-07-08T16:59:19.114395+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($id: String) {users: getUsersByQuery(queryString: $id) {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType }}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "dummygql" },
+          "verificationParams": {
+            "id": "(data.device.deviceID : '96102c3f-2c22-4614-8dcc-6b130cefe586')"
+          }
+        },
+        "created_at": "2021-07-08T16:59:19.114395+00:00",
+        "id": "737d44fd-d3e7-4d82-8a6e-09f401feb817",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-07-08T16:59:19.114395+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($id: String) {users: getUsersByQuery(queryString: $id) {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType }}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "dummygql" },
+          "verificationParams": {
+            "id": "(data.device.deviceID : '96102c3f-2c22-4614-8dcc-6b130cefe586')"
+          }
+        },
+        "created_at": "2021-07-08T16:59:19.114395+00:00",
+        "id": "37a3955d-2d39-4535-97bb-2060b32d0002",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-07-08T16:59:19.114395+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query {users: getUsersByQuery(queryString: \"((data.userLocation.state : 'Haryana') AND (data.userLocation.district : 'Bhiwani') AND (data.userLocation.block : 'Badhra')) AND (data.roles : PUBLIC) AND (data.userType.type : student)\") {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType}}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "dummygql" }
+        },
+        "created_at": "2021-07-08T18:24:36.441385+00:00",
+        "id": "ec1c73a3-f6b6-4a99-81fc-4ae24373ae26",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-07-08T18:24:36.441385+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($id: String) {users: getUsersByQuery(queryString: $id) {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType }}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "dummygql" },
+          "verificationParams": {
+            "id": "(data.device.deviceID : '96102c3f-2c22-4614-8dcc-6b130cefe586')"
+          }
+        },
+        "created_at": "2021-07-08T18:24:36.441385+00:00",
+        "id": "c22ea850-b4ec-47d5-bdc5-e5ba6433b51d",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-07-08T18:24:36.441385+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($id: String) {users: getUsersByQuery(queryString: $id) {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType }}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "dummygql" },
+          "verificationParams": {
+            "id": "(data.device.deviceID : '96102c3f-2c22-4614-8dcc-6b130cefe586')"
+          }
+        },
+        "created_at": "2021-07-08T18:24:36.441385+00:00",
+        "id": "838f8a31-64cf-4b39-87d0-6b4c3f628233",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-07-08T18:24:36.441385+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($id: String) {users: getUsersByQuery(queryString: $id) {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType }}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "dummygql" },
+          "verificationParams": {
+            "id": "(data.device.deviceID : '96102c3f-2c22-4614-8dcc-6b130cefe586')"
+          }
+        },
+        "created_at": "2021-07-08T18:37:17.072523+00:00",
+        "id": "13b5498a-7227-4e2f-a870-c525619fd5ba",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-07-08T18:37:17.072523+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($id: String) {users: getUsersByQuery(queryString: $id) {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType }}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "dummygql" },
+          "verificationParams": {
+            "id": "(data.device.deviceID : '96102c3f-2c22-4614-8dcc-6b130cefe586')"
+          }
+        },
+        "created_at": "2021-07-08T18:37:17.072523+00:00",
+        "id": "8657c864-88f6-4e8f-8ce9-7e3e7bf6958c",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-07-08T18:37:17.072523+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($id: String) {users: getUsersByQuery(queryString: $id) {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType }}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "dummygql" },
+          "verificationParams": {
+            "id": "(data.device.deviceID : '96102c3f-2c22-4614-8dcc-6b130cefe586')"
+          }
+        },
+        "created_at": "2021-07-08T18:46:04.62998+00:00",
+        "id": "27e46dc5-9669-4c77-a65b-d145c38e9282",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-07-08T18:46:04.62998+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($id: String) {users: getUsersByQuery(queryString: $id) {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType }}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "dummygql" },
+          "verificationParams": {
+            "id": "(data.device.deviceID : '96102c3f-2c22-4614-8dcc-6b130cefe586')"
+          }
+        },
+        "created_at": "2021-07-08T18:46:04.62998+00:00",
+        "id": "da0f17ca-d9d0-4658-9b8a-c94de94d576b",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-07-08T18:46:04.62998+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($id: String) {users: getUsersByQuery(queryString: $id) {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType }}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "dummygql" },
+          "verificationParams": {
+            "id": "(data.device.deviceID : '96102c3f-2c22-4614-8dcc-6b130cefe586')"
+          }
+        },
+        "created_at": "2021-07-09T08:51:43.530545+00:00",
+        "id": "4951f07e-e88c-4fa0-9d82-e40fe80256c6",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-07-09T08:51:43.530545+00:00"
+      },
+      {
+        "config": {
+          "gql": "query Query($id: String) {users: getUsersByQuery(queryString: $id) {lastName firstName device customData externalIds framework lastName roles rootOrgId userLocation userType }}",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "dummygql" },
+          "verificationParams": {
+            "id": "(data.device.deviceID : '96102c3f-2c22-4614-8dcc-6b130cefe586')"
+          }
+        },
+        "created_at": "2021-07-09T08:51:43.530545+00:00",
+        "id": "f9299338-c43f-45af-b593-7c43f4cc887c",
+        "name": null,
+        "type": "gql",
+        "updated_at": "2021-07-09T08:51:43.530545+00:00"
+      },
+      {
+        "config": {
+          "cadence": {
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "retries-interval": 10
+          },
+          "credentials": { "vault": "samagra", "variable": "samagraSandboxODK" }
+        },
+        "created_at": "2021-07-13T07:40:59.266903+00:00",
+        "id": "794b5378-4043-4b48-a086-af8179126cb8",
+        "name": null,
+        "type": "odk",
+        "updated_at": "2021-07-13T07:40:59.266903+00:00"
+      },
+      {
+        "config": {
+          "cadence": {
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "retries-interval": 10
+          },
+          "credentials": { "vault": "samagra", "variable": "samagraSandboxODK" }
+        },
+        "created_at": "2021-11-11T12:33:44.767591+00:00",
+        "id": "af9be82e-d59e-4eba-83e4-d19c7f07d8f6",
+        "name": null,
+        "type": "odk",
+        "updated_at": "2021-11-11T12:33:44.767591+00:00"
+      },
+      {
+        "config": {
+          "cadence": {
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "retries-interval": 10
+          },
+          "credentials": { "vault": "samagra", "variable": "samagraSandboxODK" }
+        },
+        "created_at": "2021-11-12T13:14:32.666551+00:00",
+        "id": "ff170fed-cb7a-463d-a8f9-4c8371241e16",
+        "name": null,
+        "type": "odk",
+        "updated_at": "2021-11-12T13:14:32.666551+00:00"
+      },
+      {
+        "config": {
+          "cadence": {
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "retries-interval": 10
+          },
+          "credentials": { "vault": "samagra", "variable": "samagraSandboxODK" }
+        },
+        "created_at": "2021-11-16T06:29:21.056722+00:00",
+        "id": "2e38e1bb-1c74-4546-95f3-45a084d0ec3c",
+        "name": null,
+        "type": "odk",
+        "updated_at": "2021-11-16T06:29:21.056722+00:00"
+      },
+      {
+        "config": {
+          "cadence": {
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "retries-interval": 10
+          },
+          "credentials": { "vault": "samagra", "variable": "samagraSandboxODK" }
+        },
+        "created_at": "2021-11-16T12:40:20.506832+00:00",
+        "id": "74f9f3c0-856b-4299-ab76-ec4a027bf2bf",
+        "name": null,
+        "type": "odk",
+        "updated_at": "2021-11-16T12:40:20.506832+00:00"
+      },
+      {
+        "config": {
+          "cadence": {
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "retries-interval": 10
+          },
+          "credentials": { "vault": "samagra", "variable": "samagraSandboxODK" }
+        },
+        "created_at": "2021-12-16T06:51:03.361755+00:00",
+        "id": "3a97cd1a-834f-488c-9c39-252261ae23d0",
+        "name": null,
+        "type": "odk",
+        "updated_at": "2021-12-16T06:51:03.361755+00:00"
+      },
+      {
+        "config": {
+          "cadence": {
+            "retries": 0,
+            "timeout": 60,
+            "concurrent": true,
+            "retries-interval": 10
+          },
+          "credentials": { "vault": "samagra", "variable": "samagraSandboxODK" }
+        },
+        "created_at": "2021-12-17T03:55:36.123803+00:00",
+        "id": "7280592a-fd1d-4774-96de-77fd397ade86",
+        "name": null,
+        "type": "odk",
+        "updated_at": "2021-12-17T03:55:36.123803+00:00"
+      },
+      {
+        "config": {
+          "gql": "query getCandidatesByPhone($phoneNo: String!) { users: candidate_profile(where: {mobile_number: {_eq: $phoneNo}}) { id mobile_number phone: whatsapp_mobile_number whatsapp_mobile_number name district_travel { id } location { longitude latitude } matches_count: candidate_vacancy_interests_aggregate(where: {interested: {_is_null: true}, vacancy_detail: {is_live: {_eq: true}}}) { aggregate { count } } matched: candidate_vacancy_interests(where: {interested: {_is_null: true}, vacancy_detail: {is_live: {_eq: true}}}) { vacancy_detail { job_role employer_detail { company_name district_name { name } } expected_salary { salary_range } id } } interested: candidate_vacancy_interests(where: {interested: {_eq: true}, vacancy_detail: {is_live: {_eq: true}}}) { id vacancy_detail { job_role expected_salary { salary_range } employer_detail { company_name district_name { name } } id } } denied: candidate_vacancy_interests(where: {interested: {_eq: false}, vacancy_detail: {is_live: {_eq: true}}}) { id vacancy_detail { job_role expected_salary { salary_range } employer_detail { company_name district_name { name } } id } } } }",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "rozgarBotGQL" },
+          "verificationParams": { "phoneNo": "9415787824" }
+        },
+        "created_at": "2022-01-31T05:15:58.747284+00:00",
+        "id": "8f40dd4f-147a-4c6c-8166-3ff731fad84e",
+        "name": "Rozgar Candidates By Phone",
+        "type": "gql",
+        "updated_at": "2022-01-31T05:15:58.747284+00:00"
+      },
+      {
+        "config": {
+          "gql": "query getRecruiterByPhone($phoneNo: String!) { users: employer_details(where: {mobile_number: {_eq: $phoneNo}}) { id phone: mobile_number company_name name location { longitude latitude } } }",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "rozgarBotGQL" },
+          "verificationParams": {
+            "id": "(data.device.deviceID : '96102c3f-2c22-4614-8dcc-6b130cefe586')"
+          }
+        },
+        "created_at": "2022-01-31T05:17:07.741282+00:00",
+        "id": "e873a7dc-87e9-44e7-af7f-2e05c8bb33be",
+        "name": "Rozgar Recruiters",
+        "type": "gql",
+        "updated_at": "2022-01-31T05:17:07.741282+00:00"
+      },
+      {
+        "config": {
+          "gql": "query getAllCandidates { users: candidate_profile(limit: 5){ id mobile_number phone: whatsapp_mobile_number whatsapp_mobile_number name district_travel { id } location { longitude latitude } matches_count: candidate_vacancy_interests_aggregate(where: {interested: {_is_null: true}, vacancy_detail: {is_live: {_eq: true}}}) { aggregate { count } } matched: candidate_vacancy_interests(where: {interested: {_is_null: true}, vacancy_detail: {is_live: {_eq: true}}}) { vacancy_detail { job_role employer_detail { company_name district_name { name } } expected_salary { salary_range } id } } interested: candidate_vacancy_interests(where: {interested: {_eq: true}, vacancy_detail: {is_live: {_eq: true}}}) { id vacancy_detail { job_role expected_salary { salary_range } employer_detail { company_name district_name { name } } id } } denied: candidate_vacancy_interests(where: {interested: {_eq: false}, vacancy_detail: {is_live: {_eq: true}}}) { id vacancy_detail { job_role expected_salary { salary_range } employer_detail { company_name district_name { name } } id } } } }",
+          "cadence": {
+            "perPage": 10000,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": false,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": { "vault": "samagra", "variable": "rozgarBotGQL" },
+          "verificationParams": {
+            "id": "(data.device.deviceID : '96102c3f-2c22-4614-8dcc-6b130cefe586')"
+          }
+        },
+        "created_at": "2022-03-23T11:29:24.3047+00:00",
+        "id": "21e86402-d030-4315-8120-647e38cbd01e",
+        "name": "Rozgar Recruiters - Broadcast Test",
+        "type": "gql",
+        "updated_at": "2022-03-23T12:37:10.906121+00:00"
+      }
+    ]
+  }
+}

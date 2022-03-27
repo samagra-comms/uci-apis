@@ -5,7 +5,11 @@ import {
 import { AppModule } from './app.module';
 import { NestFactory } from '@nestjs/core';
 import { PrismaService } from './services/prisma.service';
-import { DocumentBuilder, FastifySwaggerCustomOptions, SwaggerModule } from '@nestjs/swagger';
+import {
+  DocumentBuilder,
+  FastifySwaggerCustomOptions,
+  SwaggerModule,
+} from '@nestjs/swagger';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 
 async function bootstrap() {
@@ -14,11 +18,11 @@ async function bootstrap() {
     AppModule,
     new FastifyAdapter(),
   );
-  
+
   /** Register Prismaservice LifeCycle hooks */
   const prismaService: PrismaService = app.get(PrismaService);
   prismaService.enableShutdownHooks(app);
-  
+
   /** Global prefix: Will result in appending of keyword 'admin' at the start of all the request */
   app.setGlobalPrefix('admin');
 
@@ -31,10 +35,10 @@ async function bootstrap() {
 
   /** OpenApi spec Document builder for Swagger Api Explorer  */
   const config = new DocumentBuilder()
-  .setTitle('UCI')
-  .setDescription('UCI API description')
-  .setVersion('1.0')
-  .build();
+    .setTitle('UCI')
+    .setDescription('UCI API description')
+    .setVersion('1.0')
+    .build();
   const customOptions: FastifySwaggerCustomOptions = {
     uiConfig: {
       docExpansion: null,
@@ -45,6 +49,5 @@ async function bootstrap() {
 
   await app.listen(process.env.port);
   console.log(`App Listening to ${3000}`);
-  
 }
 bootstrap();

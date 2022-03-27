@@ -1,3 +1,5 @@
+CREATE EXTENSION pgcrypto;
+
 -- CreateTable
 CREATE TABLE "Adapter" (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),

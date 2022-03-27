@@ -3,21 +3,12 @@
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = env("PSQL_DB_URL")
 }
 
-generator nestjsDto {
-  provider                        = "prisma-generator-nestjs-dto"
-  output                          = "../src/generated/nestjs-dto"
-  outputToNestJsResourceStructure = "false"
-  exportRelationModifierClasses   = "true"
-  reExport                        = "false"
-  createDtoPrefix                 = "Create"
-  updateDtoPrefix                 = "Update"
-  dtoSuffix                       = "Dto"
-  entityPrefix                    = ""
-  entitySuffix                    = ""
-  fileNamingStyle                 = "camel"
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/prisma-client-js"
 }
 
 model Adapter {
@@ -57,13 +48,27 @@ model Transformer {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  name                String
-  tags                String[]
-  config              Json
-  service             Service            @relation(fields: [serviceId], references: [id])
-  serviceId           String             @unique @db.Uuid
-  ConversationLogics   ConversationLogic[]
+  name             String
+  tags             String[]
+  config           Json
+  service          Service             @relation(fields: [serviceId], references: [id])
+  serviceId        String              @db.Uuid
+  TranformerConfig TransformerConfig[]
 }
+
+model TransformerConfig {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  meta      Json
+
+  transformer   Transformer @relation(fields: [transformerId], references: [id])
+  transformerId String      @db.Uuid
+
+  ConversationLogic   ConversationLogic? @relation(fields: [conversationLogicId], references: [id])
+  conversationLogicId String?            @db.Uuid
+}
+
 model Bot {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt DateTime @default(now())
@@ -73,12 +78,12 @@ model Bot {
   startingMessage String
   users           UserSegment[]
   logicIDs        ConversationLogic[]
-  ownerID         String
-  ownerOrgID      String
-  purpose         String
-  description     String
-  startDate       DateTime
-  endDate         DateTime
+  ownerID         String?
+  ownerOrgID      String?
+  purpose         String?
+  description     String?
+  startDate       DateTime?           @db.Date
+  endDate         DateTime?           @db.Date
 }
 
 model UserSegment {
@@ -87,34 +92,32 @@ model UserSegment {
   updatedAt DateTime @updatedAt
 
   name        String  @unique
-  ownerID     String
-  ownerOrgID  String
-  description String
+  description String?
   count       Int     @default(0)
-  category    String
-  all         Service @relation(fields: [allServiceID], references: [id], name: "UserSegmentAll")
-  byID        Service @relation(fields: [byIDServiceID], references: [id], name: "UserSegmentByID")
-  byPhone     Service @relation(fields: [byPhoneServiceID], references: [id], name: "UserSegmentByPhone")
+  category    String?
 
-  allServiceID     String @unique @db.Uuid
-  byPhoneServiceID String @unique @db.Uuid
-  byIDServiceID    String @unique @db.Uuid
+  all     Service? @relation(fields: [allServiceID], references: [id], name: "UserSegmentAll")
+  byID    Service? @relation(fields: [byIDServiceID], references: [id], name: "UserSegmentByID")
+  byPhone Service? @relation(fields: [byPhoneServiceID], references: [id], name: "UserSegmentByPhone")
 
-  bots   Bot[]
+  allServiceID     String? @db.Uuid
+  byPhoneServiceID String? @db.Uuid
+  byIDServiceID    String? @db.Uuid
+
+  bots  Bot[]
   botId String? @db.Uuid
 }
 
 model ConversationLogic {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  description  String?
-  ownerID      String?
-  ownerOrgID   String?
-  transformers Transformer[]
+  description String?
 
-  adapter   Adapter @relation(fields: [adapterId], references: [id])
-  adapterId String  @db.Uuid
-  bots       Bot[]
+  adapter      Adapter             @relation(fields: [adapterId], references: [id])
+  adapterId    String              @db.Uuid
+  bots         Bot[]
+  transformers TransformerConfig[]
 }

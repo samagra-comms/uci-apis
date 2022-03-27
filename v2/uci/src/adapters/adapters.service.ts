@@ -1,30 +1,28 @@
 import { Injectable } from '@nestjs/common';
-import {
-  Prisma
-} from '@prisma/client';
-import { Adapter } from 'src/generated/nestjs-dto/adapter.entity';
-import { CreateAdapterDto } from 'src/generated/nestjs-dto/create-adapter.dto';
-import { UpdateAdapterDto } from 'src/generated/nestjs-dto/update-adapter.dto';
-import { PrismaService } from 'src/services/prisma.service';
+import { Adapter } from '../generated/nestjs-dto/adapter.entity';
+import { CreateAdapterDto } from '../generated/nestjs-dto/create-adapter.dto';
+import { UpdateAdapterDto } from '../generated/nestjs-dto/update-adapter.dto';
+import { PrismaService } from '../services/prisma.service';
+
 @Injectable()
 export class AdaptersService {
   constructor(private prisma: PrismaService) {}
   create(data: CreateAdapterDto): Promise<Adapter | null> {
-    return this.prisma.adapter.create({data});
+    return this.prisma.adapter.create({ data });
   }
 
   findAll(): Promise<Adapter[]> {
     return this.prisma.adapter.findMany();
   }
 
-  findOne(id: string) : Promise<Adapter | null>{
-    return this.prisma.adapter.findUnique({where:{id}});
+  findOne(id: string): Promise<Adapter | null> {
+    return this.prisma.adapter.findUnique({ where: { id } });
   }
 
   update(id: string, updateAdapterDto: UpdateAdapterDto) {
     return this.prisma.adapter.update({
       where: {
-        id
+        id,
       },
       data: updateAdapterDto,
     });

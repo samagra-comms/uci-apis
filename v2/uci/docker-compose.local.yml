@@ -1,0 +1,46 @@
+version: '3'
+
+services:
+  federation-service:
+    build: .
+    image: uci-apis:0.0.1
+    container_name: federation-service
+    restart: unless-stopped
+    volumes:
+      - ./src/helpers/vaultDataMock.json:/opt/uci/src/helpers/vaultDataMock.json
+    env_file:
+      - ./src/.env
+    ports:
+      - 9998:9999
+
+  uci-db:
+    container_name: uci-db
+    image: postgres:12
+    env_file:
+      - ./src/.env
+    command: 'postgres -c max_connections=1000 -c shared_buffers=300MB'
+    ports:
+      - '15432:5432'
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+
+  gql:
+    image: fedormelexin/graphql-engine-arm64:latest
+    env_file:
+      - ./src/.env
+    ports:
+      - '15003:8080'
+    depends_on:
+      - uci-db
+    restart: always
+
+  scheduler-db:
+    container_name: scheduler-db
+    image: redis:latest
+    ports:
+      - '6379:6379'
+    command: ['redis-server', '--appendonly', 'yes']
+    hostname: redis
+    volumes:
+      - ./redis-data:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf

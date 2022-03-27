@@ -17,13 +17,21 @@ const bot_module_1 = require("./bot/bot.module");
 const user_segment_module_1 = require("./user-segment/user-segment.module");
 const conversation_logic_module_1 = require("./conversation-logic/conversation-logic.module");
 const request_interceptor_1 = require("./interceptors/request.interceptor");
+const migration_module_1 = require("./migration/migration.module");
 let AppModule = class AppModule {
 };
 AppModule = __decorate([
     (0, common_1.Module)({
-        imports: [config_1.ConfigModule.forRoot({
+        imports: [
+            config_1.ConfigModule.forRoot({
                 isGlobal: true,
-            }), adapters_module_1.AdaptersModule, bot_module_1.BotModule, user_segment_module_1.UserSegmentModule, conversation_logic_module_1.ConversationLogicModule],
+            }),
+            adapters_module_1.AdaptersModule,
+            bot_module_1.BotModule,
+            migration_module_1.MigrationModule,
+            user_segment_module_1.UserSegmentModule,
+            conversation_logic_module_1.ConversationLogicModule,
+        ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService, prisma_service_1.PrismaService, request_interceptor_1.RequestInterceptor],
     })
