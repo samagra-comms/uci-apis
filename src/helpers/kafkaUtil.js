@@ -10,6 +10,7 @@ if (process.env.ENV === "dev") {
 } else {
   let brokers = process.env.KAFKA_HOST;
   if (process.env.KAFKA_HOST.includes(process.env.KAFKA_PORT)) {
+    broker = brokers.split(",");
     console.log("Kafka brokers have PORT");
   } else {
     brokers = process.env.KAFKA_HOST.split(",").map(
