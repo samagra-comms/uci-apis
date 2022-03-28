@@ -9,14 +9,17 @@ if (process.env.ENV === "dev") {
   });
 } else {
   let brokers = process.env.KAFKA_HOST;
+  console.log("brokers", brokers);
   if (process.env.KAFKA_HOST.includes(process.env.KAFKA_PORT)) {
-    broker = brokers.split(",");
+    brokers = brokers.split(",");
+    console.log("brokers", brokers);
     console.log("Kafka brokers have PORT");
   } else {
     brokers = process.env.KAFKA_HOST.split(",").map(
       (s) => s + ":" + process.env.KAFKA_PORT
     );
   }
+  console.log("brokers", brokers);
   console.log(`Trying to connect to ${brokers}`);
   kafka = new Kafka({
     clientId: "api",
