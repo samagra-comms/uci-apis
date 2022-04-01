@@ -23,11 +23,11 @@ exports.Prisma = Prisma
 
 /**
  * Prisma Client JS version: 3.11.1
- * Query Engine version: 34df67547cf5598f5a6cd3eb45f14ee70c3fb86f
+ * Query Engine version: 1a2506facaf1a4727b7c26850735e88ec779dee9
  */
 Prisma.prismaVersion = {
   client: "3.11.1",
-  engine: "34df67547cf5598f5a6cd3eb45f14ee70c3fb86f"
+  engine: "1a2506facaf1a4727b7c26850735e88ec779dee9"
 }
 
 Prisma.PrismaClientKnownRequestError = PrismaClientKnownRequestError;
@@ -211,7 +211,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "/Users/chakshugautam/Work/uci-apis-v2/v2/uci/prisma/generated/prisma-client-js",
+      "value": "/Users/apple/chaks/experiments/java/comms/JS/api/v2/uci/prisma/generated/prisma-client-js",
       "fromEnvVar": null
     },
     "config": {
@@ -222,11 +222,12 @@ const config = {
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
-    "rootEnvPath": null
+    "rootEnvPath": "../../../.env",
+    "schemaEnvPath": "../../../.env"
   },
   "relativePath": "../..",
   "clientVersion": "3.11.1",
-  "engineVersion": "34df67547cf5598f5a6cd3eb45f14ee70c3fb86f",
+  "engineVersion": "1a2506facaf1a4727b7c26850735e88ec779dee9",
   "datasourceNames": [
     "db"
   ],
@@ -248,7 +249,7 @@ const PrismaClient = getPrismaClient(config)
 exports.PrismaClient = PrismaClient
 Object.assign(exports, Prisma)
 
-path.join(__dirname, "libquery_engine-darwin-arm64.dylib.node");
-path.join(process.cwd(), "prisma/generated/prisma-client-js/libquery_engine-darwin-arm64.dylib.node")
+path.join(__dirname, "libquery_engine-darwin.dylib.node");
+path.join(process.cwd(), "prisma/generated/prisma-client-js/libquery_engine-darwin.dylib.node")
 path.join(__dirname, "schema.prisma");
 path.join(process.cwd(), "prisma/generated/prisma-client-js/schema.prisma")

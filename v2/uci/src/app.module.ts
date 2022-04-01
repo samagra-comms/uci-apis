@@ -10,6 +10,7 @@ import { ConversationLogicModule } from './conversation-logic/conversation-logic
 import { RequestInterceptor } from './interceptors/request.interceptor';
 import { MigrationModule } from './migration/migration.module';
 import { MigrationService } from './migration/migration.service';
+import { SecretsModule } from './secrets/secrets.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { MigrationService } from './migration/migration.service';
     MigrationModule,
     UserSegmentModule,
     ConversationLogicModule,
+    SecretsModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService, MigrationService, RequestInterceptor],

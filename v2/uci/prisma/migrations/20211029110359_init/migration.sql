@@ -1,4 +1,4 @@
-CREATE EXTENSION pgcrypto;
+CREATE EXTENSION if not exists pgcrypto;
 
 -- CreateTable
 CREATE TABLE "Adapter" (

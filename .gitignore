@@ -9,3 +9,4 @@ redis-data
 .DS_Store
 **/pgdata.zip
 .idea/
+*.keys.json
