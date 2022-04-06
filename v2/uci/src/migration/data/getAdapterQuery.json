@@ -1,1 +1,35 @@
-{"data":{"adapter":[{"channel":"WhatsApp","config":{"2WAY":"2000193033","phone":"9876543210","HSM_ID":"2000193031","credentials":{"vault":"samagra","variable":"gupshupSamagraProd"}},"created_at":"2021-06-16T06:02:41.823863+00:00","id":"44a9df72-3d7a-4ece-94c5-98cf26307324","name":"SamagraProd","provider":"gupshup","updated_at":"2021-06-16T06:02:39.125273+00:00"},{"channel":"WhatsApp","config":{"phone":"912249757677","credentials":{"vault":"samagra","variable":"netcoreUAT"}},"created_at":"2021-06-16T06:02:41.823863+00:00","id":"44a9df72-3d7a-4ece-94c5-98cf26307323","name":"SamagraNetcoreUAT","provider":"Netcore","updated_at":"2021-06-16T06:02:39.125273+00:00"}]}}
+{
+  "data": {
+    "adapter": [
+      {
+        "channel": "WhatsApp",
+        "config": {
+          "2WAY": "2000193033",
+          "phone": "9876543210",
+          "HSM_ID": "2000193031",
+          "credentials": {
+            "vault": "samagra",
+            "variable": "gupshupSamagraProd"
+          }
+        },
+        "created_at": "2021-06-16T06:02:41.823863+00:00",
+        "id": "44a9df72-3d7a-4ece-94c5-98cf26307324",
+        "name": "SamagraProd",
+        "provider": "gupshup",
+        "updated_at": "2021-06-16T06:02:39.125273+00:00"
+      },
+      {
+        "channel": "WhatsApp",
+        "config": {
+          "phone": "912249757677",
+          "credentials": { "vault": "samagra", "variable": "netcoreUAT" }
+        },
+        "created_at": "2021-06-16T06:02:41.823863+00:00",
+        "id": "44a9df72-3d7a-4ece-94c5-98cf26307323",
+        "name": "SamagraNetcoreUAT",
+        "provider": "Netcore",
+        "updated_at": "2021-06-16T06:02:39.125273+00:00"
+      }
+    ]
+  }
+}

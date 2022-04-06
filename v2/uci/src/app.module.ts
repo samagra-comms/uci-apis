@@ -2,15 +2,18 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { PrismaService } from './services/prisma.service';
-import { AdaptersModule } from './adapters/adapters.module';
-import { BotModule } from './bot/bot.module';
-import { UserSegmentModule } from './user-segment/user-segment.module';
-import { ConversationLogicModule } from './conversation-logic/conversation-logic.module';
-import { RequestInterceptor } from './interceptors/request.interceptor';
+import { PrismaService } from './global-services/prisma.service';
+import { AdaptersModule } from './modules/adapter/adapter.module';
+import { BotModule } from './modules/bot/bot.module';
+import { UserSegmentModule } from './modules/user-segment/user-segment.module';
+import { ConversationLogicModule } from './modules/conversation-logic/conversation-logic.module';
 import { MigrationModule } from './migration/migration.module';
 import { MigrationService } from './migration/migration.service';
-import { SecretsModule } from './secrets/secrets.module';
+import { SecretsModule } from './modules/secrets/secrets.module';
+import { CommonServiceModule } from './global-services/commonService.module';
+import { SunbirdTelemetryModule } from './sunbird-telemetry/sunbird-telemetry.module';
+import { ServiceModule } from './modules/service/service.module';
+import { TransformerModule } from './modules/transformer/transformer.module';
 
 @Module({
   imports: [
@@ -23,8 +26,12 @@ import { SecretsModule } from './secrets/secrets.module';
     UserSegmentModule,
     ConversationLogicModule,
     SecretsModule,
+    CommonServiceModule,
+    SunbirdTelemetryModule,
+    ServiceModule,
+    TransformerModule,
   ],
   controllers: [AppController],
-  providers: [AppService, PrismaService, MigrationService, RequestInterceptor],
+  providers: [AppService, PrismaService, MigrationService],
 })
 export class AppModule {}

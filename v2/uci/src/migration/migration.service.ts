@@ -1,7 +1,7 @@
 import downloadData from './utils/downloadData';
 
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from './../services/prisma.service';
+import { PrismaService } from '../global-services/prisma.service';
 import { ConfigService } from '@nestjs/config';
 
 import * as servciesData from './data/getServicesQuery.json';

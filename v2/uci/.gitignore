@@ -3,3 +3,7 @@ node_modules
 .env
 dist
 documentation
+vault/*
+vault
+keys
+*.samples.json

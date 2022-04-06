@@ -11,11 +11,13 @@ const common_1 = require("@nestjs/common");
 const prisma_client_js_1 = require("../../prisma/generated/prisma-client-js");
 let PrismaService = class PrismaService extends prisma_client_js_1.PrismaClient {
     async onModuleInit() {
+        console.log('DB: Up 🎉');
         await this.$connect();
     }
     async enableShutdownHooks(app) {
         this.$on('beforeExit', async () => {
             await app.close();
+            console.log('DB: Graceful Shutdown 🎉');
         });
     }
 };

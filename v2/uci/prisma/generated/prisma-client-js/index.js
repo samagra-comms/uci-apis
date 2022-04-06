@@ -211,7 +211,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "/Users/apple/chaks/experiments/java/comms/JS/api/v2/uci/prisma/generated/prisma-client-js",
+      "value": "/Users/chakshugautam/Work/uci-apis-v2/v2/uci/prisma/generated/prisma-client-js",
       "fromEnvVar": null
     },
     "config": {
@@ -249,7 +249,7 @@ const PrismaClient = getPrismaClient(config)
 exports.PrismaClient = PrismaClient
 Object.assign(exports, Prisma)
 
-path.join(__dirname, "libquery_engine-darwin.dylib.node");
-path.join(process.cwd(), "prisma/generated/prisma-client-js/libquery_engine-darwin.dylib.node")
+path.join(__dirname, "libquery_engine-darwin-arm64.dylib.node");
+path.join(process.cwd(), "prisma/generated/prisma-client-js/libquery_engine-darwin-arm64.dylib.node")
 path.join(__dirname, "schema.prisma");
 path.join(process.cwd(), "prisma/generated/prisma-client-js/schema.prisma")
