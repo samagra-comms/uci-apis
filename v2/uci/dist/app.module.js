@@ -23,6 +23,8 @@ const commonService_module_1 = require("./global-services/commonService.module")
 const sunbird_telemetry_module_1 = require("./sunbird-telemetry/sunbird-telemetry.module");
 const service_module_1 = require("./modules/service/service.module");
 const transformer_module_1 = require("./modules/transformer/transformer.module");
+const service_service_1 = require("./modules/service/service.service");
+const service_controller_1 = require("./modules/service/service.controller");
 let AppModule = class AppModule {
 };
 AppModule = __decorate([
@@ -42,8 +44,8 @@ AppModule = __decorate([
             service_module_1.ServiceModule,
             transformer_module_1.TransformerModule,
         ],
-        controllers: [app_controller_1.AppController],
-        providers: [app_service_1.AppService, prisma_service_1.PrismaService, migration_service_1.MigrationService],
+        controllers: [app_controller_1.AppController, service_controller_1.ServiceController],
+        providers: [app_service_1.AppService, prisma_service_1.PrismaService, migration_service_1.MigrationService, service_service_1.ServiceService],
     })
 ], AppModule);
 exports.AppModule = AppModule;

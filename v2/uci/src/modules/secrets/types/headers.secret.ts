@@ -1,3 +1,2 @@
-import { Headers } from 'undici';
-const Secret = Headers;
+type Secret = { [key: string]: string };
 export default Secret;

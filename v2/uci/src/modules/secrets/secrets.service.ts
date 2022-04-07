@@ -1,4 +1,4 @@
-import { IKV2CreateBody, KVVaultClient, Vault } from '@mittwald/vaults';
+import { KVVaultClient, Vault } from '@mittwald/vaults';
 
 import { ConfigService } from '@nestjs/config';
 import { Injectable } from '@nestjs/common';
