@@ -7,7 +7,7 @@ export class TelemetryService implements OnModuleInit {
   client: PostHog;
   constructor(private configService: ConfigService) {
     console.log('Constructor Called');
-    this.client = new PostHog(configService.get('POSTHOG_API_KEY'), {
+    this.client = new PostHog(this.configService.get('POSTHOG_API_KEY') || '', {
       host: configService.get('POSTHOG_API_HOST'),
       flushAt: configService.get<number>('POSTHOG_BATCH_SIZE'),
       flushInterval: configService.get<number>('POSTHOG_FLUSH_INTERVAL'),

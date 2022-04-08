@@ -10,3 +10,5 @@ redis-data
 **/pgdata.zip
 .idea/
 *.keys.json
+dist/
+documentation/

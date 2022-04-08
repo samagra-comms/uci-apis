@@ -1,3 +1,10 @@
 {
-  "cSpell.words": ["Organisation", "POSTGRES", "organisations"]
+  "cSpell.words": ["Organisation", "POSTGRES", "organisations"],
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/bower_components": true,
+    "**/vendor": true,
+    "**/documentation": true,
+    "v2/uci/documentation": true
+  }
 }

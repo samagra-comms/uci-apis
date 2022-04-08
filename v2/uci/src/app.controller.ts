@@ -9,4 +9,12 @@ export class AppController {
   getHello(): string {
     return this.appService.getHello();
   }
+
+  @Get('/getBotCount')
+  async getBotCount(): Promise<any> {
+    const botCount = await this.appService.getBotCount();
+    return {
+      data: botCount,
+    };
+  }
 }

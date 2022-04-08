@@ -58,7 +58,7 @@ async function bootstrap() {
     .build();
   const customOptions: FastifySwaggerCustomOptions = {
     uiConfig: {
-      docExpansion: null,
+      docExpansion: undefined,
     },
   };
   const document = SwaggerModule.createDocument(app, config);

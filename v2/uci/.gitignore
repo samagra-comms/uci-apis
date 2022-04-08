@@ -7,3 +7,4 @@ vault/*
 vault
 keys
 *.samples.json
+dist/*

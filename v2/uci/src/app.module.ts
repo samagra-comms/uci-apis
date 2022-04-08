@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, Type } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -16,6 +16,21 @@ import { ServiceModule } from './modules/service/service.module';
 import { TransformerModule } from './modules/transformer/transformer.module';
 import { ServiceService } from './modules/service/service.service';
 import { ServiceController } from './modules/service/service.controller';
+import { PrismaServiceMock } from './global-services/prisma.service.mock';
+
+// const prismaServiceProvider = (env: string | undefined): Type<any> => {
+//   switch (env) {
+//     case 'development':
+//     case 'production':
+//       return PrismaService;
+//     case 'test':
+//       return PrismaServiceMock;
+//     // case 'e2e':
+//     //   return PrismaServiceMockE2E;
+//     default:
+//       return PrismaService;
+//   }
+// };
 
 @Module({
   imports: [

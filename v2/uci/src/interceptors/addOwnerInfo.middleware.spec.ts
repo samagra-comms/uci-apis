@@ -16,6 +16,8 @@ describe('VerifyOwnerMiddleware', () => {
   });
 
   it('should verify request as authorized"', async () => {
+    prisma.bot.count = jest.fn().mockResolvedValue(1);
+
     prisma.bot.findUnique = jest
       .fn()
       .mockReturnValueOnce([

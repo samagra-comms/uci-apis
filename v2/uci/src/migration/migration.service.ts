@@ -32,16 +32,15 @@ export class MigrationService {
     private prisma: PrismaService,
     private configService: ConfigService,
   ) {
-    this.hasuraURL = this.configService.get<string>('GRAPHQL_BASE_URL');
-    this.hasuraSecret = this.configService.get<string>(
-      'HASURA_GRAPHQL_ADMIN_SECRET',
-    );
+    this.hasuraURL = this.configService.get<string>('GRAPHQL_BASE_URL') || '';
+    this.hasuraSecret =
+      this.configService.get<string>('HASURA_GRAPHQL_ADMIN_SECRET') || '';
     this.tableData = [];
     this.tableColumns = ['Service Name', 'Total', 'Inserted'];
   }
 
   async downloadData() {
-    const response = downloadData(
+    const response = await downloadData(
       this.hasuraURL,
       this.hasuraSecret,
       this.filePath,
