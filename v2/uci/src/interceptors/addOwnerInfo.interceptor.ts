@@ -6,8 +6,8 @@ import {
 } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { Observable } from 'rxjs';
-import { getAppIdForResponse } from 'src/interceptors/utils/responseUtils';
-import { PrismaService } from 'src/global-services/prisma.service';
+import { getAppIdForResponse } from './utils/responseUtils';
+import { PrismaService } from '../global-services/prisma.service';
 
 // Nestjs Lifecyle - https://i.stack.imgur.com/2lFhd.jpg
 

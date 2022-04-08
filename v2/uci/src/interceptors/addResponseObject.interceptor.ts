@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { Observable } from 'rxjs';
-import { getAppIdForResponse } from 'src/interceptors/utils/responseUtils';
+import { getAppIdForResponse } from './utils/responseUtils';
 
 // Nestjs Lifecyle - https://i.stack.imgur.com/2lFhd.jpg
 

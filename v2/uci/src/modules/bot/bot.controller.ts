@@ -9,11 +9,11 @@ import {
   UseInterceptors,
   Headers,
 } from '@nestjs/common';
-import { AddResponseObjectInterceptor } from 'src/interceptors/addResponseObject.interceptor';
-import { AddOwnerInfoInterceptor } from 'src/interceptors/addOwnerInfo.interceptor';
-import { AddAdminHeaderInterceptor } from 'src/interceptors/addAdminHeader.interceptor';
+import { AddResponseObjectInterceptor } from '../../interceptors/addResponseObject.interceptor';
+import { AddOwnerInfoInterceptor } from '../../interceptors/addOwnerInfo.interceptor';
+import { AddAdminHeaderInterceptor } from '../../interceptors/addAdminHeader.interceptor';
 import { BotService } from './bot.service';
-import { AddROToResponseInterceptor } from 'src/interceptors/addROtoResponse.interceptor';
+import { AddROToResponseInterceptor } from '../../interceptors/addROtoResponse.interceptor';
 
 @UseInterceptors(
   AddResponseObjectInterceptor,

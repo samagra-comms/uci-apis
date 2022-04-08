@@ -3,8 +3,8 @@ import { PrismaService } from '../../global-services/prisma.service';
 import { AdapterDTO } from './dto';
 import { Adapter, Prisma } from 'prisma/generated/prisma-client-js';
 import { PrismaError } from 'src/common/prismaError';
-import { TelemetryService } from 'src/global-services/telemetry.service';
-import { prismaErrorHandler } from 'src/common/prismaError.handler';
+import { TelemetryService } from '../../global-services/telemetry.service';
+import { prismaErrorHandler } from '../../common/prismaError.handler';
 
 @Injectable()
 export class AdaptersService {

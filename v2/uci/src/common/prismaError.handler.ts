@@ -1,4 +1,4 @@
-import { Prisma } from 'prisma/generated/prisma-client-js';
+import { Prisma } from '../../prisma/generated/prisma-client-js';
 import { PrismaError } from './prismaError';
 
 export const stackTraceParser = (stackTrace: string): string[] => {
