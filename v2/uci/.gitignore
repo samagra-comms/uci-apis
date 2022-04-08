@@ -8,3 +8,4 @@ vault
 keys
 *.samples.json
 dist/*
+yarn-error.log
