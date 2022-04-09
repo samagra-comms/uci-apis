@@ -5,4 +5,6 @@ type Secret = {
   password2Way: string;
 };
 
+export { Secret };
+
 export default Secret;

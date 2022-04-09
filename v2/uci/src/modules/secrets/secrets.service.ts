@@ -30,6 +30,11 @@ export class SecretsService {
     return kvPairs.data[key];
   }
 
+  async getSecretByPath(path: string): Promise<any> {
+    const kvPairs = await this.KVClient.read(path);
+    return kvPairs.data;
+  }
+
   async setSecret(path: string, value: { [key: string]: string }) {
     return await this.KVClient.create(path, value);
   }
@@ -39,7 +44,6 @@ export class SecretsService {
   }
 
   async deleteSecret(path: string, key: string) {
-    const d = await this.KVClient.delete(path);
-    console.log({ d });
+    await this.KVClient.delete(path);
   }
 }

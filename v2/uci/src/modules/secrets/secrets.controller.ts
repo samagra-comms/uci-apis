@@ -1,17 +1,9 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { SecretsService } from './secrets.service';
 import { Secret } from './types';
 
 @Controller('secrets')
 export class SecretsController {
-  // Add a new secret to a userPath. The keys will be stored by ownerID.
-  // Secrets are stored based on spec.
-  // Examples:
-  //   - user1/UserSegmentServer1
-  //   - user1/UserSegmentServer1/key1
-  //
-  //   - user1/secrets/test/key2
-  // POST
   constructor(private readonly secretService: SecretsService) {}
 
   @Post()
@@ -28,5 +20,13 @@ export class SecretsController {
     );
   }
 
-  //PUT - Update a secret => return all secrets of the path.
+  @Get(':variableName')
+  findOne(@Param('variableName') id: string, @Body() ownerId: string) {
+    return this.secretService.getSecretByPath(ownerId + '/' + id);
+  }
+
+  @Get('all')
+  findAll(@Body() ownerId: string) {
+    return this.secretService.getSecretByPath(ownerId);
+  }
 }
