@@ -1,5 +1,18 @@
 {
-  "cSpell.words": ["Organisation", "POSTGRES", "organisations"],
+  "cSpell.words": [
+    "cnonce",
+    "ekstep",
+    "Haryana",
+    "Hasura",
+    "microservices",
+    "nestjs",
+    "Netcore",
+    "Organisation",
+    "organisations",
+    "Panipat",
+    "POSTGRES",
+    "undici"
+  ],
   "search.exclude": {
     "**/node_modules": true,
     "**/bower_components": true,

@@ -4,10 +4,11 @@ import {
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
-import { v4 as uuidv4 } from 'uuid';
+
 import { Observable } from 'rxjs';
-import { getAppIdForResponse } from './utils/responseUtils';
 import { PrismaService } from '../global-services/prisma.service';
+import { getAppIdForResponse } from './utils/responseUtils';
+import { v4 as uuidv4 } from 'uuid';
 
 // Nestjs Lifecyle - https://i.stack.imgur.com/2lFhd.jpg
 
@@ -23,7 +24,7 @@ const findOne = (haystack, arr) => {
 
 @Injectable()
 export class AddOwnerInfoInterceptor implements NestInterceptor {
-  constructor(private prisma: PrismaService) {}
+  // constructor(private prisma: PrismaService) {}
 
   isValidReq(req, urlsWithVerification) {
     return (
@@ -33,18 +34,18 @@ export class AddOwnerInfoInterceptor implements NestInterceptor {
     );
   }
 
-  getReqAsset = (assetString) => {
-    if (assetString === 'bot') return this.prisma['bot'];
-    else if (assetString === 'userSegment') return this.prisma['userSegment'];
-    else if (assetString === 'conversationLogic')
-      return this.prisma['conversationLogic'];
-    else if (assetString === 'forms') return 'forms';
-    else return null;
-  };
+  // getReqAsset = (assetString) => {
+  //   if (assetString === 'bot') return this.prisma['bot'];
+  //   else if (assetString === 'userSegment') return this.prisma['userSegment'];
+  //   else if (assetString === 'conversationLogic')
+  //     return this.prisma['conversationLogic'];
+  //   else if (assetString === 'forms') return 'forms';
+  //   else return null;
+  // };
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const req = context.switchToHttp().getRequest();
-    req.body = req.body || {};
+    // req.body = req.body || {};
     req.body.ts = new Date();
     req.body.url = req.url;
     req.body.path = req.path;
