@@ -17,6 +17,7 @@ import { TransformerModule } from './modules/transformer/transformer.module';
 import { ServiceService } from './modules/service/service.service';
 import { ServiceController } from './modules/service/service.controller';
 import { PrismaServiceMock } from './global-services/prisma.service.mock';
+import { AuthModule } from './auth/auth.module';
 
 // const prismaServiceProvider = (env: string | undefined): Type<any> => {
 //   switch (env) {
@@ -47,6 +48,7 @@ import { PrismaServiceMock } from './global-services/prisma.service.mock';
     SunbirdTelemetryModule,
     ServiceModule,
     TransformerModule,
+    AuthModule,
   ],
   controllers: [AppController, ServiceController],
   providers: [AppService, PrismaService, MigrationService, ServiceService],

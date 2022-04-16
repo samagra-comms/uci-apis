@@ -6,6 +6,7 @@ import {
   Post,
   UseInterceptors,
 } from '@nestjs/common';
+import { PrismaService } from 'src/global-services/prisma.service';
 import { AddAdminHeaderInterceptor } from 'src/interceptors/addAdminHeader.interceptor';
 import { AddOwnerInfoInterceptor } from 'src/interceptors/addOwnerInfo.interceptor';
 import { AddResponseObjectInterceptor } from 'src/interceptors/addResponseObject.interceptor';
@@ -22,7 +23,10 @@ import { getSecretType } from './types';
 )
 @Controller('secret')
 export class SecretsController {
-  constructor(private readonly secretService: SecretsService) {}
+  constructor(
+    private readonly secretService: SecretsService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   @Post()
   async create(@Body() secretDTO: SecretDTO): Promise<any> {

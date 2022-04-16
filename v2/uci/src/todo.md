@@ -2,6 +2,9 @@
 
 1. Routes with Basic Tests
    - Secrets
+     - Create a secret with ownerInfo added
+     - Delete all secrets
+     - Update a specific secret
    - Adapter
    - Service
    - UserSegment
