@@ -1,0 +1,27 @@
+{
+  "jti": "98ee456c-3b18-4df8-a546-d2fafc4aff40",
+  "exp": 1632331428,
+  "nbf": 0,
+  "iat": 1632288228,
+  "iss": "https://dev.sunbirded.org/auth/realms/sunbird",
+  "aud": "account",
+  "sub": "f:5a8a3f2b-3409-42e0-9001-f913bc0fde31:95e4942d-cbe8-477d-aebd-ad8e6de4bfc8",
+  "typ": "Bearer",
+  "azp": "project-sunbird-dev-client",
+  "auth_time": 0,
+  "session_state": "3042ef33-b4ff-48eb-bd0c-502fa369d1dd",
+  "acr": "1",
+  "allowed-origins": ["https://dev.sunbirded.org"],
+  "realm_access": {
+    "roles": ["offline_access", "uma_authorization"]
+  },
+  "resource_access": {
+    "account": {
+      "roles": ["manage-account", "manage-account-links", "view-profile"]
+    }
+  },
+  "scope": "",
+  "name": "Reviewer",
+  "given_name": "Reviewer",
+  "email": "us****@yopmail.com"
+}

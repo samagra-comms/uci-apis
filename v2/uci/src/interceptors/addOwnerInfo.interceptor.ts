@@ -19,6 +19,11 @@ import {
 import { PrismaService } from '../global-services/prisma.service';
 import { getAppIdForResponse } from './utils/responseUtils';
 import { v4 as uuidv4 } from 'uuid';
+import {
+  Bot,
+  UserSegment,
+  ConversationLogic,
+} from 'prisma/generated/prisma-client-js';
 
 // Nestjs Lifecyle - https://i.stack.imgur.com/2lFhd.jpg
 
@@ -59,57 +64,64 @@ export class AddOwnerInfoInterceptor implements NestInterceptor {
   ): Promise<Observable<any>> {
     const req = context.switchToHttp().getRequest();
     const rspObj = req.body.respObj;
-    const ownerOrgID = req.headers.ownerorgId;
-    const ownerID = req.headers.ownerId;
+    const ownerOrgId = req.headers.ownerorgid;
+    const ownerId = req.headers.ownerid;
     const asset = req.body.asset;
 
-    req.body.ownerID = ownerID;
-    req.body.ownerOrgID = ownerOrgID;
+    req.body.ownerId = ownerId;
+    req.body.ownerOrgId = ownerOrgId;
 
-    let assetModel: any;
     switch (asset) {
       case 'bot':
-        assetModel = this.prisma.bot;
-        break;
-      case 'userSegment':
-        assetModel = this.prisma.userSegment;
-        break;
-      case 'conversationLogic':
-        assetModel = this.prisma.conversationLogic;
-        break;
-      case 'forms':
-      default:
-        rspObj.ownerID = ownerID;
-        return next.handle();
-    }
-    const resObj = await assetModel
-      .findUnique({ where: { id: req.params.id } })
-      .then((s) => {
-        if (s && s.ownerID === ownerID) {
-          resObj.ownerID = ownerID;
+        const assetQueryResponseBot: Bot | null =
+          await this.prisma.bot.findUnique({
+            where: { id: req.params.id },
+          });
+        if (assetQueryResponseBot?.ownerID === ownerId) {
+          rspObj.ownerId = ownerId;
         } else {
           rspObj.errCode = MiddlewareMessages.ADD_OWNER.UNAUTHORIZED_CODE;
           rspObj.errMsg = MiddlewareMessages.ADD_OWNER.UNAUTHORIZED_MESSAGE;
           rspObj.responseCode = ResponseCodes.CLIENT_ERROR;
         }
-        return rspObj;
-      })
-      .catch((e) => {
-        console.log(e);
-        rspObj.errCode = MiddlewareMessages.ADD_OWNER.FAILED_CODE;
-        rspObj.errMsg = MiddlewareMessages.ADD_OWNER.FAILED_MESSAGE;
-        rspObj.responseCode = ResponseCodes.CLIENT_ERROR;
-        return rspObj;
-      });
+        break;
+      case 'userSegment':
+        const assetQueryResponseUS:
+          | (UserSegment & {
+              bots: Bot[];
+            })
+          | null = await this.prisma.userSegment.findUnique({
+          where: { id: req.params.id },
+          include: {
+            bots: true,
+          },
+        });
+        if (
+          assetQueryResponseUS?.bots.map((bot) => bot.ownerID).includes(ownerId)
+        ) {
+          rspObj.ownerId = ownerId;
+        } else {
+          rspObj.errCode = MiddlewareMessages.ADD_OWNER.UNAUTHORIZED_CODE;
+          rspObj.errMsg = MiddlewareMessages.ADD_OWNER.UNAUTHORIZED_MESSAGE;
+          rspObj.responseCode = ResponseCodes.CLIENT_ERROR;
+        }
+        break;
+      case 'conversationLogic':
+      case 'forms':
+      case 'secrets':
+      default:
+        rspObj.ownerId = ownerId;
+        return next.handle();
+    }
     // $ = Obverable<any>
-    const resObj$ = from(resObj).pipe(
+    const resObj$ = from(rspObj).pipe(
       ignoreElements(),
       catchError((err) => throwError(err)),
     );
 
     const main$ = next.handle().pipe((data) => {
-      resObj.result = data;
-      resObj.endTime = new Date();
+      rspObj.result = data;
+      rspObj.endTime = new Date();
       return rspObj;
     });
 

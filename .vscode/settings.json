@@ -9,6 +9,8 @@
     "Netcore",
     "Organisation",
     "organisations",
+    "ownerid",
+    "ownerorgid",
     "Panipat",
     "POSTGRES",
     "undici"
@@ -19,5 +21,13 @@
     "**/vendor": true,
     "**/documentation": true,
     "v2/uci/documentation": true
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
   }
 }

@@ -1,0 +1,14 @@
+{
+  "aud": "a1313380-069d-4f4f-8dcb-0d0e717f6a6b",
+  "exp": 1650375374,
+  "iat": 1650371774,
+  "iss": "acme.com",
+  "sub": "8f7ee860-0163-4229-9d2a-01cef53145ba",
+  "jti": "d0ad322e-76fa-48b5-a879-27eef2ee7ac7",
+  "authenticationType": "PASSWORD",
+  "preferred_username": "uci-user",
+  "applicationId": "a1313380-069d-4f4f-8dcb-0d0e717f6a6b",
+  "roles": ["orgOwner"],
+  "ownerOrgId": "uci-user",
+  "ownerId": "uci-user"
+}

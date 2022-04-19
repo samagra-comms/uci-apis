@@ -6,14 +6,14 @@ import { AuthHelper } from './auth.helper';
 import { User } from './user.entity';
 
 @Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy) {
+export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   @Inject(AuthHelper)
   private readonly helper: AuthHelper;
 
   constructor(@Inject(ConfigService) config: ConfigService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: config.get('JWT_KEY'),
+      secretOrKey: config.get('AUTH_PUBLIC_KEY'),
       ignoreExpiration: true,
     });
   }
