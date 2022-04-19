@@ -63,6 +63,7 @@ export class AddOwnerInfoInterceptor implements NestInterceptor {
     next: CallHandler,
   ): Promise<Observable<any>> {
     const req = context.switchToHttp().getRequest();
+    console.log('Inside addownerinterceptor', req.body);
     const rspObj = req.body.respObj;
     const ownerOrgId = req.headers.ownerorgid;
     const ownerId = req.headers.ownerid;

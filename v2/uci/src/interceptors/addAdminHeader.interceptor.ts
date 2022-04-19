@@ -8,7 +8,6 @@ import { Observable } from 'rxjs';
 import { ConfigService } from '@nestjs/config';
 
 // Nestjs Lifecyle - https://i.stack.imgur.com/2lFhd.jpg
-
 @Injectable()
 export class AddAdminHeaderInterceptor implements NestInterceptor {
   constructor(private readonly config: ConfigService) {}
@@ -21,6 +20,8 @@ export class AddAdminHeaderInterceptor implements NestInterceptor {
     } else {
       req.body.isAdmin = false;
     }
+    // for testing
+    context.switchToHttp().getRequest().body = req.body;
     return next.handle();
   }
 }
