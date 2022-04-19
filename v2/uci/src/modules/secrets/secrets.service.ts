@@ -37,14 +37,29 @@ export class SecretsService {
   }
 
   async setSecret(path: string, value: { [key: string]: string }) {
-    return await this.KVClient.create(path, value);
+    return await this.KVClient.create(path + '/', value);
   }
 
   async getAllSecrets(path: string): Promise<any> {
-    return await this.KVClient.list(path);
+    const keys = await (await this.KVClient.list(path)).data.keys;
+    const data: any[] = [];
+    for (const key of keys) {
+      const dataAtKey = await this.getSecretByPath(path + '/' + key);
+      data.push({ [`${key}`]: dataAtKey });
+    }
+    return data;
   }
 
-  async deleteSecret(path: string, key: string) {
+  async deleteSecret(path: string) {
     await this.KVClient.delete(path);
+    return true;
+  }
+
+  async deleteAllSecrets(path: any): Promise<any> {
+    const keys = await (await this.KVClient.list(path)).data.keys;
+    for (const key of keys) {
+      await this.deleteSecret(path + '/' + key);
+    }
+    return true;
   }
 }

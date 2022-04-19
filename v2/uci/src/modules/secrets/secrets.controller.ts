@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -48,13 +49,27 @@ export class SecretsController {
   @Get(':variableName')
   async findOne(
     @Param('variableName') variableName: string,
-    @Body() ownerId: string,
+    @Body() body: any,
   ): Promise<any> {
-    return this.secretService.getSecretByPath(ownerId + '/' + variableName);
+    if (variableName) {
+      const data = await this.secretService.getSecretByPath(
+        body.ownerId + '/' + variableName,
+      );
+      return { [`${variableName}`]: data };
+    } else {
+      return this.secretService.getAllSecrets(body.ownerId);
+    }
   }
 
-  @Get('all')
-  async findAll(@Body() ownerId: string): Promise<any> {
-    return this.secretService.getSecretByPath(ownerId);
+  @Delete(':variableName')
+  async deleteAll(
+    @Param('variableName') variableName: string,
+    @Body() body: any,
+  ): Promise<any> {
+    if (variableName) {
+      return this.secretService.deleteSecret(body.ownerId + '/' + variableName);
+    } else {
+      return this.secretService.deleteAllSecrets(body.ownerId);
+    }
   }
 }
