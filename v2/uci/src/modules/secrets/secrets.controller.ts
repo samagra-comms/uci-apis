@@ -5,22 +5,22 @@ import {
   Get,
   Param,
   Post,
-  // UseInterceptors,
+  UseInterceptors,
 } from '@nestjs/common';
-// import { AddAdminHeaderInterceptor } from 'src/interceptors/addAdminHeader.interceptor';
-// import { AddOwnerInfoInterceptor } from 'src/interceptors/addOwnerInfo.interceptor';
-// import { AddResponseObjectInterceptor } from 'src/interceptors/addResponseObject.interceptor';
-// import { AddROToResponseInterceptor } from 'src/interceptors/addROtoResponse.interceptor';
+import { AddAdminHeaderInterceptor } from '../../interceptors/addAdminHeader.interceptor';
+import { AddOwnerInfoInterceptor } from '../../interceptors/addOwnerInfo.interceptor';
+import { AddResponseObjectInterceptor } from '../../interceptors/addResponseObject.interceptor';
+import { AddROToResponseInterceptor } from '../../interceptors/addROtoResponse.interceptor';
 import { SecretDTO } from './secret.dto';
 import { SecretsService } from './secrets.service';
 import { getSecretType } from './types';
 
-// @UseInterceptors(
-//   AddResponseObjectInterceptor,
-//   AddAdminHeaderInterceptor,
-//   AddOwnerInfoInterceptor,
-//   AddROToResponseInterceptor,
-// )
+@UseInterceptors(
+  AddResponseObjectInterceptor,
+  AddAdminHeaderInterceptor,
+  AddOwnerInfoInterceptor,
+  AddROToResponseInterceptor,
+)
 @Controller('secret')
 export class SecretsController {
   constructor(private readonly secretService: SecretsService) {}

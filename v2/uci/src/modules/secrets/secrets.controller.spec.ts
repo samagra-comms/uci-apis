@@ -8,6 +8,7 @@ import { createMock } from '@golevelup/ts-jest';
 import { ConfigService } from '@nestjs/config';
 import { INestApplication } from '@nestjs/common';
 import { SecretsModule } from './secrets.module';
+import { PrismaService } from '../../global-services/prisma.service';
 
 /**
  * Creates a mock of the secrets service.
@@ -79,10 +80,22 @@ describe('SecretsController', () => {
           provide: 'SecretsService',
           useValue: SecretsServiceMock,
         },
+        {
+          provide: 'ConfigService',
+          useValue: createMock<ConfigService>(),
+        },
+        {
+          provide: 'PrismaService',
+          useValue: createMock<PrismaService>(),
+        },
       ],
     })
       .overrideProvider(SecretsService)
       .useValue(SecretsServiceMock)
+      .overrideProvider(ConfigService)
+      .useValue(createMock<ConfigService>())
+      .overrideProvider(PrismaService)
+      .useValue(createMock<PrismaService>())
       .compile();
 
     app = module.createNestApplication();
