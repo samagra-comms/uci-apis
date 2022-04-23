@@ -17,7 +17,7 @@ export class SecretsService {
     this.KVClient = this.client.KV(1, this.KVPath);
   }
 
-  constructor(private configService: ConfigService) {
+  constructor(public configService: ConfigService) {
     console.log({ configService });
     this.initClient(
       this.configService.get<string>('VAULT_ADDR') || '',
@@ -32,11 +32,13 @@ export class SecretsService {
   }
 
   async getSecretByPath(path: string): Promise<any> {
+    console.log('getSecretByPath method called');
     const kvPairs = await this.KVClient.read(path);
     return kvPairs.data;
   }
 
   async setSecret(path: string, value: { [key: string]: string }) {
+    console.log('method called');
     return await this.KVClient.create(path + '/', value);
   }
 

@@ -10,22 +10,15 @@ import { RESPONSE_CODE as ResponseCodes } from '../common/messages';
 import {
   catchError,
   concat,
-  defer,
   from,
   ignoreElements,
   Observable,
   throwError,
 } from 'rxjs';
 import { PrismaService } from '../global-services/prisma.service';
-import { getAppIdForResponse } from './utils/responseUtils';
-import { v4 as uuidv4 } from 'uuid';
-import {
-  Bot,
-  UserSegment,
-  ConversationLogic,
-} from 'prisma/generated/prisma-client-js';
+import { Bot, UserSegment } from 'prisma/generated/prisma-client-js';
 
-// Nestjs Lifecyle - https://i.stack.imgur.com/2lFhd.jpg
+// Nestjs Lifecycle - https://i.stack.imgur.com/2lFhd.jpg
 
 /**
  * @description determine if an array contains one or more items from another array.

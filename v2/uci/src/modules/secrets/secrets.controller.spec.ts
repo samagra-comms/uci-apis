@@ -1,58 +1,120 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { SecretDTO } from './secret.dto';
 import { SecretsController } from './secrets.controller';
+import { SecretType } from './types';
+import { SecretsService } from './secrets.service';
+import { KVVaultClient, Vault } from '@mittwald/vaults';
+import { createMock } from '@golevelup/ts-jest';
+import { ConfigService } from '@nestjs/config';
+import { INestApplication } from '@nestjs/common';
+import { SecretsModule } from './secrets.module';
 
 /**
  * Creates a mock of the secrets service.
  */
+// {
+//   "key1": {
+//     "key2": {
+//       "key3": "value3"
+//     }
+//   }
+// }
+// key1/key2/key3 = value3
+// key1/key2 = { key3: value3 }
 let keyValueStore: { [key: string]: any } = {};
 
+// GET /secret/:variableName
 const resolvePath = (object, path, defaultValue) =>
   path.split('/').reduce((o, p) => (o ? o[p] : defaultValue), object);
 
+// SET /secret/:variableName
 const setNestedProp = (obj = {}, [first, ...rest]: string[], value) => ({
   ...obj,
   [first]: rest.length ? setNestedProp(obj[first], rest, value) : value,
 });
 
-const secretServiceMock = {
-  setSecret: jest.fn().mockImplementation(async (path, value) => {
+const SecretsServiceMock: SecretsService = {
+  client: createMock<Vault>(),
+  KVClient: createMock<KVVaultClient>(),
+  KVPath: '',
+  initClient: function (vaultAddress: string, vaultToken: string): void {
+    throw new Error('Function not implemented.');
+  },
+  configService: createMock<ConfigService>(),
+
+  setSecret: async (path, value): Promise<any> => {
     keyValueStore = setNestedProp(keyValueStore, path.split('/'), value);
     return Promise.resolve(null);
-  }),
-  getSecret: jest.fn().mockImplementation((path, key): Promise<any> => {
+  },
+  getSecret: async (path, key): Promise<any> => {
     return Promise.resolve(resolvePath(keyValueStore, path + '/' + key, null));
-  }),
-  getSecretByPath: jest.fn().mockImplementation((path) => {
+  },
+  getSecretByPath: async (path): Promise<any> => {
     return Promise.resolve(resolvePath(keyValueStore, path, null));
-  }),
-  getAllSecrets: jest.fn().mockImplementation((path) => {
+  },
+  getAllSecrets: async (path): Promise<any> => {
     return Promise.resolve(resolvePath(keyValueStore, path, null));
-  }),
-  deleteSecret: jest.fn().mockImplementation((path, key) => {
-    resolvePath(keyValueStore, path + '/' + key, undefined);
-  }),
+  },
+  deleteSecret: async (path): Promise<boolean> => {
+    Promise.resolve(resolvePath(keyValueStore, path, undefined));
+    return true;
+  },
+  deleteAllSecrets: function (path: any): Promise<any> {
+    throw new Error('Function not implemented.');
+  },
 };
 
 // -----------------------------------------------------------------------
 
 describe('SecretsController', () => {
+  let app: INestApplication;
   let controller: SecretsController;
+  let secretService: SecretsService;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [SecretsController],
+      imports: [SecretsModule],
       providers: [
         {
-          provide: 'SecretService',
-          useValue: secretServiceMock,
+          provide: 'SecretsService',
+          useValue: SecretsServiceMock,
         },
       ],
-    }).compile();
+    })
+      .overrideProvider(SecretsService)
+      .useValue(SecretsServiceMock)
+      .compile();
+
+    app = module.createNestApplication();
+    await app.init();
 
     controller = module.get<SecretsController>(SecretsController);
+    secretService = module.get<any>('SecretsService');
+    secretService.setSecret('/secret/key1/key2/key3', { key: 'value3' });
   });
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
+  });
+
+  it('should add a secret on API call', async () => {
+    const secret: SecretDTO = {
+      secretBody: {
+        usernameHSM: 'a',
+        passwordHSM: 'b',
+        username2Way: 'c',
+        password2Way: 'd',
+      },
+      ownerId: 'test',
+      type: SecretType.WhatsappGupshup,
+      variableName: '21',
+    };
+    await controller.create(secret);
+    const response = await controller.findOne(secret.variableName, {
+      ownerId: secret.ownerId,
+    });
+    expect(JSON.stringify(response)).toBe(
+      JSON.stringify({ [secret.variableName]: secret.secretBody }),
+    );
   });
 });

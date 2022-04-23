@@ -5,33 +5,28 @@ import {
   Get,
   Param,
   Post,
-  UseInterceptors,
+  // UseInterceptors,
 } from '@nestjs/common';
-import { PrismaService } from 'src/global-services/prisma.service';
-import { AddAdminHeaderInterceptor } from 'src/interceptors/addAdminHeader.interceptor';
-import { AddOwnerInfoInterceptor } from 'src/interceptors/addOwnerInfo.interceptor';
-import { AddResponseObjectInterceptor } from 'src/interceptors/addResponseObject.interceptor';
-import { AddROToResponseInterceptor } from 'src/interceptors/addROtoResponse.interceptor';
+// import { AddAdminHeaderInterceptor } from 'src/interceptors/addAdminHeader.interceptor';
+// import { AddOwnerInfoInterceptor } from 'src/interceptors/addOwnerInfo.interceptor';
+// import { AddResponseObjectInterceptor } from 'src/interceptors/addResponseObject.interceptor';
+// import { AddROToResponseInterceptor } from 'src/interceptors/addROtoResponse.interceptor';
 import { SecretDTO } from './secret.dto';
 import { SecretsService } from './secrets.service';
 import { getSecretType } from './types';
 
-@UseInterceptors(
-  AddResponseObjectInterceptor,
-  AddAdminHeaderInterceptor,
-  AddOwnerInfoInterceptor,
-  AddROToResponseInterceptor,
-)
+// @UseInterceptors(
+//   AddResponseObjectInterceptor,
+//   AddAdminHeaderInterceptor,
+//   AddOwnerInfoInterceptor,
+//   AddROToResponseInterceptor,
+// )
 @Controller('secret')
 export class SecretsController {
-  constructor(
-    private readonly secretService: SecretsService,
-    private readonly prisma: PrismaService,
-  ) {}
+  constructor(private readonly secretService: SecretsService) {}
 
   @Post()
   async create(@Body() secretDTO: SecretDTO): Promise<any> {
-    console.log({ secretDTO });
     if (secretDTO.type === getSecretType(secretDTO.secretBody)) {
       await this.secretService.setSecret(
         secretDTO.ownerId + '/' + secretDTO.variableName,
