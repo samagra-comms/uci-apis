@@ -13,7 +13,7 @@ import { AddResponseObjectInterceptor } from '../../interceptors/addResponseObje
 import { AddOwnerInfoInterceptor } from '../../interceptors/addOwnerInfo.interceptor';
 import { AddAdminHeaderInterceptor } from '../../interceptors/addAdminHeader.interceptor';
 import { BotService } from './bot.service';
-import { AddROToResponseInterceptor } from '../../interceptors/addROtoResponse.interceptor';
+import { AddROToResponseInterceptor } from '../../interceptors/addROToResponse.interceptor';
 
 @UseInterceptors(
   AddResponseObjectInterceptor,

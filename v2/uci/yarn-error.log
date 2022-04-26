@@ -1,30 +1,30 @@
 Arguments: 
-  /Users/apple/.nvm/versions/node/v14.19.1/bin/node /Users/apple/.nvm/versions/node/v14.19.1/bin/yarn add @nesjs/jwt --save
+  /home/radhay/.nvm/versions/node/v16.14.2/bin/node /home/radhay/.nvm/versions/node/v16.14.2/bin/yarn install
 
 PATH: 
-  /Users/apple/.nvm/versions/node/v14.19.1/bin:/Users/apple/.bun/bin:/Users/apple/development/google-cloud-sdk/bin:/Users/apple/Library/Android/sdk/platform-tools:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/go/bin:/Users/apple/.bun/bin:/Users/apple/development/google-cloud-sdk/bin:/Users/apple/.nvm/versions/node/v12.18.2/bin:/Users/apple/Library/Android/sdk/platform-tools:/Users/apple/development/flutter/bin:/Users/apple/go/bin:/Library/Frameworks/Python.framework/Versions/3.8/bin:/usr/local/Cellar/redis/6.0.9/bin/:/Users/apple/development/flutter/bin:/Users/apple/go/bin:/Library/Frameworks/Python.framework/Versions/3.8/bin:/usr/local/Cellar/redis/6.0.9/bin/
+  /home/radhay/.nvm/versions/node/v16.14.2/bin:/home/radhay/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
 
 Yarn version: 
   1.22.18
 
 Node version: 
-  14.19.1
+  16.14.2
 
 Platform: 
-  darwin x64
+  linux x64
 
 Trace: 
-  Error: https://registry.yarnpkg.com/@nesjs%2fjwt: Not found
-      at Request.params.callback [as _callback] (/Users/apple/.nvm/versions/node/v14.19.1/lib/node_modules/yarn/lib/cli.js:66138:18)
-      at Request.self.callback (/Users/apple/.nvm/versions/node/v14.19.1/lib/node_modules/yarn/lib/cli.js:140883:22)
-      at Request.emit (events.js:400:28)
-      at Request.<anonymous> (/Users/apple/.nvm/versions/node/v14.19.1/lib/node_modules/yarn/lib/cli.js:141855:10)
-      at Request.emit (events.js:400:28)
-      at IncomingMessage.<anonymous> (/Users/apple/.nvm/versions/node/v14.19.1/lib/node_modules/yarn/lib/cli.js:141777:12)
-      at Object.onceWrapper (events.js:519:28)
-      at IncomingMessage.emit (events.js:412:35)
-      at endReadableNT (internal/streams/readable.js:1334:12)
-      at processTicksAndRejections (internal/process/task_queues.js:82:21)
+  Error: https://npm.pkg.github.com/download/@mittwald/vaults/1.4.4/cbdecaa7cf55177383c38d01d74fe95fececa25cca6fb0f339783a32f3de9fdc: Request failed "401 Unauthorized"
+      at ResponseError.ExtendableBuiltin (/home/radhay/.nvm/versions/node/v16.14.2/lib/node_modules/yarn/lib/cli.js:696:66)
+      at new ResponseError (/home/radhay/.nvm/versions/node/v16.14.2/lib/node_modules/yarn/lib/cli.js:802:124)
+      at Request.<anonymous> (/home/radhay/.nvm/versions/node/v16.14.2/lib/node_modules/yarn/lib/cli.js:66208:16)
+      at Request.emit (node:events:526:28)
+      at Request.module.exports.Request.onRequestResponse (/home/radhay/.nvm/versions/node/v16.14.2/lib/node_modules/yarn/lib/cli.js:141760:10)
+      at ClientRequest.emit (node:events:526:28)
+      at HTTPParser.parserOnIncomingClient (node:_http_client:618:27)
+      at HTTPParser.parserOnHeadersComplete (node:_http_common:128:17)
+      at TLSSocket.socketOnData (node:_http_client:482:22)
+      at TLSSocket.emit (node:events:526:28)
 
 npm manifest: 
   {
@@ -53,6 +53,7 @@ npm manifest:
       "test:e2e": "jest --config ./test/jest-e2e.json"
     },
     "dependencies": {
+      "@golevelup/ts-jest": "^0.3.3",
       "@mittwald/vaults": "1.4.4",
       "@nestjs/common": "^8.0.0",
       "@nestjs/config": "^1.1.6",
@@ -76,6 +77,7 @@ npm manifest:
       "jest-mock-extended": "^2.0.5",
       "kafkajs": "^1.16.0",
       "lodash": "^4.17.21",
+      "passport": "^0.5.2",
       "passport-jwt": "^4.0.0",
       "posthog-node": "^1.3.0",
       "prisma": "3",
@@ -1282,6 +1284,11 @@ Lockfile:
     version "2.0.2"
     resolved "https://registry.yarnpkg.com/@foliojs-fork/restructure/-/restructure-2.0.2.tgz#73759aba2aff1da87b7c4554e6839c70d43c92b4"
     integrity sha512-59SgoZ3EXbkfSX7b63tsou/SDGzwUEK6MuB5sKqgVK1/XE0fxmpsOb9DQI8LXW3KfGnAjImCGhhEb7uPPAUVNA==
+  
+  "@golevelup/ts-jest@^0.3.3":
+    version "0.3.3"
+    resolved "https://registry.yarnpkg.com/@golevelup/ts-jest/-/ts-jest-0.3.3.tgz#f9901f3eaaa7fd366d97538d2fc859ffc3052693"
+    integrity sha512-gut5EhD2S7W1p+C/IsUS1o0P5SHgxsN9TqHyRTjG+rfycniLNBfvIWZPEizpsTev/lR10/XOTpE0YicxPme2+Q==
   
   "@humanwhocodes/config-array@^0.5.0":
     version "0.5.0"
@@ -6934,10 +6941,18 @@ Lockfile:
       jsonwebtoken "^8.2.0"
       passport-strategy "^1.0.0"
   
-  passport-strategy@^1.0.0:
+  passport-strategy@1.x.x, passport-strategy@^1.0.0:
     version "1.0.0"
     resolved "https://registry.yarnpkg.com/passport-strategy/-/passport-strategy-1.0.0.tgz#b5539aa8fc225a3d1ad179476ddf236b440f52e4"
     integrity sha1-tVOaqPwiWj0a0XlHbd8ja0QPUuQ=
+  
+  passport@^0.5.2:
+    version "0.5.2"
+    resolved "https://registry.yarnpkg.com/passport/-/passport-0.5.2.tgz#0cb38dd8a71552c8390dfa6a9a6f7f3909954bcf"
+    integrity sha512-w9n/Ot5I7orGD4y+7V3EFJCQEznE5RxHamUxcqLT2QoJY0f2JdN8GyHonYFvN0Vz+L6lUJfVhrk2aZz2LbuREw==
+    dependencies:
+      passport-strategy "1.x.x"
+      pause "0.0.1"
   
   path-browserify@^1.0.1:
     version "1.0.1"
@@ -6998,6 +7013,11 @@ Lockfile:
     integrity sha1-/lo0sMvOErWqaitAPuLnO2AvFEU=
     dependencies:
       through "~2.3"
+  
+  pause@0.0.1:
+    version "0.0.1"
+    resolved "https://registry.yarnpkg.com/pause/-/pause-0.0.1.tgz#1d408b3fdb76923b9543d96fb4c9dfd535d9cb5d"
+    integrity sha1-HUCLP9t2kjuVQ9lvtMnf1TXZy10=
   
   pdfjs-dist@^2.12.313:
     version "2.13.216"

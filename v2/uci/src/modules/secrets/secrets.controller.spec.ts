@@ -130,4 +130,22 @@ describe('SecretsController', () => {
       JSON.stringify({ [secret.variableName]: secret.secretBody }),
     );
   });
+
+  it('should delete a secret on API call', async () => {
+    const secret: SecretDTO = {
+      secretBody: {
+        usernameHSM: 'a',
+        passwordHSM: 'b',
+        username2Way: 'c',
+        password2Way: 'd',
+      },
+      ownerId: 'test',
+      type: SecretType.WhatsappGupshup,
+      variableName: '21',
+    };
+    const response = await controller.deleteAll(secret.variableName, {
+      ownerId: secret.ownerId,
+    });
+    expect(response).toBe(true);
+  });
 });
