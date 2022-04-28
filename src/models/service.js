@@ -31,8 +31,7 @@ class Service extends Model {
     };
   }
 
-  resolve() {
-    console.log("Resolving users now", this);
+  async resolve() {
     if (this.type === "gql") {
       try {
         const userQuery = this.config.gql;
@@ -63,10 +62,45 @@ class Service extends Model {
       } catch (e) {
         return [];
       }
-    } else if (this.type === "GET") {
+    } else if (this.type.toLowerCase() === "get") {
+      console.log("Inside GET")
+      try {
+        const v = new Vault();
+        const credentials = v.getCredentials(
+          this.type,
+          this.config.credentials
+        );
+        const url = this.config.url;
+        const params = this.config.verificationParams;
+        const response = await fetch(url, {
+          method: "GET",
+          headers: credentials?.headers ? credentials?.headers : {},
+        }).then((resp) => {console.log("here"); return resp.json()});
+        return response;
+      } catch (e) {
+        console.log({ e });
+        return [];
+      }
 
-    } else if (this.type === "POST") {
-
+    } else if (this.type === "post") {
+      try {
+        const v = new Vault();
+        const credentials = v.getCredentials(
+          this.type,
+          this.config.credentials
+        );
+        const url = credentials.uri;
+        const params = this.config.verificationParams;
+        const response = await fetch(url, {
+          method: "POST",
+          headers: credentials?.headers ? credentials?.headers : {},
+          body: params,
+        });
+        const data = await response.json();
+        return data;
+      } catch (e) {
+        return [];
+      }
     } else {
       return null;
     }
@@ -116,7 +150,7 @@ class Service extends Model {
     }
   };
 
-  verify(tag) {
+  async verify(tag) {
     if (this.type === "gql") {
       try {
         const userQuery = this.config.gql;
@@ -195,7 +229,61 @@ class Service extends Model {
           total: null,
         };
       }
-    } else {
+    } else if (this.type === "get"){
+      try {
+        const v = new Vault();
+        const credentials = v.getCredentials(
+          this.type,
+          this.config.credentials
+        );
+        const url = credentials.uri;
+        const params = this.config.verificationParams;
+        const response = await fetch(url, {
+          method: "GET",
+          headers: credentials.headers,
+          body: params,
+        });
+        const data = await response.json();
+        return {
+          verified: true,
+          total: data.length,
+        };
+      } catch (e) {
+        console.log(e);
+        return {
+          verified: false,
+          error: e.message,
+          total: null,
+        };
+      }
+    } else if(this.type === "post") {
+      try {
+        const v = new Vault();
+        const credentials = v.getCredentials(
+          this.type,
+          this.config.credentials
+        );
+        const url = credentials.uri;
+        const params = this.config.verificationParams;
+        const response = await fetch(url, {
+          method: "POST",
+          headers: credentials.headers,
+          body: params,
+        });
+        const data = await response.json();
+        return {
+          verified: true,
+          total: data.length,
+        };
+      } catch (e) {
+        console.log(e);
+        return {
+          verified: false,
+          error: e.message,
+          total: null,
+        };
+      }
+    }else {
       return Promise.resolve({
         verified: true,
         total: 10,
