@@ -74,9 +74,9 @@ class Service extends Model {
         const params = this.config.verificationParams;
         const response = await fetch(url, {
           method: "GET",
-          headers: credentials?.headers ? credentials?.headers : {},
+          headers: credentials && credentials.headers ? credentials.headers : {},
         }).then((resp) => {console.log("here"); return resp.json()});
-        return response;
+        return response.data;
       } catch (e) {
         console.log({ e });
         return [];
