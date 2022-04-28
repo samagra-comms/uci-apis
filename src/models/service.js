@@ -93,7 +93,7 @@ class Service extends Model {
         const params = this.config.verificationParams;
         const response = await fetch(url, {
           method: "POST",
-          headers: credentials?.headers ? credentials?.headers : {},
+          headers: credentials && credentials.headers ? credentials.headers : {},
           body: params,
         });
         const data = await response.json();
