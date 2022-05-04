@@ -327,6 +327,118 @@ async function getByParam(req, res) {
   }
 }
 
+async function checkValidBot(req, res) {
+  const rspObj = req.rspObj;
+  const ownerID = req.body.ownerID;
+  const ownerOrgID = req.body.ownerOrgID;
+  const isAdmin = req.body.isAdmin;
+  let bot;
+  const errCode =
+    programMessages.EXCEPTION_CODE +
+    "_" +
+    BotMessages.GET_BY_PARAM.EXCEPTION_CODE;
+  try {
+    if (req.query.name) {
+      if (isAdmin) {
+        bot = (await Bot.query().where({ name: req.query.name }))[0];
+      } else {
+        bot = (
+          await Bot.query().where({ name: req.query.name, ownerID, ownerOrgID })
+        )[0];
+      }
+
+      if (bot instanceof Bot) {
+        // Add logic
+        let logic = await ConversationLogic.query().findByIds(bot.logicIDs);
+        bot.logic = logic;
+        rspObj.responseCode = responseCode.SUCCESS;
+        rspObj.result = { data: bot };
+        return res.status(200).send(successResponse(rspObj));
+      } else rspObj.errCode = BotMessages.GET_BY_PARAM.INCORRECT_NAME_CODE;
+      rspObj.errMsg = BotMessages.GET_BY_PARAM.INCORRECT_NAME_MESSAGE;
+      rspObj.responseCode = responseCode.CLIENT_ERROR;
+      return res
+        .status(400)
+        .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+    } else if (req.query.startingMessage) {
+      if (req.query.startingMessage === "") {
+        rspObj.errCode = BotMessages.GET_BY_PARAM.MISSING_CODE;
+        rspObj.errMsg = BotMessages.GET_BY_PARAM.MISSING_MESSAGE;
+        rspObj.responseCode = responseCode.CLIENT_ERROR;
+        return res
+          .status(400)
+          .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+      } else {
+        // if (isAdmin) {
+        const bots = await Bot.query().where({
+          startingMessage: req.query.startingMessage,
+        });
+        // } else {
+        //   bot = (
+        //     await Bot.query().where({
+        //       startingMessage: req.query.startingMessage,
+        //       ownerID: ownerID,
+        //       ownerOrgID: ownerOrgID,
+        //     })
+        //   )[0];
+        // }
+        if (bots.length === 0) {
+          rspObj.errCode = BotMessages.GET_BY_PARAM.FAILED_CODE;
+          rspObj.errMsg = BotMessages.GET_BY_PARAM.FAILED_MESSAGE;
+          rspObj.responseCode = responseCode.CLIENT_ERROR;
+          return res
+            .status(400)
+            .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+        } else {
+          bot = bots[0];
+          console.log({ bot });
+          if (bot instanceof Bot) {
+            // Add logic
+            let date = new Date();
+            if (
+              (bot.status != "enabled" && bot.status != "live") ||
+              bot.startDate == null ||
+              date < bot.startDate ||
+              (bot.endDate != null && date > bot.endDate)
+            ) {
+              bot.valid = false;
+            } else {
+              bot.valid = true;
+            }
+            let logic = await ConversationLogic.query().findByIds(bot.logicIDs);
+            bot.logic = logic;
+            rspObj.responseCode = responseCode.SUCCESS;
+            rspObj.result = { data: bot };
+            return res.status(200).send(successResponse(rspObj));
+          } else {
+            rspObj.errCode = BotMessages.GET_BY_PARAM.FAILED_CODE;
+            rspObj.errMsg = BotMessages.GET_BY_PARAM.FAILED_MESSAGE;
+            rspObj.responseCode = responseCode.CLIENT_ERROR;
+            return res
+              .status(400)
+              .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+          }
+        }
+      }
+    } else {
+      rspObj.errCode = BotMessages.GET_BY_PARAM.MISSING_CODE;
+      rspObj.errMsg = BotMessages.GET_BY_PARAM.MISSING_MESSAGE;
+      rspObj.responseCode = responseCode.CLIENT_ERROR;
+      return res
+        .status(400)
+        .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+    }
+  } catch (e) {
+    console.log(e);
+    rspObj.errCode = BotMessages.GET_BY_PARAM.FAILED_CODE;
+    rspObj.errMsg = BotMessages.GET_BY_PARAM.FAILED_MESSAGE;
+    rspObj.responseCode = responseCode.CLIENT_ERROR;
+    return res
+      .status(400)
+      .send(errorResponse(rspObj, errCode + errorCode.CODE1));
+  }
+}
+
 async function search(req, res) {
   const rspObj = req.rspObj;
   const errCode =
@@ -422,7 +534,7 @@ async function update(req, res) {
         isValidUserSegment =
           isValidUserSegment &&
           (await UserSegment.query().findById(userSegments[i])) instanceof
-          UserSegment;
+            UserSegment;
       }
       const CLs = data.logic;
       let isValidCL = true;
@@ -430,7 +542,7 @@ async function update(req, res) {
         isValidCL =
           isValidCL &&
           (await ConversationLogic.query().findById(CLs[i])) instanceof
-          ConversationLogic;
+            ConversationLogic;
       }
       data.logicIDs = data.logic;
       delete data.logic;
@@ -558,7 +670,7 @@ async function insert(req, res) {
             isValidUserSegment =
               isValidUserSegment &&
               (await UserSegment.query().findById(userSegments[i])) instanceof
-              UserSegment;
+                UserSegment;
           }
           const CLs = data.logic;
           let isValidCL = true;
@@ -566,7 +678,7 @@ async function insert(req, res) {
             isValidCL =
               isValidCL &&
               (await ConversationLogic.query().findById(CLs[i])) instanceof
-              ConversationLogic;
+                ConversationLogic;
           }
 
           data.logicIDs = data.logic;
@@ -788,6 +900,16 @@ module.exports = function (app) {
       requestMiddleware.checkIfAdmin,
       requestMiddleware.addOwnerInfo,
       getByParam
+    );
+
+  app
+    .route(BASE_URL + "/bot/checkValidBot/")
+    .get(
+      requestMiddleware.gzipCompression(),
+      requestMiddleware.createAndValidateRequestBody,
+      requestMiddleware.checkIfAdmin,
+      requestMiddleware.addOwnerInfo,
+      checkValidBot
     );
 
   app
