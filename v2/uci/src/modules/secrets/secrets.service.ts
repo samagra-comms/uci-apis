@@ -18,7 +18,6 @@ export class SecretsService {
   }
 
   constructor(public configService: ConfigService) {
-    console.log({ configService });
     this.initClient(
       this.configService.get<string>('VAULT_ADDR') || '',
       this.configService.get<string>('VAULT_TOKEN') || '',

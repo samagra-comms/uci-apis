@@ -1,203 +1,205 @@
-// import { InMemoryCache } from 'apollo-cache-inmemory';
-// import gql from 'graphql-tag';
-// import fetch from 'node-fetch';
-// import userSchema from '../service/schema/user.schema.json';
+import fetch from 'isomorphic-fetch';
+import userSchema from '../service/schema/user.schema.json';
+import {
+  ApolloClient,
+  InMemoryCache,
+  HttpLink,
+  QueryOptions,
+  gql,
+  ApolloQueryResult,
+} from '@apollo/client';
 
-// import Ajv from 'ajv';
-// import { Service } from 'prisma/generated/prisma-client-js';
-// const ajv = new Ajv();
+import Ajv from 'ajv';
+const ajv = new Ajv();
 
-// import { Injectable } from '@nestjs/common';
+import { Injectable, Scope } from '@nestjs/common';
+import { SecretsService } from '../secrets/secrets.service';
+import { ConfigService } from '@nestjs/config';
+import { User } from './schema/user.dto';
+import { TelemetryService } from '../../global-services/telemetry.service';
+import { ErrorType, GqlConfig, GqlResolverError } from './types';
+import { ServiceQueryType } from './enum';
 
-// @Injectable()
-// export class GQLResolverService {
-//   resolve = (service: Service) => {
-//     console.log('Resolving users now', this);
-//     if (service.type === 'gql') {
-//       try {
-//         const userQuery = service.config.gql;
-//         const v = new Vault();
-//         const credentials = v.getCredentials(
-//           service.type,
-//           service.config.credentials,
-//         );
-//         const client = this.getGQLClient(credentials);
-//         const variables = service.config.verificationParams;
-//         const query = {
-//           query: gql`
-//             ${userQuery}
-//           `,
-//           variables,
-//         };
-//         console.log(query);
-//         if (query.variables === undefined) {
-//           console.log('AllService Query');
-//           delete query.variables;
-//         }
-//         return client.query(query).then(async (resp) => {
-//           console.log({ resp });
-//           return resp.data.users;
-//         });
-//       } catch (e) {
-//         return [];
-//       }
-//     } else if (service.type === 'GET') {
-//     } else if (service.type === 'POST') {
-//     } else {
-//       return null;
-//     }
-//   };
+@Injectable()
+export class GQLResolverService {
+  validate = ajv.compile(userSchema);
+  constructor(
+    private configService: ConfigService,
+    private secretsService: SecretsService,
+    private telemetryService: TelemetryService,
+  ) {}
 
-//   getUserByGQL = async (userParams) => {
-//     try {
-//       const userQuery = service.config.gql;
-//       console.log({ userQuery });
-//       console.log(service.config.credentials);
-//       const v = new Vault();
-//       const credentials = v.getCredentials(
-//         service.type,
-//         service.config.credentials,
-//       );
+  async verify(
+    queryType: ServiceQueryType,
+    gqlConfig: GqlConfig,
+    user: string,
+  ) {
+    //secretPath = <user>/<variable>
+    const secretPath = `${user}/${gqlConfig.credentials.variable}`;
+    const headers = await this.secretsService.getAllSecrets(secretPath);
+    const client = this.getClient(gqlConfig.url, headers);
+    const variables = gqlConfig.verificationParams;
 
-//       const client = this.getGQLClient(credentials);
-//       const variables = userParams;
-//       return client
-//         .query({
-//           query: gql`
-//             ${userQuery}
-//           `,
-//           variables,
-//         })
-//         .then(async (resp) => {
-//           console.log(resp.data);
-//           const user = resp.data.users[0];
-//           const validate = ajv.compile(userSchema);
-//           const valid = validate(user);
+    const usersOrError: User[] | GqlResolverError = await this.getUsers(
+      client,
+      gqlConfig.query,
+      variables,
+    );
+    if (usersOrError instanceof Array) {
+      const totalUsers = usersOrError.length;
+      const sampleUser = usersOrError[0];
 
-//           return {
-//             verified: valid,
-//             user,
-//           };
-//         })
-//         .catch((e) => {
-//           console.log(e);
-//           return {
-//             verified: false,
-//             user: null,
-//           };
-//         });
-//     } catch (e) {
-//       console.log(e);
-//       return {
-//         verified: false,
-//         user: null,
-//       };
-//     }
-//   };
+      //TODO: Additional Checks
+      switch (queryType) {
+        case ServiceQueryType.byPhone:
+          break;
+        case ServiceQueryType.byId:
+          break;
+        case ServiceQueryType.all:
+          break;
+      }
 
-//   verify = (tag, service: Service) => {
-//     if (service.type === 'gql') {
-//       try {
-//         const userQuery = service.config.gql;
-//         const v = new Vault();
-//         const credentials = v.getCredentials(
-//           service.type,
-//           service.config.credentials,
-//         );
+      return {
+        total: totalUsers,
+        schemaValidated: true,
+        sampleUser,
+      };
+    } else {
+      return {
+        total: 0,
+        schemaValidated: false,
+        error: usersOrError,
+      };
+    }
+  }
 
-//         const client = this.getGQLClient(credentials);
-//         const variables = service.config.verificationParams;
-//         return client
-//           .query({
-//             query: gql`
-//               ${userQuery}
-//             `,
-//             variables,
-//           })
-//           .then(async (resp) => {
-//             if (tag === 'getAllUsers') {
-//               console.log(resp.data.users.length);
-//               const users = resp.data.users;
-//               const validate = ajv.compile(userSchema);
-//               const valid = validate(resp.data.users[0]);
+  async resolve(
+    queryType: ServiceQueryType,
+    gqlConfig: GqlConfig,
+    user: string,
+  ): Promise<User[]> {
+    const secretPath = `${user}/${gqlConfig.credentials.variable}`;
+    const headers = await this.secretsService.getAllSecrets(secretPath);
+    const client = this.getClient(gqlConfig.url, headers);
+    const variables = gqlConfig.verificationParams;
 
-//               console.log(validate.errors);
-//               console.log(users[0]);
-//               return {
-//                 total: users.length,
-//                 verified: valid,
-//                 schemaValidated: valid,
-//                 sampleUser: users[0],
-//               };
-//             } else if (tag === 'getUserByPhone') {
-//               const user = resp.data.users[0];
-//               const validate = ajv.compile(userSchema);
-//               const valid = validate(user);
-//               console.log(valid);
+    const usersOrError: User[] | GqlResolverError = await this.getUsers(
+      client,
+      gqlConfig.query,
+      variables,
+    );
+    if (usersOrError instanceof Array) {
+      //TODO: Additional Checks
+      switch (queryType) {
+        case ServiceQueryType.byPhone:
+          break;
+        case ServiceQueryType.byId:
+          break;
+        case ServiceQueryType.all:
+          break;
+      }
 
-//               return {
-//                 schemaValidated: valid,
-//                 verified: valid,
-//                 total: 1,
-//               };
-//             } else if (tag === 'getUserByID') {
-//               const user = resp.data.users[0];
-//               const validate = ajv.compile(userSchema);
-//               const valid = validate(user);
-//               console.log(valid);
+      return usersOrError;
+    } else {
+      return [];
+    }
+  }
 
-//               return {
-//                 verified: valid,
-//                 total: 1,
-//               };
-//             } else {
-//               return {
-//                 verified: false,
-//                 error: 'Not a valid tag',
-//                 total: null,
-//               };
-//             }
-//           })
-//           .catch((e) => {
-//             console.log(e);
-//             return {
-//               verified: false,
-//               error: e.message,
-//               total: null,
-//             };
-//           });
-//       } catch (e) {
-//         console.log(e);
-//         return {
-//           verified: false,
-//           error: e.message,
-//           total: null,
-//         };
-//       }
-//     } else {
-//       return Promise.resolve({
-//         verified: true,
-//         total: 10,
-//       });
-//     }
-//   };
+  async getUsers(
+    client: ApolloClient<any>,
+    query: string,
+    variables?: any,
+    errorNotificationWebhook?: string,
+  ): Promise<User[] | GqlResolverError> {
+    let isValidUserResponse = true;
+    let currentUser: any;
+    return this.query(client, query, variables).then(async (resp) => {
+      for (const user of resp.data.users) {
+        currentUser = user;
+        if (!this.validate(user)) {
+          isValidUserResponse = false;
+          //Notify Federated Service that user is invalid
+          if (errorNotificationWebhook) {
+            await this.notifyOnError(
+              errorNotificationWebhook,
+              user,
+              this.validate.errors,
+            );
+            break;
+          }
+        }
+      }
+      if (isValidUserResponse) {
+        return resp.data.users;
+      } else {
+        return {
+          error: this.validate.errors,
+          errorType: ErrorType.UserSchemaMismatch,
+          user: currentUser,
+        };
+      }
+    });
+  }
 
-//   getGQLClient = (credentials) => {
-//     return new ApolloClient({
-//       link: new HttpLink({
-//         uri: credentials.uri,
-//         fetch: fetch,
-//         headers: credentials.headers,
-//       }),
-//       cache: new InMemoryCache(),
-//     });
-//   };
+  public notifyOnError(
+    errorNotificationWebhook: string,
+    user: User,
+    error: any,
+  ): Promise<any> {
+    return fetch(errorNotificationWebhook, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        user,
+        error,
+      }),
+    })
+      .then((response) => {
+        return response.json();
+      })
+      .catch(async (e) => {
+        await this.telemetryService.client.capture({
+          distinctId: 'NestJS-Local',
+          event: 'Failed to notify federated service',
+          properties: {
+            error,
+            user,
+            errorNotificationWebhook,
+          },
+        });
+        return {
+          error: e,
+        };
+      });
+  }
 
-//   getUserPhone = (resp) => {
-//     return resp.data.users
-//       .filter((user) => user.profile)
-//       .filter((user) => user.profile.data)
-//       .filter((user) => user.profile.data.phone)
-//       .map((user) => user.profile.data.phone);
-//   };
-// }
+  async query(
+    client: ApolloClient<any>,
+    query: string,
+    variables?: any,
+  ): Promise<ApolloQueryResult<any>> {
+    const q: QueryOptions = {
+      query: gql`
+        ${query}
+      `,
+      variables,
+    };
+    return client.query(q);
+  }
+
+  getClient = (
+    uri: string,
+    headers: { [key: string]: string },
+  ): ApolloClient<any> => {
+    return new ApolloClient({
+      link: new HttpLink({
+        uri: uri,
+        headers: headers,
+        fetch: fetch,
+      }),
+      cache: new InMemoryCache(),
+    });
+  };
+}

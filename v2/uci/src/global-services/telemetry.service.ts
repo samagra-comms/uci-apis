@@ -17,6 +17,12 @@ export class TelemetryService implements OnModuleInit {
   async onModuleInit() {
     // This should only be printed once - https://docs.nestjs.com/assets/lifecycle-events.png
     console.log('Telemetry: Initialized Successfully 🎉');
+    this.client.identify({
+      distinctId: 'NestJS-Local',
+      properties: {
+        version: this.configService.get('NEST_VERSION'),
+      },
+    });
   }
 
   async beforeApplicationShutdown() {

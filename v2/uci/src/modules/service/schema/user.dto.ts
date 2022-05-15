@@ -1,16 +1,16 @@
 // Prepared from https://transform.tools/json-to-typescript
 
-export interface Root {
+export type User = {
   id: string;
   externalIds: string[];
   rootOrgId: string;
-  firstName: string;
-  lastName: string;
-  userLocation: UserLocation;
-  roles: string;
-  userType: UserType;
-  customData: any;
-}
+  firstName?: string;
+  lastName?: string;
+  userLocation?: UserLocation;
+  roles?: string;
+  userType?: UserType;
+  customData?: any;
+};
 
 export interface UserLocation {
   id: string;

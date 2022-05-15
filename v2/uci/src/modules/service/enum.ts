@@ -3,3 +3,9 @@ export enum ServiceType {
   GET = 'GET',
   POST = 'POST',
 }
+
+export enum ServiceQueryType {
+  byPhone = 'byPhone',
+  byId = 'byId',
+  all = 'all',
+}

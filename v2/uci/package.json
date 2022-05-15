@@ -43,7 +43,7 @@
     "class-validator": "^0.13.2",
     "expect-type": "^0.13.0",
     "fastify-swagger": "^4.13.1",
-    "graphql": "^16.3.0",
+    "graphql": "^16.5.0",
     "graphql-tag": "^2.12.6",
     "jest-mock-extended": "^2.0.5",
     "kafkajs": "^1.16.0",
