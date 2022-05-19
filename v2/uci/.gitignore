@@ -9,3 +9,5 @@ keys
 *.samples.json
 dist/*
 yarn-error.log
+
+prisma/generated/prisma-client-js
