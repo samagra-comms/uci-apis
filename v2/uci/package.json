@@ -24,6 +24,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@apollo/client": "^3.6.2",
     "@golevelup/ts-jest": "^0.3.3",
     "@mittwald/vaults": "1.4.4",
     "@nestjs/common": "^8.0.0",
@@ -45,6 +46,7 @@
     "fastify-swagger": "^4.13.1",
     "graphql": "^16.5.0",
     "graphql-tag": "^2.12.6",
+    "isomorphic-fetch": "^3.0.0",
     "jest-mock-extended": "^2.0.5",
     "kafkajs": "^1.16.0",
     "lodash": "^4.17.21",
