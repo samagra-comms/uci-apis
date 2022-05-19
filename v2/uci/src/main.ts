@@ -4,6 +4,8 @@ import {
 } from '@nestjs/platform-fastify';
 import { AppModule } from './app.module';
 import { NestFactory } from '@nestjs/core';
+import helmet from 'fastify-helmet';
+import multipart from 'fastify-multipart';
 import { PrismaService } from './global-services/prisma.service';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import {
@@ -13,6 +15,7 @@ import {
 } from '@nestjs/swagger';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { join } from 'path';
 
 async function bootstrap() {
   /** Fastify Application */
@@ -65,7 +68,20 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, document, customOptions);
 
   //await app.startAllMicroservices();
+  app.register(helmet, {
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: [`'self'`],
+        styleSrc: [`'self'`, `'unsafe-inline'`],
+        imgSrc: [`'self'`, 'data:', 'validator.swagger.io'],
+        scriptSrc: [`'self'`, `https: 'unsafe-inline'`],
+      },
+    },
+  });
+  app.register(multipart);
+  app.useStaticAssets({ root: join(__dirname, '../../formUploads') });
   await app.listen(3001, '0.0.0.0');
-  console.log(`App Listening to ${3001}`);
+
+  console.log(`APP IS RUNNING ON PORT ${await app.getUrl()}`);
 }
 bootstrap();

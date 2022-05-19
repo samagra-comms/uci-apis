@@ -13,7 +13,16 @@ const XMLHttpRequest = require('xmlhttprequest').XMLHttpRequest;
 
 import CryptoJS from 'crypto-js';
 
-const digestAuthRequest = function (method, url, username, password) {
+const digestAuthRequest = function (
+  method,
+  url,
+  username,
+  password,
+  options: { timeout?: number; loggingOn?: boolean } = {
+    timeout: 10000,
+    loggingOn: false,
+  },
+) {
   // eslint-disable-next-line @typescript-eslint/no-this-alias
   const self = this;
 
@@ -30,11 +39,13 @@ const digestAuthRequest = function (method, url, username, password) {
   this.cnonce = null; // client nonce
 
   // settings
-  this.timeout = 10000; // timeout
-  this.loggingOn = true; // toggle console logging
+  this.timeout = options.timeout; // timeout
+  this.loggingOn = options.loggingOn; // toggle console logging
 
   // determine if a post, so that request will send data
   this.post = false;
+
+  this.extras = null;
   if (method.toLowerCase() === 'post' || method.toLowerCase() === 'put') {
     this.post = true;
   }
@@ -43,18 +54,20 @@ const digestAuthRequest = function (method, url, username, password) {
   // successFn - will be passed JSON data
   // errorFn - will be passed error status code
   // data - optional, for POSTS
-  this.request = function (successFn, errorFn, data) {
+  this.request = function (successFn, errorFn, data, extras) {
     // posts data as JSON if there is any
     if (data) {
       self.data = JSON.stringify(data);
     }
+
+    self.extras = extras;
     self.successFn = successFn;
     self.errorFn = errorFn;
 
     if (!self.nonce) {
-      self.makeUnauthenticatedRequest(self.data);
+      return self.makeUnauthenticatedRequest(self.data);
     } else {
-      self.makeAuthenticatedRequest();
+      return self.makeAuthenticatedRequest();
     }
   };
   this.makeUnauthenticatedRequest = function (data) {
@@ -129,16 +142,22 @@ const digestAuthRequest = function (method, url, username, password) {
             if (self.firstRequest.responseText.length > 0) {
               // If JSON, parse and return object
               if (self.isJson(self.firstRequest.responseText)) {
-                self.successFn(JSON.parse(self.firstRequest.responseText));
+                self.successFn(
+                  JSON.parse(self.firstRequest.responseText),
+                  self.extras,
+                );
               } else {
-                self.successFn({
-                  responseText: self.firstRequest.responseText,
-                  headers: self.responseHeaders,
-                });
+                self.successFn(
+                  {
+                    responseText: self.firstRequest.responseText,
+                    headers: self.responseHeaders,
+                  },
+                  self.extras,
+                );
               }
             }
           } else {
-            self.successFn();
+            self.successFn(undefined, self.extras);
           }
         }
       }
@@ -168,7 +187,7 @@ const digestAuthRequest = function (method, url, username, password) {
   this.makeAuthenticatedRequest = function () {
     self.response = self.formulateResponse();
     self.authenticatedRequest = new XMLHttpRequest();
-    self.authenticatedRequest.open(method, url, true);
+    self.authenticatedRequest.open(method, url, false);
     self.authenticatedRequest.timeout = self.timeout;
     const digestAuthHeader =
       self.scheme +
@@ -215,40 +234,6 @@ const digestAuthRequest = function (method, url, username, password) {
     }
     self.authenticatedRequest.onload = function () {
       // success
-      if (
-        self.authenticatedRequest.status >= 200 &&
-        self.authenticatedRequest.status < 400
-      ) {
-        // increment nonce count
-        self.nc++;
-        // return data
-        if (
-          self.authenticatedRequest.responseText !== 'undefined' &&
-          self.authenticatedRequest.responseText.length > 0
-        ) {
-          // If JSON, parse and return object
-          if (self.isJson(self.authenticatedRequest.responseText)) {
-            self.successFn(JSON.parse(self.authenticatedRequest.responseText));
-          } else {
-            console.log(
-              self.authenticatedRequest.getResponseHeader('Set-Cookie'),
-            );
-            self.successFn({
-              responseText: self.authenticatedRequest.responseText,
-              cookie: self.authenticatedRequest
-                .getResponseHeader('Set-Cookie')[0]
-                .split(';')[0],
-            });
-          }
-        } else {
-          self.successFn();
-        }
-      }
-      // failure
-      else {
-        self.nonce = null;
-        self.errorFn(self.authenticatedRequest.status);
-      }
     };
     // handle errors
     self.authenticatedRequest.onerror = function () {
@@ -266,6 +251,40 @@ const digestAuthRequest = function (method, url, username, password) {
       self.authenticatedRequest.send(self.data);
     } else {
       self.authenticatedRequest.send();
+      if (
+        self.authenticatedRequest.status >= 200 &&
+        self.authenticatedRequest.status < 400
+      ) {
+        // increment nonce count
+        self.nc++;
+        // return data
+        if (
+          self.authenticatedRequest.responseText !== 'undefined' &&
+          self.authenticatedRequest.responseText.length > 0
+        ) {
+          // If JSON, parse and return object
+          if (self.isJson(self.authenticatedRequest.responseText)) {
+            return self.successFn(
+              JSON.parse(self.authenticatedRequest.responseText),
+            );
+          } else {
+            self.log(self.authenticatedRequest.getResponseHeader('Set-Cookie'));
+            return self.successFn({
+              responseText: self.authenticatedRequest.responseText,
+              cookie: self.authenticatedRequest
+                .getResponseHeader('Set-Cookie')[0]
+                .split(';')[0],
+            });
+          }
+        } else {
+          return self.successFn();
+        }
+      }
+      // failure
+      else {
+        self.nonce = null;
+        self.errorFn(self.authenticatedRequest.status);
+      }
     }
     self.log('Authenticated request to ' + url);
   };
@@ -328,6 +347,4 @@ const digestAuthRequest = function (method, url, username, password) {
   };
 };
 
-module.exports = {
-  digestAuthRequest,
-};
+export default digestAuthRequest;

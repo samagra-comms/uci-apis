@@ -42,6 +42,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') implements IAuthGuard {
       // Either the user is an admin or the user is the owner of the resource
       return userId === request.headers['ownerid'] || isAdmin;
     } catch (e) {
+      console.log(e);
       return false;
     }
   }

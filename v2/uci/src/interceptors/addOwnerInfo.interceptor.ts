@@ -106,7 +106,7 @@ export class AddOwnerInfoInterceptor implements NestInterceptor {
         rspObj.ownerId = ownerId;
         return next.handle();
     }
-    // $ = Obverable<any>
+    // $ = Observable<any>
     const resObj$ = from(rspObj).pipe(
       ignoreElements(),
       catchError((err) => throwError(err)),

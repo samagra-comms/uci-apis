@@ -373,8 +373,8 @@ export namespace Prisma {
   export import Decimal = runtime.Decimal
 
   /**
-   * Prisma Client JS version: 3.11.1
-   * Query Engine version: 1a2506facaf1a4727b7c26850735e88ec779dee9
+   * Prisma Client JS version: 3.14.0
+   * Query Engine version: 2b0c12756921c891fec4f68d9444e18c7d5d4a6a
    */
   export type PrismaVersion = {
     client: string
@@ -890,6 +890,7 @@ export namespace Prisma {
     | 'aggregate'
     | 'count'
     | 'runCommandRaw'
+    | 'findRaw'
 
   /**
    * These options are being passed in to the middleware as "params"
@@ -911,7 +912,8 @@ export namespace Prisma {
   ) => Promise<T>
 
   // tested in getLogLevel.test.ts
-  export function getLogLevel(log: Array<LogLevel | LogDefinition>): LogLevel | undefined; 
+  export function getLogLevel(log: Array<LogLevel | LogDefinition>): LogLevel | undefined;
+
   export type Datasource = {
     url?: string
   }
