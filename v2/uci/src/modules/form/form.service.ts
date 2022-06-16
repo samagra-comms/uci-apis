@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { TelemetryService } from 'src/global-services/telemetry.service';
+import { TelemetryService } from '../../global-services/telemetry.service';
 import fetch from 'node-fetch';
 import digestAuthRequest from '../../common/digestAuthRequest';
 // eslint-disable-next-line @typescript-eslint/no-var-requires

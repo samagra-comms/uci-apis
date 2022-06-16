@@ -33,6 +33,7 @@ export class MigrationService {
     private configService: ConfigService,
   ) {
     this.hasuraURL = this.configService.get<string>('GRAPHQL_BASE_URL') || '';
+    console.log(this.hasuraURL);
     this.hasuraSecret =
       this.configService.get<string>('HASURA_GRAPHQL_ADMIN_SECRET') || '';
     this.tableData = [];

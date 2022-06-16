@@ -11,7 +11,7 @@ import { ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { diskStorage } from 'multer';
 import { Request } from 'express';
 import { extname } from 'path';
-import { FastifyFileInterceptor } from 'src/interceptors/file.interceptor';
+import { FastifyFileInterceptor } from '../../interceptors/file.interceptor';
 import { FormUploadDto } from './formUpload.dto';
 import { fileMapper } from 'src/common/file-mapper';
 import { FormService } from './form.service';

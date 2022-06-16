@@ -13,11 +13,13 @@ import {
   FastifySwaggerCustomOptions,
   SwaggerModule,
 } from '@nestjs/swagger';
-import { ValidationPipe, VersioningType } from '@nestjs/common';
+import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { join } from 'path';
 
 async function bootstrap() {
+  const logger = new Logger('Main');
+
   /** Fastify Application */
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
@@ -82,6 +84,6 @@ async function bootstrap() {
   app.useStaticAssets({ root: join(__dirname, '../../formUploads') });
   await app.listen(3001, '0.0.0.0');
 
-  console.log(`APP IS RUNNING ON PORT ${await app.getUrl()}`);
+  logger.verbose(`APP IS RUNNING ON PORT ${await app.getUrl()}`);
 }
 bootstrap();
