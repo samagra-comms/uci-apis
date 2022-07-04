@@ -33,3 +33,9 @@ export type GqlResolverError = {
   error: Error;
   user?: User;
 };
+
+export type GetRequestConfig = GqlConfig;
+export type GetRequestResolverError = GqlResolverError;
+
+export type PostRequestConfig = GqlConfig & { requestBody?: any };
+export type PostRequestResolverError = GqlConfig;

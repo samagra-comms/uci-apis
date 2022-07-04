@@ -12,3 +12,4 @@ redis-data
 *.keys.json
 dist/
 documentation/
+prisma/generated/

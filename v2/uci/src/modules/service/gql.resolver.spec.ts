@@ -6,6 +6,7 @@ import { SecretsService } from '../secrets/secrets.service';
 import { TelemetryService } from '../../global-services/telemetry.service';
 import { createMock } from '@golevelup/ts-jest';
 import { User } from './schema/user.dto';
+import { ServiceQueryType } from './enum';
 
 describe('SecretsService', () => {
   let service: GQLResolverService;
@@ -113,7 +114,11 @@ describe('SecretsService', () => {
       },
       errorNotificationWebhook: 'https://eo3kiu96phwev11.m.pipedream.net',
     };
-    const users = await service.resolve(gqlConfig);
+    const users = await service.resolve(
+      ServiceQueryType.byPhone,
+      gqlConfig,
+      'test',
+    );
     expect(users).toBeInstanceOf(Array);
   });
 
