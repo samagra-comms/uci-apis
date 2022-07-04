@@ -1,12 +1,12 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import PostHog from 'posthog-node';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class TelemetryService implements OnModuleInit {
+  private readonly logger = new Logger('TelemetryService');
   client: PostHog;
   constructor(private configService: ConfigService) {
-    console.log('Constructor Called');
     this.client = new PostHog(this.configService.get('POSTHOG_API_KEY') || '', {
       host: configService.get('POSTHOG_API_HOST'),
       flushAt: configService.get<number>('POSTHOG_BATCH_SIZE'),
@@ -16,7 +16,7 @@ export class TelemetryService implements OnModuleInit {
 
   async onModuleInit() {
     // This should only be printed once - https://docs.nestjs.com/assets/lifecycle-events.png
-    console.log('Telemetry: Initialized Successfully 🎉');
+    this.logger.verbose('Initialized Successfully 🎉');
     this.client.identify({
       distinctId: 'NestJS-Local',
       properties: {
@@ -27,6 +27,6 @@ export class TelemetryService implements OnModuleInit {
 
   async beforeApplicationShutdown() {
     await this.client.shutdown();
-    console.log('Telemetry: Gracefully Shutdown 🎉');
+    this.logger.verbose('Gracefully Shutdown 🎉');
   }
 }

@@ -18,6 +18,7 @@ import { ServiceService } from './modules/service/service.service';
 import { ServiceController } from './modules/service/service.controller';
 import { PrismaServiceMock } from './global-services/prisma.service.mock';
 import { AuthModule } from './auth/auth.module';
+import { FormModule } from './modules/form/form.module';
 
 // const prismaServiceProvider = (env: string | undefined): Type<any> => {
 //   switch (env) {
@@ -50,6 +51,7 @@ import { AuthModule } from './auth/auth.module';
     ServiceModule,
     TransformerModule,
     AuthModule,
+    FormModule,
   ],
   controllers: [AppController, ServiceController],
   providers: [AppService, PrismaService, MigrationService, ServiceService],

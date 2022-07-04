@@ -8,6 +8,8 @@ import {
   Delete,
   UseInterceptors,
   Headers,
+  Query,
+  Req,
 } from '@nestjs/common';
 import { AddResponseObjectInterceptor } from '../../interceptors/addResponseObject.interceptor';
 import { AddOwnerInfoInterceptor } from '../../interceptors/addOwnerInfo.interceptor';
@@ -31,16 +33,44 @@ export class BotController {
     return this.botService.create(createBotDto);
   }
 
-  @Get()
+  @Get('/all')
   findAll() {
     return this.botService.findAll();
   }
 
+  @Get('/search')
+  find(
+    @Query('perPage') perPage: string,
+    @Query('page') page: string,
+    @Query('name') name: string,
+    @Query('startingMessage') startingMessage: string,
+    @Query('match') match: 'true' | 'false',
+    @Body() body: any,
+  ) {
+    return this.botService.find(
+      parseInt(perPage),
+      parseInt(page),
+      name,
+      startingMessage,
+      match === 'true',
+      body.ownerId,
+      body.ownerOrgId,
+    );
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string, @Headers() headers, @Body() body) {
-    console.log({ headers });
-    console.log({ body });
     return this.botService.findOne(id);
+  }
+
+  @Get('/start/:id')
+  startOne(@Param('id') id: string, @Headers() headers, @Body() body) {
+    return this.botService.start(id);
+  }
+
+  @Get('/pause/:id')
+  pauseOne(@Param('id') id: string, @Headers() headers, @Body() body) {
+    return this.botService.pause(id);
   }
 
   @Patch(':id')

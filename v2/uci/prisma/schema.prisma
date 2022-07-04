@@ -11,6 +11,12 @@ generator client {
   output   = "./generated/prisma-client-js"
 }
 
+enum BotStatus {
+  ENABLED
+  DISABLED
+  DRAFT
+}
+
 model Adapter {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt DateTime @default(now())
@@ -19,7 +25,7 @@ model Adapter {
   channel  String
   provider String
   config   Json
-  name     String @unique
+  name     String?
 
   ConversationLogic ConversationLogic[]
 }
@@ -84,6 +90,7 @@ model Bot {
   description     String?
   startDate       DateTime?           @db.Date
   endDate         DateTime?           @db.Date
+  status          BotStatus           @default(DRAFT)
 }
 
 model UserSegment {
