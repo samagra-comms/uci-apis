@@ -426,8 +426,8 @@ async function update(req, res) {
     );
   } else {
     try {
-      if (data.endDate === "") data.endDate = null;
-      if (data.startDate === "") data.startDate = null;
+      if (data.endDate === undefined || data.endDate === "") data.endDate = null;
+      if (data.startDate === undefined || data.startDate === "") data.startDate = null;
       // Loop over transformers to verify if they exist or not.
       const userSegments = data.users;
       let isValidUserSegment = true;
