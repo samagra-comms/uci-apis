@@ -89,9 +89,17 @@ async function get(req, res) {
     const page = req.query.page - 1;
     const ownerID = req.body.ownerID;
     const ownerOrgID = req.body.ownerOrgID;
-    const botsData = await Bot.query()
-      .where({ ownerID, ownerOrgID })
-      .page(page, batchSize);
+    const isOrgAdmin = req.body.isOrgAdmin === undefined ? false : true;
+    let botsData;
+    if (isOrgAdmin) {
+      botsData = await Bot.query()
+        .where({ ownerOrgID })
+        .page(page, batchSize);
+    } else {
+      botsData = await Bot.query()
+        .where({ ownerID, ownerOrgID })
+        .page(page, batchSize);
+    }
     const data = [];
     for (let i = 0; i < botsData.results.length; i++) {
       let bot = botsData.results[i];
@@ -340,10 +348,12 @@ async function search(req, res) {
       let bots;
       if (req.query.match === "true") {
         bots = await Bot.query()
+          .where("ownerOrgID", ownerOrgID)
           .where("name", req.query.name)
           .page(page, batchSize);
       } else {
         bots = await Bot.query()
+          .where("ownerOrgID", ownerOrgID)
           .where("name", "ILIKE", `%${req.query.name}%`)
           .page(page, batchSize);
       }
@@ -402,6 +412,8 @@ async function update(req, res) {
   const data = req.body.data;
   const isExisting = (await Bot.query().findById(req.params.id)) !== undefined;
 
+  const trx = await Bot.startTransaction();
+
   if (!isExisting) {
     response.sendErrorRes(
       req,
@@ -414,7 +426,8 @@ async function update(req, res) {
     );
   } else {
     try {
-      const trx = await Bot.startTransaction();
+      if (data.endDate === "") data.endDate = null;
+      if (data.startDate === "") data.startDate = null;
       // Loop over transformers to verify if they exist or not.
       const userSegments = data.users;
       let isValidUserSegment = true;
