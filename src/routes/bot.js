@@ -89,7 +89,7 @@ async function get(req, res) {
     const page = req.query.page - 1;
     const ownerID = req.body.ownerID;
     const ownerOrgID = req.body.ownerOrgID;
-    const isOrgAdmin = req.body.isOrgAdmin === undefined ? false : true;
+    const isOrgAdmin = true;
     let botsData;
     if (isOrgAdmin) {
       botsData = await Bot.query()
