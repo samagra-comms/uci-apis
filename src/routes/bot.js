@@ -337,6 +337,7 @@ async function getByParam(req, res) {
 
 async function search(req, res) {
   const rspObj = req.rspObj;
+  const isAdmin = req.body.isAdmin;
   const errCode =
     programMessages.EXCEPTION_CODE + "_" + BotMessages.SEARCH.EXCEPTION_CODE;
   try {
@@ -347,15 +348,27 @@ async function search(req, res) {
     if (req.query.name) {
       let bots;
       if (req.query.match === "true") {
-        bots = await Bot.query()
-          .where("ownerOrgID", ownerOrgID)
-          .where("name", req.query.name)
-          .page(page, batchSize);
+        if(isAdmin) {
+          bots = await Bot.query()
+            .where("name", req.query.name)
+            .page(page, batchSize);
+        }else {
+          bots = await Bot.query()
+            .where("ownerOrgID", ownerOrgID)
+            .where("name", req.query.name)
+            .page(page, batchSize);
+        }
       } else {
-        bots = await Bot.query()
-          .where("ownerOrgID", ownerOrgID)
-          .where("name", "ILIKE", `%${req.query.name}%`)
-          .page(page, batchSize);
+        if(isAdmin) {
+          bots = await Bot.query()
+            .where("name", "ILIKE", `%${req.query.name}%`)
+            .page(page, batchSize);
+        }else {
+          bots = await Bot.query()
+            .where("ownerOrgID", ownerOrgID)
+            .where("name", "ILIKE", `%${req.query.name}%`)
+            .page(page, batchSize);
+        }
       }
 
       const botsModified = await Promise.all(
