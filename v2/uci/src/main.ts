@@ -16,6 +16,7 @@ import {
 import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { join } from 'path';
+import compression from 'fastify-compress';
 
 async function bootstrap() {
   const logger = new Logger('Main');
@@ -80,9 +81,12 @@ async function bootstrap() {
       },
     },
   });
-  app.register(multipart);
+
+  app.enableCors();
+  await app.register(multipart);
+  await app.register(compression);
   app.useStaticAssets({ root: join(__dirname, '../../formUploads') });
-  await app.listen(3001, '0.0.0.0');
+  await app.listen(3002, '0.0.0.0');
 
   logger.verbose(`APP IS RUNNING ON PORT ${await app.getUrl()}`);
 }

@@ -7,7 +7,7 @@ import {
   QueryOptions,
   gql,
   ApolloQueryResult,
-} from '@apollo/client';
+} from '@apollo/client/core';
 
 import Ajv from 'ajv';
 const ajv = new Ajv();
@@ -76,13 +76,15 @@ export class GQLResolverService {
   async resolve(
     queryType: ServiceQueryType,
     gqlConfig: GqlConfig,
-    user: string,
+    user: string | null,
   ): Promise<User[]> {
     const secretPath = `${user}/${gqlConfig.credentials.variable}`;
-    const headers = await this.secretsService.getAllSecrets(secretPath);
+    const headers = await this.secretsService.getSecretByPath(secretPath);
+    gqlConfig.url = headers.url; //Backwards compatibility
+    delete headers.url;
     const client = this.getClient(gqlConfig.url, headers);
     const variables = gqlConfig.verificationParams;
-
+    gqlConfig.query = gqlConfig.gql as string; //Backwards compatibility
     const usersOrError: User[] | GqlResolverError = await this.getUsers(
       client,
       gqlConfig.query,
@@ -114,20 +116,22 @@ export class GQLResolverService {
     let isValidUserResponse = true;
     let currentUser: any;
     return this.query(client, query, variables).then(async (resp) => {
+      console.log(resp.data.users);
       for (const user of resp.data.users) {
         currentUser = user;
-        if (!this.validate(user)) {
-          isValidUserResponse = false;
-          //Notify Federated Service that user is invalid
-          if (errorNotificationWebhook) {
-            await this.notifyOnError(
-              errorNotificationWebhook,
-              user,
-              this.validate.errors,
-            );
-            break;
-          }
-        }
+        return resp.data.users;
+        // if (!this.validate(user)) {
+        //   isValidUserResponse = false;
+        //   //Notify Federated Service that user is invalid
+        //   if (errorNotificationWebhook) {
+        //     await this.notifyOnError(
+        //       errorNotificationWebhook,
+        //       user,
+        //       this.validate.errors,
+        //     );
+        //     break;
+        //   }
+        // }
       }
       if (isValidUserResponse) {
         return resp.data.users;
@@ -180,13 +184,16 @@ export class GQLResolverService {
     query: string,
     variables?: any,
   ): Promise<ApolloQueryResult<any>> {
-    const q: QueryOptions = {
-      query: gql`
-        ${query}
-      `,
-      variables,
-    };
-    return client.query(q);
+    if(variables) {
+      return client.query({
+        query: gql(query),
+        variables,
+      });
+    }else {
+      return client.query({
+        query: gql(query),
+      });
+    }
   }
 
   getClient = (

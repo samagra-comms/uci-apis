@@ -6,10 +6,25 @@ import {
   Patch,
   Param,
   Delete,
+  UseInterceptors,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { ConversationLogicService } from './conversation-logic.service';
+import { AddResponseObjectInterceptor } from '../../interceptors/addResponseObject.interceptor';
+import { AddOwnerInfoInterceptor } from '../../interceptors/addOwnerInfo.interceptor';
+import { AddAdminHeaderInterceptor } from '../../interceptors/addAdminHeader.interceptor';
+import { AddROToResponseInterceptor } from '../../interceptors/addROToResponse.interceptor';
 
-@Controller('conversation-logic')
+@ApiTags('ConversationLogic')
+@UseInterceptors(
+  AddResponseObjectInterceptor,
+  AddAdminHeaderInterceptor,
+  AddOwnerInfoInterceptor,
+  AddROToResponseInterceptor,
+)
+@Controller({
+  path: 'conversationLogic',
+})
 export class ConversationLogicController {
   constructor(
     private readonly conversationLogicService: ConversationLogicService,
@@ -17,7 +32,9 @@ export class ConversationLogicController {
 
   @Post()
   create(@Body() createConversationLogicDto: any) {
-    return this.conversationLogicService.create(createConversationLogicDto);
+    return this.conversationLogicService.create(
+      createConversationLogicDto.data,
+    );
   }
 
   @Get()

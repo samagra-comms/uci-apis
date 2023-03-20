@@ -14,7 +14,7 @@ interface IncomingMessage {
   headers: Record<string, any>;
 }
 
-@Controller('sunbird-telemetry')
+@Controller()
 export class SunbirdTelemetryController {
   @MessagePattern('telemetry')
   async handleEntityCreated(payload: IncomingMessage) {

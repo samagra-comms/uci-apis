@@ -3,6 +3,7 @@ import {
   ExecutionContext,
   Injectable,
   NestInterceptor,
+  NotFoundException,
 } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { map, Observable } from 'rxjs';
@@ -31,6 +32,7 @@ export class AddROToResponseInterceptor<T>
       map((data) => {
         rspObj.result = data;
         rspObj.endTime = new Date();
+        if (data?.status === 404) throw new NotFoundException(rspObj);
         return rspObj;
       }),
     );

@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  NotFoundException,
   Param,
   Post,
   UseInterceptors,
@@ -46,13 +47,19 @@ export class SecretsController {
     @Param('variableName') variableName: string,
     @Body() body: any,
   ): Promise<any> {
-    if (variableName) {
-      const data = await this.secretService.getSecretByPath(
-        body.ownerId + '/' + variableName,
-      );
-      return { [`${variableName}`]: data };
-    } else {
-      return this.secretService.getAllSecrets(body.ownerId);
+    try{
+      if (variableName) {
+        const data = await this.secretService.getSecretByPath(
+          body.ownerId + '/' + variableName,
+        );
+        return { [`${variableName}`]: data };
+      } else {
+        return this.secretService.getAllSecrets(body.ownerId);
+      }
+    }catch(e) {
+      return {
+        status: 404
+      };
     }
   }
 

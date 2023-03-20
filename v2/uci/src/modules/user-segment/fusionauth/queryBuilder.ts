@@ -20,7 +20,7 @@ const filterSample = {
   },
 };
 
-class QueryBuilder {
+export class QueryBuilder {
   filters: any;
   prefixSingle: string;
   postfixSingle: string;
@@ -170,7 +170,3 @@ class QueryBuilder {
     return this.checkBrackets(query) ? query : '';
   };
 }
-
-module.exports = {
-  QueryBuilder,
-};

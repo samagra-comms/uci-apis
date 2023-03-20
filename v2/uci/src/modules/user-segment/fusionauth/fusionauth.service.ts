@@ -1,166 +1,233 @@
-// const { FusionAuthClient } = require('fusionauth-node-client');
-// const env = require('dotenv').config();
-// const CryptoJS = require('crypto-js');
-// const AES = require('crypto-js/aes');
-// const assert = require('assert');
-// const { response } = require('express');
-// const _ = require('lodash');
+import FusionAuthClient, {
+  LoginRequest,
+  LoginResponse,
+  RegistrationRequest,
+  RegistrationResponse,
+  SearchRequest,
+  SearchResponse,
+  Sort,
+  UUID,
+  User,
+  UserRegistration,
+  UserRequest,
+  UserResponse,
+} from '@fusionauth/typescript-client';
 
-// CryptoJS.lib.WordArray.words;
+import ClientResponse from '@fusionauth/typescript-client/build/src/ClientResponse';
+import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
-// // For staging server
-// const fusionAuthURL = process.env.FUSIONAUTH_URL;
-// const fusionAuthAPIKey = process.env.FUSIONAUTH_KEY;
-// const anonymousBotID = process.env.FA_ANONYMOUS_BOT_ID;
+export enum FAStatus {
+  SUCCESS = 'USER_ADDED',
+  USER_EXISTS = 'USER_EXISTS',
+  ERROR = 'ERROR',
+}
 
-// const client = new FusionAuthClient(fusionAuthAPIKey, fusionAuthURL);
-// const encodedBase64Key = process.env.ENCRYPTION_KEY;
-// const parsedBase64Key = CryptoJS.enc.Base64.parse(encodedBase64Key);
+const CryptoJS = require('crypto-js');
+const AES = require('crypto-js/aes');
+const assert = require('assert');
+const { response } = require('express');
+const _ = require('lodash');
 
-// class DeviceManager {
-//   getUserNameEncrypted = (username) => {
-//     return this.encrypt(username).toString();
-//   };
+CryptoJS.lib.WordArray.words;
 
-//   encrypt = (plainString) => {
-//     const encryptedString = AES.encrypt(plainString, parsedBase64Key, {
-//       mode: CryptoJS.mode.ECB,
-//     });
-//     return encryptedString;
-//   };
+// For staging server
+@Injectable()
+export class DeviceManagerService {
+  client: FusionAuthClient;
+  anonymousBotId: string;
+  encodedBase64Key: string;
+  parsedBase64Key: string;
+  logger: Logger;
 
-//   decrypt = (encryptedString) => {
-//     const plainString = AES.decrypt(encryptedString, parsedBase64Key, {
-//       mode: CryptoJS.mode.ECB,
-//     }).toString(CryptoJS.enc.Utf8);
-//     return plainString;
-//   };
+  constructor(private readonly configService: ConfigService) {
+    this.client = new FusionAuthClient(
+      configService.get<string>('FUSIONAUTH_KEY') as string,
+      configService.get<string>('FUSIONAUTH_URL') as string,
+    );
+    this.anonymousBotId = configService.get<string>(
+      'FUSIONAUTH_ANONYMOUS_BOT_APP_ID',
+    ) as string;
+    this.encodedBase64Key = configService.get<string>(
+      'ENCRYPTION_KEY',
+    ) as string;
+    this.parsedBase64Key = CryptoJS.enc.Base64.parse(this.encodedBase64Key);
+    this.logger = new Logger('DeviceManagerService');
+  }
 
-//   addAnonymousBotID = async () => {
-//     addBotToRegistry(anonymousBotID);
-//   };
+  getUserNameEncrypted = (username) => {
+    return this.encrypt(username).toString();
+  };
 
-//   addBotToRegistry = async (botID) => {
-//     return await client
-//       .createApplication(botID, { application: { name: botID } })
-//       .then((response) => {
-//         console.log(JSON.stringify(response));
-//       })
-//       .catch((e) => {
-//         console.log(JSON.stringify(e));
-//       });
-//   };
+  encrypt = (plainString) => {
+    const encryptedString = AES.encrypt(plainString, this.parsedBase64Key, {
+      mode: CryptoJS.mode.ECB,
+    });
+    return encryptedString;
+  };
 
-//   botExists = async (botID) => {
-//     return client
-//       .retrieveApplication(botID)
-//       .then((response) => {
-//         console.log({ response });
-//         return { status: true, user: response.successResponse };
-//       })
-//       .catch((e) => {
-//         console.log(e);
-//         return { status: false, user: null };
-//       });
-//   };
+  decrypt = (encryptedString) => {
+    const plainString = AES.decrypt(encryptedString, this.parsedBase64Key, {
+      mode: CryptoJS.mode.ECB,
+    }).toString(CryptoJS.enc.Utf8);
+    return plainString;
+  };
 
-//   isDeviceAlreadyExisting = async (username) => {
-//     return client
-//       .retrieveUserByUsername(username)
-//       .then((response) => {
-//         console.log({ response });
-//         return { status: true, user: response.successResponse.user };
-//       })
-//       .catch((e) => ({ status: false, user: null }));
-//   };
+  addAnonymousBotID = async () => {
+    this.addBotToRegistry(this.anonymousBotId);
+  };
 
-//   addDeviceToRegistry = async (botID, user) => {
-//     // TODO: Encrypt
-//     console.log({ botID, user });
-//     const deviceString = user.device.type + ':' + user.device.deviceID;
-//     const username = this.encrypt(deviceString).toString();
+  addBotToRegistry = async (botID) => {
+    return await this.client
+      .createApplication(botID, { application: { name: botID } })
+      .then((response) => {
+        this.logger.log('Bot Added to Registry: ' + botID);
+      })
+      .catch((e) => {
+        this.logger.error(JSON.stringify(e));
+      });
+  };
 
-//     const isDeviceExisting = await this.isDeviceAlreadyExisting(username);
-//     const isBotExisting = await this.botExists(botID);
+  botExists = async (botID) => {
+    return this.client
+      .retrieveApplication(botID)
+      .then((response) => {
+        return { status: true, user: response.response.application };
+      })
+      .catch((e) => {
+        this.logger.error(`Bot doesn't exist in Registry: ${botID}`);
+        return { status: false, user: null };
+      });
+  };
 
-//     if (!isBotExisting.status) {
-//       await this.addBotToRegistry(botID);
-//     }
+  isDeviceAlreadyExisting = async (username) => {
+    return this.client
+      .retrieveUserByUsername(username)
+      .then((response: ClientResponse<UserResponse>) => {
+        return { status: true, user: response.response.user };
+      })
+      .catch((e) => {
+        this.logger.error(`Device doesn't exist in Registry: ${username}`);
+        return { status: false, user: null };
+      });
+  };
 
-//     if (!isDeviceExisting.status) {
-//       let fullName = '';
-//       if (user.firstName && user.lastName)
-//         fullName = user.firstName + ' ' + user.lastName;
+  addDeviceToRegistry = async (botId, user) => {
+    const deviceString = user.device.type + ':' + user.device.deviceID;
+    const username = this.encrypt(deviceString).toString();
 
-//       user.device.consent = true;
+    const isDeviceExisting = await this.isDeviceAlreadyExisting(username);
+    const isBotExisting = await this.botExists(botId);
 
-//       let userRequestJSON = {
-//         user: {
-//           username: username,
-//           password: 'dummyUser',
-//           fullName: fullName,
-//           active: true,
-//           data: user,
-//         },
-//         registration: {
-//           applicationId: botID,
-//           username: username,
-//         },
-//       };
+    if (!isBotExisting.status) {
+      await this.addBotToRegistry(botId);
+    }
 
-//       if (fullName === '') delete userRequestJSON.user.fullName;
-//       return await client
-//         .register(null, userRequestJSON)
-//         .then((response) => {
-//           console.log('User Added Successfully');
-//           console.log({ response });
-//           return response.successResponse.user.id;
-//         })
-//         .catch((e) => {
-//           console.log(JSON.stringify(e));
-//         });
-//     } else {
-//       //Register user to existing bot
-//       const user = isDeviceExisting.user;
-//       let isUserRegistered;
-//       try {
-//         isUserRegistered = _.includes(
-//           user.registrations.map((s) => s.applicationId),
-//           botID,
-//         );
-//       } catch (e) {
-//         isUserRegistered = false;
-//       }
+    if (!isDeviceExisting.status) {
+      let fullName = '';
+      if (user.firstName && user.lastName)
+        fullName = user.firstName + ' ' + user.lastName;
 
-//       if (isUserRegistered) return user.id;
-//       else {
-//         return await client
-//           .register(isDeviceExisting.user.id, {
-//             registration: {
-//               applicationId: botID,
-//             },
-//           })
-//           .then((response) => {
-//             console.log('User Added Successfully');
-//             console.log({ response });
-//             return response.successResponse.user.id;
-//           })
-//           .catch((e) => console.log(JSON.stringify(e)));
-//       }
-//     }
-//   };
+      user.device.consent = true;
 
-//   addAnonymousDeviceToRegistry = async (username) => {
-//     const user = {
-//       device: {
-//         deviceID: username.split(':')[1],
-//         type: username.split(':')[0],
-//       },
-//     };
-//     return this.addDeviceToRegistry(anonymousBotID, user);
-//   };
-// }
+      let userRequestJSON: any = {
+        user: {
+          username: username,
+          password: 'dummyUser',
+          fullName: fullName,
+          active: true,
+          data: user,
+        },
+        registration: {
+          applicationId: botId,
+          username: username,
+        },
+      };
 
-// module.exports = {
-//   DeviceManager,
-// };
+      if (fullName === '') delete userRequestJSON.user.fullName;
+
+      return await this.client
+        .register("", userRequestJSON)
+        .then((response: ClientResponse<RegistrationResponse>) => {
+          return {
+            userId: response.response.user?.id,
+            status: FAStatus.SUCCESS,
+          };
+        })
+        .catch((e: Error) => {
+          this.logger.error(
+            `Error Registering Device in Registry: BotId - ${botId}, device - ${deviceString}. Error: ${JSON.stringify(
+              e.message,
+            )}`,
+          );
+          return {
+            userId: null,
+            status: FAStatus.ERROR,
+            error: e.message,
+          };
+        });
+    } else {
+      //Register user to existing bot
+      const user = isDeviceExisting.user;
+      let isUserRegistered;
+      try {
+        isUserRegistered = _.includes(
+          user?.registrations?.map((s) => s.applicationId),
+          botId,
+        );
+      } catch (e) {
+        isUserRegistered = false;
+      }
+
+      if (isUserRegistered)
+        return { userId: user?.id, status: FAStatus.USER_EXISTS };
+      else {
+        return await this.client
+          .register(isDeviceExisting.user?.id as string, {
+            registration: {
+              applicationId: botId,
+            },
+          })
+          .then((response) => {
+            this.logger.log(
+              `Device ${deviceString} added Successfully to Bot: ${botId}`,
+            );
+            return {
+              userId: response.response.user?.id,
+              status: FAStatus.SUCCESS,
+            };
+          })
+          .catch((e) => {
+            this.logger.error(
+              `Error Registering Device in Registry: BotId - ${botId}, device - ${deviceString}`,
+            );
+            return {
+              userId: null,
+              status: FAStatus.ERROR,
+              error: e.message,
+            };
+          });
+      }
+    }
+  };
+
+  addDevicenameToRegistry = async (botId, deviceName) => {
+    const user = {
+      device: {
+        deviceID: deviceName.split(':')[1],
+        type: deviceName.split(':')[0],
+      },
+    };
+    return this.addDeviceToRegistry(botId, user);
+  };
+
+  addAnonymousDeviceToRegistry = async (username) => {
+    const user = {
+      device: {
+        deviceID: username.split(':')[1],
+        type: username.split(':')[0],
+      },
+    };
+    return this.addDeviceToRegistry(this.anonymousBotId, user);
+  };
+}

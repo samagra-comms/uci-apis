@@ -19,6 +19,11 @@ import { ServiceController } from './modules/service/service.controller';
 import { PrismaServiceMock } from './global-services/prisma.service.mock';
 import { AuthModule } from './auth/auth.module';
 import { FormModule } from './modules/form/form.module';
+import { GQLResolverService } from './modules/service/gql.resolver';
+import { SecretsService } from './modules/secrets/secrets.service';
+import { DeviceManagerService } from './modules/user-segment/fusionauth/fusionauth.service';
+import { GetRequestResolverService } from './modules/service/http-get.resolver';
+import { PostRequestResolverService } from './modules/service/http-post.resolver';
 
 // const prismaServiceProvider = (env: string | undefined): Type<any> => {
 //   switch (env) {
@@ -54,6 +59,16 @@ import { FormModule } from './modules/form/form.module';
     FormModule,
   ],
   controllers: [AppController, ServiceController],
-  providers: [AppService, PrismaService, MigrationService, ServiceService],
+  providers: [
+    AppService,
+    PrismaService,
+    MigrationService,
+    ServiceService,
+    GQLResolverService,
+    GetRequestResolverService,
+    PostRequestResolverService,
+    SecretsService,
+    DeviceManagerService,
+  ],
 })
 export class AppModule {}

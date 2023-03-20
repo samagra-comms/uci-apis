@@ -6,22 +6,16 @@ import {
   Patch,
   Param,
   Delete,
-  Version,
-  Put,
   UseInterceptors,
 } from '@nestjs/common';
-import { PrismaService } from '../../global-services/prisma.service';
-import { AdaptersService } from './adapter.service';
 import { ApiTags } from '@nestjs/swagger';
-import { AdapterDTO } from './dto';
-import { Adapter } from 'prisma/generated/prisma-client-js';
-import { PrismaError } from 'src/common/prismaError';
+import { TransformerService } from './transformer.service';
 import { AddResponseObjectInterceptor } from '../../interceptors/addResponseObject.interceptor';
 import { AddOwnerInfoInterceptor } from '../../interceptors/addOwnerInfo.interceptor';
 import { AddAdminHeaderInterceptor } from '../../interceptors/addAdminHeader.interceptor';
 import { AddROToResponseInterceptor } from '../../interceptors/addROToResponse.interceptor';
 
-@ApiTags('Adapters')
+@ApiTags('Transformer')
 @UseInterceptors(
   AddResponseObjectInterceptor,
   AddAdminHeaderInterceptor,
@@ -29,36 +23,35 @@ import { AddROToResponseInterceptor } from '../../interceptors/addROToResponse.i
   AddROToResponseInterceptor,
 )
 @Controller({
-  path: 'adapter',
+  path: 'transformer',
 })
-export class AdaptersController {
+export class TransformerController {
   constructor(
-    private prisma: PrismaService,
-    private readonly adaptersService: AdaptersService,
+    private readonly transformerService: TransformerService,
   ) { }
 
   @Post()
-  create(@Body() adapter: AdapterDTO): Promise<Adapter | PrismaError> {
-    return this.adaptersService.create(adapter);
+  create(@Body() createTransformerDto: any) {
+    return this.transformerService.create(createTransformerDto);
   }
 
   @Get()
   findAll() {
-    return this.adaptersService.findAll();
+    return this.transformerService.findAll();
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.adaptersService.findOne(id);
+    return this.transformerService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAdapterDto: any) {
-    return this.adaptersService.update(id, updateAdapterDto);
+  update(@Param('id') id: string, @Body() updateTransformerDto: any) {
+    return this.transformerService.update(id, updateTransformerDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.adaptersService.remove(+id);
+    return this.transformerService.remove(id);
   }
 }

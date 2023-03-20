@@ -42,12 +42,17 @@ export class SecretsService {
   }
 
   async getAllSecrets(path: string): Promise<any> {
-    const keys = await (await this.KVClient.list(path)).data.keys;
     const data: any[] = [];
-    for (const key of keys) {
-      const dataAtKey = await this.getSecretByPath(path + '/' + key);
-      data.push({ [`${key}`]: dataAtKey });
+    try {
+      const keys = await (await this.KVClient.list(path)).data.keys;
+      for (const key of keys) {
+        const dataAtKey = await this.getSecretByPath(path + '/' + key);
+        data.push({ [`${key}`]: dataAtKey });
+      }
+    } catch (e) {
+      console.log(e);
     }
+
     return data;
   }
 

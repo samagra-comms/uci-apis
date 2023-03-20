@@ -18,21 +18,20 @@
 */
 
 export type CreateTransformerDto = {
-  id: string;
-};
+    id: string;
+}
 
 export interface CreateFormTransformerDto extends CreateTransformerDto {
-  id: string;
-  meta?: {
-    form?: string;
-    formID?: string;
-  };
+    id: string;
+    meta?: {
+        form?: string;
+        formID?: string;
+    };
 }
 
 export interface CreateConversationLogicDto {
-  id?: string;
-  name: string;
-  description?: string;
-  transformers: CreateTransformerDto[];
-  adapter: string;
+    name: string;
+    transformers: CreateTransformerDto[];
+    adapter: string;
+
 }

@@ -1,6 +1,6 @@
 import fetch from 'isomorphic-fetch';
 import userSchema from '../service/schema/user.schema.json';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import Ajv from 'ajv';
 import { ConfigService } from '@nestjs/config';
 import { SecretsService } from '../secrets/secrets.service';
@@ -8,17 +8,19 @@ import { TelemetryService } from 'src/global-services/telemetry.service';
 import { ErrorType, GetRequestConfig, GetRequestResolverError } from './types';
 import { ServiceQueryType } from './enum';
 import { User } from './schema/user.dto';
-import { url } from 'inspector';
 const ajv = new Ajv();
 
 @Injectable()
 export class GetRequestResolverService {
   validate = ajv.compile(userSchema);
+  logger: Logger;
   constructor(
     private configService: ConfigService,
     private secretsService: SecretsService,
     private telemetryService: TelemetryService,
-  ) {}
+  ) {
+    this.logger = new Logger('HTTP-GET-ResolverService');
+  }
 
   async verify(
     queryType: ServiceQueryType,
@@ -65,12 +67,16 @@ export class GetRequestResolverService {
   async resolve(
     queryType: ServiceQueryType,
     getRequestConfig: GetRequestConfig,
-    user: string,
+    user: string | null,
   ): Promise<User[]> {
+    this.logger.debug(
+      `Resolving ${queryType}, ${JSON.stringify(getRequestConfig.url)}`,
+    );
     const secretPath = `${user}/${getRequestConfig.credentials.variable}`;
     const headers = await this.secretsService.getAllSecrets(secretPath);
     // const variables = getRequestConfig.verificationParams;
     const errorNotificationWebhook = getRequestConfig.errorNotificationWebhook;
+    this.logger.debug(`Headers: ${JSON.stringify(headers)}`);
     const usersOrError: User[] | GetRequestResolverError = await this.getUsers(
       getRequestConfig.url,
       headers,
@@ -103,32 +109,36 @@ export class GetRequestResolverService {
     return fetch(url, {
       method: 'GET',
       headers: headers,
-    }).then(async (resp) => {
-      for (const user of resp.data.users) {
-        currentUser = user;
-        if (!this.validate(user)) {
-          isValidUserResponse = false;
-          //Notify Federated Service that user is invalid
-          if (errorNotificationWebhook != null) {
-            await this.notifyOnError(
-              errorNotificationWebhook,
-              user,
-              this.validate.errors,
-            );
-            break;
-          }
+    })
+      .then((resp) => resp.json())
+      .then(async (resp) => {
+        return resp.data?.users === undefined ? resp.data : resp.data.users;
+        for (const user of resp.data.users) {
+          currentUser = user;
+          return resp.data.users === undefined ? resp.data : resp.data.users;
+          // if (!this.validate(user)) {
+          //   isValidUserResponse = false;
+          //   //Notify Federated Service that user is invalid
+          //   if (errorNotificationWebhook != null) {
+          //     await this.notifyOnError(
+          //       errorNotificationWebhook,
+          //       user,
+          //       this.validate.errors,
+          //     );
+          //     break;
+          //   }
+          // }
         }
-      }
-      if (isValidUserResponse) {
-        return resp.data.users;
-      } else {
-        return {
-          error: this.validate.errors,
-          errorType: ErrorType.UserSchemaMismatch,
-          user: currentUser,
-        };
-      }
-    });
+        if (isValidUserResponse) {
+          return resp.data.users;
+        } else {
+          return {
+            error: this.validate.errors,
+            errorType: ErrorType.UserSchemaMismatch,
+            user: currentUser,
+          };
+        }
+      });
   }
 
   public notifyOnError(

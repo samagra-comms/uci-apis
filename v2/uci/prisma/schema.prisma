@@ -91,6 +91,7 @@ model Bot {
   startDate       DateTime?           @db.Date
   endDate         DateTime?           @db.Date
   status          BotStatus           @default(DRAFT)
+  tags            String[]
 }
 
 model UserSegment {

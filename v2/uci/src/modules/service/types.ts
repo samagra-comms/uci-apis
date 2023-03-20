@@ -3,6 +3,7 @@ import { User } from './schema/user.dto';
 export type GqlConfig = {
   url: string;
   query: string;
+  gql?: string;
   cadence: {
     perPage: number;
     retries: number;

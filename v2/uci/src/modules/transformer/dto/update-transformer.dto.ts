@@ -1,3 +1,3 @@
-import { CreateConversationLogicDto } from './create-conversation-logic.dto';
+import { CreateConversationLogicDto } from './create-transformer.dto';
 
 export interface UpdateConversationLogicDto extends CreateConversationLogicDto { }
