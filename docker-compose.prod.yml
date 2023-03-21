@@ -2,7 +2,9 @@ version: '3'
 
 services:
   federation-service:
-    build: .
+    build:
+      context: .
+      dockerfile: ./build/Dockerfile
     image: federation-service
     container_name: federation-service
     restart: unless-stopped
