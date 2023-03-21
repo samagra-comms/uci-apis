@@ -18,4 +18,6 @@ export class CreateBotDto {
   status: string;
   startDate: string;
   endDate: string;
+  ownerid: string;
+  ownerorgid: string;
 }

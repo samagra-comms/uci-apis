@@ -107,8 +107,8 @@ export class BotService {
       const createData = {
         startingMessage: data.startingMessage,
         name: data.name,
-        ownerID: data.ownerID,
-        ownerOrgID: data.ownerOrgID,
+        ownerID: data.ownerid,
+        ownerOrgID: data.ownerorgid,
         status:
           data.status === 'enabled' ? BotStatus.ENABLED : BotStatus.DISABLED,
         startDate: this.getDateFromString(data.startDate),
