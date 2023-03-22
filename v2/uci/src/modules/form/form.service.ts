@@ -52,17 +52,26 @@ export class FormService {
   }
 
   async login() {
-    this.odkClient.request(
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
-      () => {},
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
-      () => {},
-      null,
-      this,
-    );
+    return new Promise((resolve, reject) => {
+      this.odkClient.request(
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
+        () => {
+          resolve('Logged in to ODK');
+          console.log('Logged in to ODK');
+        },
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
+        () => {
+          reject();
+          console.log('Error Logged in to ODK');
+        },
+        null,
+        this,
+      );
+    });
   }
 
   async uploadForm(formFile: Express.Multer.File): Promise<FormUploadStatus> {
+    await this.login();
     this.formFile = formFile;
     return this.odkClient.request(
       async function (data): Promise<FormUploadStatus> {
@@ -85,7 +94,7 @@ export class FormService {
           .then((response) => response.text())
           .then(async (result): Promise<FormUploadStatus> => {
             if (result.includes('Successful form upload.')) {
-              await fetch(this.extras.TRANSFORMER_BASE_URL)
+              fetch(this.extras.TRANSFORMER_BASE_URL)
                 .then(console.log)
                 .catch(console.log);
               const data = fs.readFileSync(formFile.path);

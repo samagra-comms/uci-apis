@@ -38,19 +38,19 @@ export class BotService {
       `${this.configService.get('UCI_CORE_BASE_URL')}/pause?campaignId=${id}`,
     )
       .then(async (s) => {
-        await this.prisma.bot
-          .update({
-            where: {
-              id,
-            },
-            data: {
-              status: BotStatus.DISABLED,
-            },
-          })
-          .catch((e) => {
-            console.error(e);
-            return false;
-          });
+        // await this.prisma.bot
+        //   .update({
+        //     where: {
+        //       id,
+        //     },
+        //     data: {
+        //       status: BotStatus.DISABLED,
+        //     },
+        //   })
+        //   .catch((e) => {
+        //     console.error(e);
+        //     return false;
+        //   });
         return true;
       })
       .catch((e) => {
@@ -60,24 +60,30 @@ export class BotService {
   }
 
   start(id: string) {
-    console.log(this.configService.get('UCI_CORE_BASE_URL'));
+    console.log(
+      `${this.configService.get(
+        'UCI_CORE_BASE_URL',
+      )}/campaign/start?campaignId=${id}`,
+    );
     return fetch(
-      `${this.configService.get('UCI_CORE_BASE_URL')}/start?campaignId=${id}`,
+      `${this.configService.get(
+        'UCI_CORE_BASE_URL',
+      )}/campaign/start?campaignId=${id}`,
     )
       .then(async (s) => {
-        await this.prisma.bot
-          .update({
-            where: {
-              id,
-            },
-            data: {
-              status: BotStatus.DISABLED,
-            },
-          })
-          .catch((e) => {
-            console.error(e);
-            return false;
-          });
+        // await this.prisma.bot
+        //   .update({
+        //     where: {
+        //       id,
+        //     },
+        //     data: {
+        //       status: BotStatus.DISABLED,
+        //     },
+        //   })
+        //   .catch((e) => {
+        //     console.error(e);
+        //     return false;
+        //   });
         return true;
       })
       .catch((e) => {
@@ -102,8 +108,12 @@ export class BotService {
         name,
       },
     });
-    console.log({ isUniqueName });
+    console.log({ isUniqueName, data });
     if (!isUniqueName) {
+      console.log(
+        'Creating bot',
+        data.status === 'enabled' ? BotStatus.ENABLED : BotStatus.DISABLED,
+      );
       const createData = {
         startingMessage: data.startingMessage,
         name: data.name,
@@ -265,3 +275,6 @@ export class BotService {
     return `This action removes a #${id} adapter`;
   }
 }
+
+// http://10.139.255.159:9080/campaign/start?campaignId=b9b4ff0d-e37d-4f51-aec2-8b8695f66ef9
+// http://10.139.255.159:9080/start?campaignId=74a937cd-09f6-40cb-8021-b5c69f0f6239
