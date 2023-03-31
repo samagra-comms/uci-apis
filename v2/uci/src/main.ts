@@ -84,7 +84,7 @@ async function bootstrap() {
 
   app.enableCors();
   await app.register(multipart);
-  await app.register(compression);
+  await app.register(compression, { encodings: ['gzip', 'deflate'] });
   app.useStaticAssets({ root: join(__dirname, '../../formUploads') });
   await app.listen(3002, '0.0.0.0');
 

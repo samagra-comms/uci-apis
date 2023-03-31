@@ -47,7 +47,7 @@ export class SecretsController {
     @Param('variableName') variableName: string,
     @Body() body: any,
   ): Promise<any> {
-    try{
+    try {
       if (variableName) {
         const data = await this.secretService.getSecretByPath(
           body.ownerId + '/' + variableName,
@@ -56,9 +56,9 @@ export class SecretsController {
       } else {
         return this.secretService.getAllSecrets(body.ownerId);
       }
-    }catch(e) {
+    } catch (e) {
       return {
-        status: 404
+        status: 404,
       };
     }
   }

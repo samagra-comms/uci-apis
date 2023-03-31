@@ -45,6 +45,11 @@ export class BotController {
     return this.botService.findAll();
   }
 
+  @Get('/allContextual')
+  findAllContextual(@Body() body: any) {
+    return this.botService.findAllContextual(body.ownerId, body.ownerOrgId);
+  }
+
   @Get('/search')
   find(
     @Query('perPage') perPage: string,
@@ -139,6 +144,7 @@ export class BotController {
         };
       };
     }> | null = await this.botService.findOne(id);
+    bot ? console.log('Users for the bot', bot['users']) : '';
     if (bot && bot.users[0].all) {
       const users = await this.service.resolve(bot.users[0].all, bot.ownerID);
       return users;

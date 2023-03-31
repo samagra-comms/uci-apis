@@ -152,6 +152,16 @@ export class BotService {
     return this.prisma.bot.findMany();
   }
 
+  findAllContextual(ownerID, ownerOrgID): Promise<Bot[]> {
+    return this.prisma.bot.findMany({
+      where: {
+        ownerID: ownerID,
+        ownerOrgID: ownerOrgID,
+      },
+      include: this.include,
+    });
+  }
+
   findByQuery(query: any) {
     return this.prisma.bot.findMany({
       where: {
