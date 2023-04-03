@@ -28,15 +28,9 @@ export class FormService {
     private configService: ConfigService,
     private telemetryService: TelemetryService,
   ) {
-    this.ODK_FILTER_URL = `${this.configService.get<string>(
-      'ODK_BASE_URL',
-    )}/Aggregate.html#submissions/filter///`;
-    this.ODK_FORM_UPLOAD_URL = `${this.configService.get<string>(
-      'ODK_BASE_URL',
-    )}/formUpload`;
-    this.TRANSFORMER_BASE_URL = `${this.configService.get<string>(
-      'TRANSFORMER_BASE_URL',
-    )}`;
+    this.ODK_FILTER_URL = `${this.configService.get<string>('ODK_BASE_URL')}/Aggregate.html#submissions/filter///`;
+    this.ODK_FORM_UPLOAD_URL = `${this.configService.get<string>('ODK_BASE_URL')}/formUpload`;
+    this.TRANSFORMER_BASE_URL = `${this.configService.get<string>('TRANSFORMER_BASE_URL')}`;
 
     this.odkClient = new digestAuthRequest(
       'GET',
