@@ -73,6 +73,7 @@ knex
             const data = require("./../helpers/vaultDataMock.json");
             process.env["vault"] = JSON.stringify(data);
           } else {
+            console.log("Error while getting vault data"+e);
             console.log("Getting Vault data from path");
             const data = require("./../helpers/vaultDataMock2.json");
             console.log(data.data);
