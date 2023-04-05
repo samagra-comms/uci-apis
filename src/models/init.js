@@ -50,7 +50,7 @@ knex
     Transformer.query()
       .then(async (ts) => {
         try {
-          throw "Vault Model is not present!";
+          //throw "Vault Model is not present!";
           await VaultModel.query()
             .findById(1)
             .then((d) => {
