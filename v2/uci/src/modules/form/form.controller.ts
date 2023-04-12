@@ -3,7 +3,7 @@ import {
   Controller,
   Post,
   Req,
-  UploadedFile,
+  UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
 import { Express } from 'express';
@@ -11,9 +11,6 @@ import { ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { diskStorage } from 'multer';
 import { Request } from 'express';
 import { extname } from 'path';
-import { FastifyFileInterceptor } from '../../interceptors/file.interceptor';
-import { FormUploadDto } from './formUpload.dto';
-import { fileMapper } from 'src/common/file-mapper';
 import { FormService } from './form.service';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const fs = require('fs');
@@ -42,6 +39,7 @@ import { AddAdminHeaderInterceptor } from '../../interceptors/addAdminHeader.int
 import { AddOwnerInfoInterceptor } from '../../interceptors/addOwnerInfo.interceptor';
 import { AddResponseObjectInterceptor } from '../../interceptors/addResponseObject.interceptor';
 import { AddROToResponseInterceptor } from '../../interceptors/addROToResponse.interceptor';
+import { FastifyFileFieldInterceptor } from '../../interceptors/multipleFields.interceptor';
 
 @Controller('form')
 export class FormController {
@@ -50,12 +48,13 @@ export class FormController {
   @ApiConsumes('multipart/form-data')
   @Post('upload')
   @UseInterceptors(
-    FastifyFileInterceptor('form', {
+    FastifyFileFieldInterceptor([
+      {name: 'form', maxCount: 1},
+      {name: 'mediaFiles'}
+    ], {
       storage: diskStorage({
         destination: './upload/single',
-        filename: editFileName,
       }),
-      fileFilter: xmlFileFilter,
     }),
     AddResponseObjectInterceptor, //sequencing matters here
     AddAdminHeaderInterceptor,
@@ -63,13 +62,20 @@ export class FormController {
     AddROToResponseInterceptor,
   )
   async single(
-    @UploadedFile() file: Express.Multer.File,
-    @Body() body: FormUploadDto,
+    @UploadedFiles() files: {form: Express.Multer.File[], mediaFiles: Express.Multer.File[]},
   ) {
-    console.log(file, body);
-    const response = await this.formService.uploadForm(file);
-    fs.unlink(file.path, (err) => {
-      console.log(err);
+    const response = await this.formService.uploadForm(files.form[0], files.mediaFiles);
+    fs.unlink(files.form[0].path, (err) => {
+      if (err) {
+        console.log(err);
+      }
+    });
+    files.mediaFiles.forEach((formFile) => {
+      fs.unlink(formFile.path, (err) => {
+        if (err) {
+          console.log(err);
+        }
+      });
     });
     return response;
   }
