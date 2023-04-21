@@ -3,7 +3,6 @@ import {
   Bot,
   BotStatus,
   Prisma,
-  UserSegment,
 } from '../../../prisma/generated/prisma-client-js';
 import { PrismaService } from '../../global-services/prisma.service';
 import fetch from 'isomorphic-fetch';
@@ -59,37 +58,27 @@ export class BotService {
       });
   }
 
-  start(id: string) {
-    console.log(
-      `${this.configService.get(
-        'UCI_CORE_BASE_URL',
-      )}/campaign/start?campaignId=${id}`,
-    );
-    return fetch(
-      `${this.configService.get(
-        'UCI_CORE_BASE_URL',
-      )}/campaign/start?campaignId=${id}`,
-    )
-      .then(async (s) => {
-        // await this.prisma.bot
-        //   .update({
-        //     where: {
-        //       id,
-        //     },
-        //     data: {
-        //       status: BotStatus.DISABLED,
-        //     },
-        //   })
-        //   .catch((e) => {
-        //     console.error(e);
-        //     return false;
-        //   });
-        return true;
-      })
-      .catch((e) => {
-        console.error(e);
-        return false;
-      });
+  // TODO: restrict type of config
+  async start(id: string, config: any) {
+    const totalRecords: number = config.totalRecords;
+    const pageSize: number = config.cadence.perPage;
+    let pages = Math.ceil(totalRecords/pageSize);
+    const promises: any = [];
+    for (let page = 1; page <= pages; page++) {
+      console.log(
+        `${this.configService.get(
+          'UCI_CORE_BASE_URL',
+        )}/campaign/start?campaignId=${id}&page=${page}`,
+      );
+      const promise = fetch(`${this.configService.get('UCI_CORE_BASE_URL',)}/campaign/start?campaignId=${id}&page=${page}`)
+      promises.push(promise);
+    }
+    return await Promise.all(promises)
+    .then(res => true)
+    .catch(err => {
+      console.log(err);
+      return false;
+    });
   }
 
   // dateString = '2020-01-01'

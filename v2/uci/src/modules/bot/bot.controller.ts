@@ -98,8 +98,25 @@ export class BotController {
   }
 
   @Get('/start/:id')
-  startOne(@Param('id') id: string, @Headers() headers, @Body() body) {
-    return this.botService.start(id);
+  async startOne(@Param('id') id: string, @Headers() headers, @Body() body) {
+    const bot: Prisma.BotGetPayload<{
+      include: {
+        users: {
+          include: {
+            all: true;
+          };
+        };
+        logicIDs: {
+          include: {
+            transformers: true;
+            adapter: true;
+          };
+        };
+      };
+    }> | null = await this.botService.findOne(id);
+    console.log(bot?.users[0].all);
+    const res = await this.botService.start(id, bot?.users[0].all?.config);
+    return res;
   }
 
   @Get('/:id/addUser/:userId')
@@ -127,8 +144,8 @@ export class BotController {
     return this.botService.pause(id);
   }
 
-  @Get('/getAllUsers/:id')
-  async getAllUsers(@Param('id') id: string, @Headers() headers, @Body() body) {
+  @Get('/getAllUsers/:id/:page')
+  async getAllUsers(@Param('id') id: string, @Param('page') page: number) {
     const bot: Prisma.BotGetPayload<{
       include: {
         users: {
@@ -146,7 +163,7 @@ export class BotController {
     }> | null = await this.botService.findOne(id);
     bot ? console.log('Users for the bot', bot['users']) : '';
     if (bot && bot.users[0].all) {
-      const users = await this.service.resolve(bot.users[0].all, bot.ownerID);
+      const users = await this.service.resolve(bot.users[0].all, page, bot.ownerID);
       return users;
     }
     return bot;

@@ -4,7 +4,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import Ajv from 'ajv';
 import { ConfigService } from '@nestjs/config';
 import { SecretsService } from '../secrets/secrets.service';
-import { TelemetryService } from 'src/global-services/telemetry.service';
+import { TelemetryService } from '../../global-services/telemetry.service';
 import { ErrorType, GetRequestConfig, GetRequestResolverError } from './types';
 import { ServiceQueryType } from './enum';
 import { User } from './schema/user.dto';
@@ -68,6 +68,7 @@ export class GetRequestResolverService {
     queryType: ServiceQueryType,
     getRequestConfig: GetRequestConfig,
     user: string | null,
+    page: number
   ): Promise<User[]> {
     this.logger.debug(
       `Resolving ${queryType}, ${JSON.stringify(getRequestConfig.url)}`,
@@ -77,8 +78,14 @@ export class GetRequestResolverService {
     // const variables = getRequestConfig.verificationParams;
     const errorNotificationWebhook = getRequestConfig.errorNotificationWebhook;
     this.logger.debug(`Headers: ${JSON.stringify(headers)}`);
+    let userFetchUrl = getRequestConfig.url;
+    if (getRequestConfig.cadence.perPage != undefined && page != undefined) {
+      const pageSize = getRequestConfig.cadence.perPage;
+      const offset = pageSize * (page - 1);
+      userFetchUrl += `&limit=${pageSize}&offset=${offset}`;
+    }
     const usersOrError: User[] | GetRequestResolverError = await this.getUsers(
-      getRequestConfig.url,
+      userFetchUrl,
       headers,
       errorNotificationWebhook,
     );
