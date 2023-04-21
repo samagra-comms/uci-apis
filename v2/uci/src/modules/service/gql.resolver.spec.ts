@@ -118,6 +118,7 @@ describe('SecretsService', () => {
       ServiceQueryType.byPhone,
       gqlConfig,
       'test',
+      undefined
     );
     expect(users).toBeInstanceOf(Array);
   });
