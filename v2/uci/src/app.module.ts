@@ -24,6 +24,7 @@ import { SecretsService } from './modules/secrets/secrets.service';
 import { DeviceManagerService } from './modules/user-segment/fusionauth/fusionauth.service';
 import { GetRequestResolverService } from './modules/service/http-get.resolver';
 import { PostRequestResolverService } from './modules/service/http-post.resolver';
+import { HealthModule } from './modules/health/health.module';
 
 // const prismaServiceProvider = (env: string | undefined): Type<any> => {
 //   switch (env) {
@@ -57,6 +58,7 @@ import { PostRequestResolverService } from './modules/service/http-post.resolver
     TransformerModule,
     AuthModule,
     FormModule,
+    HealthModule
   ],
   controllers: [AppController, ServiceController],
   providers: [
