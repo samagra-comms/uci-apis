@@ -11,6 +11,7 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const XMLHttpRequest = require('xmlhttprequest').XMLHttpRequest;
 
+import { UnauthorizedException } from '@nestjs/common';
 import CryptoJS from 'crypto-js';
 
 const digestAuthRequest = function (
@@ -180,7 +181,7 @@ const digestAuthRequest = function (
             ') on unauthenticated request to ' +
             url,
         );
-        self.errorFn(self.firstRequest.status);
+        self.errorFn(new UnauthorizedException(self.firstRequest.status));
       }
     };
   };
@@ -244,7 +245,7 @@ const digestAuthRequest = function (
           url,
       );
       self.nonce = null;
-      self.errorFn(self.authenticatedRequest.status);
+      self.errorFn(new Error(self.authenticatedRequest.status));
     };
     // send
     if (self.post) {
@@ -283,7 +284,7 @@ const digestAuthRequest = function (
       // failure
       else {
         self.nonce = null;
-        self.errorFn(self.authenticatedRequest.status);
+        self.errorFn(new Error(self.authenticatedRequest.status));
       }
     }
     self.log('Authenticated request to ' + url);
