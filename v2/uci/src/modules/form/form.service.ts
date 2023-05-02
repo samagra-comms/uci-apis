@@ -48,10 +48,10 @@ export class FormService {
         loggingOn: false,
       },
     );
-    this.login(); //first time login
+    this.login().catch((err) => console.error(`Failed to login to ODK! Reason ${err}`)); //first time login
   }
 
-  async login() {
+  async login(): Promise<any> {
     return new Promise((resolve, reject) => {
       this.odkClient.request(
         // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -60,9 +60,9 @@ export class FormService {
           console.log('Logged in to ODK');
         },
         // eslint-disable-next-line @typescript-eslint/no-empty-function
-        () => {
-          reject();
-          console.log('Error Logged in to ODK');
+        (err) => {
+          reject(err);
+          console.log('Error Logging in to ODK');
         },
         null,
         this,
@@ -71,7 +71,7 @@ export class FormService {
   }
 
   async uploadForm(formFile: Express.Multer.File): Promise<FormUploadStatus> {
-    await this.login();
+    await this.login().catch((err) => console.error(`Failed to login to ODK! Reason ${err}.`));
     this.formFile = formFile;
     return this.odkClient.request(
       async function (data): Promise<FormUploadStatus> {
