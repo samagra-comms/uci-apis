@@ -4,7 +4,7 @@ import { BotController } from './bot.controller';
 import { PrismaService } from '../../global-services/prisma.service';
 import { ServiceService } from '../service/service.service';
 import { GQLResolverService } from '../service/gql.resolver';
-import { TelemetryService } from 'src/global-services/telemetry.service';
+import { TelemetryService } from '../../global-services/telemetry.service';
 import { ConfigService } from '@nestjs/config';
 import { SecretsService } from '../secrets/secrets.service';
 import { DeviceManagerService } from '../user-segment/fusionauth/fusionauth.service';

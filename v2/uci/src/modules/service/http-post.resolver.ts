@@ -4,7 +4,7 @@ import { Injectable } from '@nestjs/common';
 import Ajv from 'ajv';
 import { ConfigService } from '@nestjs/config';
 import { SecretsService } from '../secrets/secrets.service';
-import { TelemetryService } from 'src/global-services/telemetry.service';
+import { TelemetryService } from '../../global-services/telemetry.service';
 import {
   ErrorType,
   PostRequestConfig,
