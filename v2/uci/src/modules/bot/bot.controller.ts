@@ -10,6 +10,7 @@ import {
   Headers,
   Query,
   Req,
+  UploadedFile,
 } from '@nestjs/common';
 import { AddResponseObjectInterceptor } from '../../interceptors/addResponseObject.interceptor';
 import { AddOwnerInfoInterceptor } from '../../interceptors/addOwnerInfo.interceptor';
@@ -20,13 +21,35 @@ import { ServiceService } from '../service/service.service';
 import { Bot, Prisma } from 'prisma/generated/prisma-client-js';
 import { DeviceManagerService } from '../user-segment/fusionauth/fusionauth.service';
 import { CreateBotDto } from './dto/create-bot.dto';
+import { ApiConsumes } from '@nestjs/swagger';
+import { FastifyFileInterceptor } from '../../interceptors/file.interceptor';
+import { diskStorage } from 'multer';
+import { Request } from 'express';
+import { extname } from 'path';
+import fs from 'fs';
 
-@UseInterceptors(
-  AddResponseObjectInterceptor,
-  AddAdminHeaderInterceptor,
-  AddOwnerInfoInterceptor,
-  AddROToResponseInterceptor,
-)
+
+const editFileName = (req: Request, file: Express.Multer.File, callback) => {
+  const name = file.originalname.split('.')[0];
+  const fileExtName = extname(file.originalname);
+  const randomName = Array(4)
+    .fill(null)
+    .map(() => Math.round(Math.random() * 16).toString(16))
+    .join('');
+  callback(null, `${name}-${randomName}${fileExtName}`);
+};
+
+export const imageFileFilter = (
+  req: Request,
+  file: Express.Multer.File,
+  callback,
+) => {
+  if (!file.originalname.match(/\.(jpg|jpeg|png|)$/)) {
+    return callback(new Error('Only XML files are allowed!'), false);
+  }
+  callback(null, true);
+};
+
 @Controller('bot')
 export class BotController {
   constructor(
@@ -35,22 +58,59 @@ export class BotController {
     private readonly deviceManagerService: DeviceManagerService,
   ) {}
 
+  @ApiConsumes('multipart/form-data')
   @Post()
-  create(@Body() createBotDto: { data: CreateBotDto }, @Headers() headers) {
-    return this.botService.create({ ...createBotDto.data, ...headers });
+  @UseInterceptors(
+    FastifyFileInterceptor('botImage', {
+      storage: diskStorage({
+        destination: './upload/single',
+        filename: editFileName,
+      }),
+      fileFilter: imageFileFilter,
+    }),
+    AddResponseObjectInterceptor, //sequencing matters here
+    AddAdminHeaderInterceptor,
+    AddOwnerInfoInterceptor,
+    AddROToResponseInterceptor,
+  )
+  async create(@UploadedFile() botImage: Express.Multer.File, @Body() botData, @Headers() headers) {
+    const createBotDto: {data: CreateBotDto} = JSON.parse(botData.data);
+    const response = await this.botService.create({ ...createBotDto.data, ...headers }, botImage);
+    fs.unlink(botImage.path, err => {
+      console.log(err);
+    });
+    return response;
   }
 
   @Get('/all')
+  @UseInterceptors(
+    AddResponseObjectInterceptor,
+    AddAdminHeaderInterceptor,
+    AddOwnerInfoInterceptor,
+    AddROToResponseInterceptor,
+  )
   findAll() {
     return this.botService.findAll();
   }
 
   @Get('/allContextual')
+  @UseInterceptors(
+    AddResponseObjectInterceptor,
+    AddAdminHeaderInterceptor,
+    AddOwnerInfoInterceptor,
+    AddROToResponseInterceptor,
+  )
   findAllContextual(@Body() body: any) {
     return this.botService.findAllContextual(body.ownerId, body.ownerOrgId);
   }
 
   @Get('/search')
+  @UseInterceptors(
+    AddResponseObjectInterceptor,
+    AddAdminHeaderInterceptor,
+    AddOwnerInfoInterceptor,
+    AddROToResponseInterceptor,
+  )
   find(
     @Query('perPage') perPage: string,
     @Query('page') page: string,
@@ -73,6 +133,12 @@ export class BotController {
   }
 
   @Get('/search/internal')
+  @UseInterceptors(
+    AddResponseObjectInterceptor,
+    AddAdminHeaderInterceptor,
+    AddOwnerInfoInterceptor,
+    AddROToResponseInterceptor,
+  )
   findForAdmin(
     @Query('perPage') perPage: string,
     @Query('page') page: string,
@@ -93,11 +159,23 @@ export class BotController {
   }
 
   @Get(':id')
+  @UseInterceptors(
+    AddResponseObjectInterceptor,
+    AddAdminHeaderInterceptor,
+    AddOwnerInfoInterceptor,
+    AddROToResponseInterceptor,
+  )
   findOne(@Param('id') id: string, @Headers() headers, @Body() body) {
     return this.botService.findOne(id);
   }
 
   @Get('/start/:id')
+  @UseInterceptors(
+    AddResponseObjectInterceptor,
+    AddAdminHeaderInterceptor,
+    AddOwnerInfoInterceptor,
+    AddROToResponseInterceptor,
+  )
   async startOne(@Param('id') id: string, @Headers() headers, @Body() body) {
     const bot: Prisma.BotGetPayload<{
       include: {
@@ -120,6 +198,12 @@ export class BotController {
   }
 
   @Get('/:id/addUser/:userId')
+  @UseInterceptors(
+    AddResponseObjectInterceptor,
+    AddAdminHeaderInterceptor,
+    AddOwnerInfoInterceptor,
+    AddROToResponseInterceptor,
+  )
   async addUserToBot(
     @Param('id') botId: string,
     @Param('userId') userId,
@@ -130,6 +214,12 @@ export class BotController {
   }
 
   @Post('/:id/addUser/:userId')
+  @UseInterceptors(
+    AddResponseObjectInterceptor,
+    AddAdminHeaderInterceptor,
+    AddOwnerInfoInterceptor,
+    AddROToResponseInterceptor,
+  )
   async addUserToBotPost(
     @Param('id') botId: string,
     @Param('userId') userId,
@@ -140,6 +230,12 @@ export class BotController {
   }
 
   @Get('/pause/:id')
+  @UseInterceptors(
+    AddResponseObjectInterceptor,
+    AddAdminHeaderInterceptor,
+    AddOwnerInfoInterceptor,
+    AddROToResponseInterceptor,
+  )
   pauseOne(@Param('id') id: string, @Headers() headers, @Body() body) {
     return this.botService.pause(id);
   }
@@ -170,11 +266,23 @@ export class BotController {
   }
 
   @Patch(':id')
+  @UseInterceptors(
+    AddResponseObjectInterceptor,
+    AddAdminHeaderInterceptor,
+    AddOwnerInfoInterceptor,
+    AddROToResponseInterceptor,
+  )
   update(@Param('id') id: string, @Body() updateBotDto: any) {
     return this.botService.update(id, updateBotDto);
   }
 
   @Delete(':id')
+  @UseInterceptors(
+    AddResponseObjectInterceptor,
+    AddAdminHeaderInterceptor,
+    AddOwnerInfoInterceptor,
+    AddROToResponseInterceptor,
+  )
   remove(@Param('id') id: string) {
     return this.botService.remove(id);
   }

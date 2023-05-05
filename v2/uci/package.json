@@ -55,6 +55,7 @@
     "fastify-multer": "^2.0.2",
     "fastify-multipart": "^5.4.0",
     "fastify-swagger": "^4.13.1",
+    "fetch-mock": "^9.11.0",
     "graphql": "^16.5.0",
     "graphql-tag": "^2.12.6",
     "isomorphic-fetch": "^3.0.0",

@@ -92,6 +92,7 @@ model Bot {
   endDate         DateTime?           @db.Date
   status          BotStatus           @default(DRAFT)
   tags            String[]
+  botImage        String?
 }
 
 model UserSegment {
