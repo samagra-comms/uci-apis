@@ -5,12 +5,13 @@ import {
   Prisma,
 } from '../../../prisma/generated/prisma-client-js';
 import { PrismaService } from '../../global-services/prisma.service';
-import fetch from 'isomorphic-fetch';
 import { ConfigService } from '@nestjs/config';
 import { caseInsensitiveQueryBuilder } from '../../common/prismaUtils';
 import { CreateBotDto } from './dto/create-bot.dto';
 const pLimit = require('p-limit');
 const limit = pLimit(1);
+import fs from 'fs';
+import FormData from 'form-data';
 
 @Injectable()
 export class BotService {
@@ -104,47 +105,68 @@ export class BotService {
 
   async create(
     data: CreateBotDto & { ownerID: string; ownerOrgID: string },
+    botImage: Express.Multer.File
   ): Promise<Bot | null> {
-    console.log({ data });
     // Check for unique name
     const name = data.name;
-    const isUniqueName = await this.prisma.bot.findUnique({
+    const alreadyExists = await this.prisma.bot.findUnique({
       where: {
         name,
       },
     });
-    console.log({ isUniqueName, data });
-    if (!isUniqueName) {
-      console.log(
-        'Creating bot',
-        data.status === 'enabled' ? BotStatus.ENABLED : BotStatus.DISABLED,
-      );
-      const createData = {
-        startingMessage: data.startingMessage,
-        name: data.name,
-        ownerID: data.ownerid,
-        ownerOrgID: data.ownerorgid,
-        status:
-          data.status === 'enabled' ? BotStatus.ENABLED : BotStatus.DISABLED,
-        startDate: this.getDateFromString(data.startDate),
-        endDate: this.getDateFromString(data.endDate),
-        tags: data.tags,
-        logicIDs: {
-          connect: data.logic.map((logic) => {
-            return {
-              id: logic,
-            };
-          }),
-        },
-        users: {
-          connect: data.users.map((user) => {
-            return {
-              id: user,
-            };
-          }),
-        },
+    if (!alreadyExists) {
+      const formData = new FormData();
+      const fileToUpload = fs.createReadStream(botImage.path);
+      formData.append('file', fileToUpload, botImage.originalname);
+
+      const requestOptions = {
+        method: 'POST',
+        body: formData,
+        timeout: 5000,
       };
-      return this.prisma.bot.create({ data: createData });
+
+      return fetch(
+        `${this.configService.get<string>('MINIO_MEDIA_UPLOAD_URL')}`,
+        //@ts-ignore
+        requestOptions
+      )
+      .then(resp => resp.json())
+      .then(async resp => {
+        if (!resp.fileName) {
+          console.log("Bot image upload failed!");
+          throw new HttpException(
+            'Bot image upload failed',
+            HttpStatus.INTERNAL_SERVER_ERROR
+          );
+        }
+        const createData = {
+          startingMessage: data.startingMessage,
+          name: data.name,
+          ownerID: data.ownerid,
+          ownerOrgID: data.ownerorgid,
+          status:
+            data.status === 'enabled' ? BotStatus.ENABLED : BotStatus.DISABLED,
+          startDate: this.getDateFromString(data.startDate),
+          endDate: this.getDateFromString(data.endDate),
+          tags: data.tags,
+          logicIDs: {
+            connect: data.logic.map((logic) => {
+              return {
+                id: logic,
+              };
+            }),
+          },
+          users: {
+            connect: data.users.map((user) => {
+              return {
+                id: user,
+              };
+            }),
+          },
+          botImage: resp.fileName,
+        };
+        return this.prisma.bot.create({ data: createData });
+      });
     } else {
       throw new HttpException(
         'Bot already exists with the following name',
@@ -157,13 +179,42 @@ export class BotService {
     return this.prisma.bot.findMany();
   }
 
-  findAllContextual(ownerID, ownerOrgID): Promise<Bot[]> {
-    return this.prisma.bot.findMany({
+  async findAllContextual(ownerID: string | null, ownerOrgID: string | null): Promise<Bot[]> {
+    const botData = await this.prisma.bot.findMany({
       where: {
         ownerID: ownerID,
         ownerOrgID: ownerOrgID,
       },
       include: this.include,
+    });
+
+    const promises: Promise<any>[] = [];
+    const botsToResolve: Bot[] = [];
+    botData.forEach(bot => {
+      if (bot.botImage) {
+        botsToResolve.push(bot);
+        promises.push(
+          fetch(
+            `${this.configService.get<string>('MINIO_GET_SIGNED_FILE_URL')}?fileName=${bot.botImage}`,
+            //@ts-ignore
+            {timeout: 5000}
+          ).then(resp => resp.text())
+        );
+      }
+    });
+
+    return Promise.allSettled(promises)
+    .then(results => {
+      results.forEach((result, index) => {
+        if (result.status == 'fulfilled') {
+          botsToResolve[index].botImage = result.value;
+        }
+        else {
+          botsToResolve[index].botImage = null;
+        }
+      });
+
+      return botData;
     });
   }
 
