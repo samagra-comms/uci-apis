@@ -16,7 +16,6 @@ import { ServiceModule } from './modules/service/service.module';
 import { TransformerModule } from './modules/transformer/transformer.module';
 import { ServiceService } from './modules/service/service.service';
 import { ServiceController } from './modules/service/service.controller';
-import { PrismaServiceMock } from './global-services/prisma.service.mock';
 import { AuthModule } from './auth/auth.module';
 import { FormModule } from './modules/form/form.module';
 import { GQLResolverService } from './modules/service/gql.resolver';
@@ -24,6 +23,7 @@ import { SecretsService } from './modules/secrets/secrets.service';
 import { DeviceManagerService } from './modules/user-segment/fusionauth/fusionauth.service';
 import { GetRequestResolverService } from './modules/service/http-get.resolver';
 import { PostRequestResolverService } from './modules/service/http-post.resolver';
+import { HealthModule } from './health/health.module';
 
 // const prismaServiceProvider = (env: string | undefined): Type<any> => {
 //   switch (env) {
@@ -57,6 +57,7 @@ import { PostRequestResolverService } from './modules/service/http-post.resolver
     TransformerModule,
     AuthModule,
     FormModule,
+    HealthModule,
   ],
   controllers: [AppController, ServiceController],
   providers: [
