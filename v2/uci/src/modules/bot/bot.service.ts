@@ -9,6 +9,8 @@ import fetch from 'isomorphic-fetch';
 import { ConfigService } from '@nestjs/config';
 import { caseInsensitiveQueryBuilder } from '../../common/prismaUtils';
 import { CreateBotDto } from './dto/create-bot.dto';
+const pLimit = require('p-limit');
+const limit = pLimit(1);
 
 @Injectable()
 export class BotService {
@@ -58,27 +60,41 @@ export class BotService {
       });
   }
 
+  sleep(delay) {
+    var start = new Date().getTime();
+    while (new Date().getTime() < start + delay);
+  }
+
   // TODO: restrict type of config
   async start(id: string, config: any) {
     const totalRecords: number = config.totalRecords;
     const pageSize: number = config.cadence.perPage;
-    let pages = Math.ceil(totalRecords/pageSize);
-    const promises: any = [];
+    let pages = Math.ceil(totalRecords / pageSize);
+    const promisesFunc: string[] = [];
     for (let page = 1; page <= pages; page++) {
       console.log(
         `${this.configService.get(
           'UCI_CORE_BASE_URL',
         )}/campaign/start?campaignId=${id}&page=${page}`,
       );
-      const promise = fetch(`${this.configService.get('UCI_CORE_BASE_URL',)}/campaign/start?campaignId=${id}&page=${page}`)
-      promises.push(promise);
+      const url = `${this.configService.get(
+        'UCI_CORE_BASE_URL',
+      )}/campaign/start?campaignId=${id}&page=${page}`;
+      promisesFunc.push(url);
     }
-    return await Promise.all(promises)
-    .then(res => true)
-    .catch(err => {
-      console.log(err);
-      return false;
+    let promises = promisesFunc.map((url) => {
+      return limit(() =>
+        fetch(url).then((s) => {
+          this.sleep(1000);
+        }),
+      );
     });
+    return await Promise.all(promises)
+      .then((res) => true)
+      .catch((err) => {
+        console.log(err);
+        return false;
+      });
   }
 
   // dateString = '2020-01-01'
