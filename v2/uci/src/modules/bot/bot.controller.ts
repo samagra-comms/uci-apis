@@ -144,8 +144,8 @@ export class BotController {
     return this.botService.pause(id);
   }
 
-  @Get('/getAllUsers/:id/:page')
-  async getAllUsers(@Param('id') id: string, @Param('page') page: number) {
+  @Get('/getAllUsers/:id/:page?')
+  async getAllUsers(@Param('id') id: string, @Param('page') page?: number) {
     const bot: Prisma.BotGetPayload<{
       include: {
         users: {

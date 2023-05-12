@@ -68,7 +68,7 @@ export class GetRequestResolverService {
     queryType: ServiceQueryType,
     getRequestConfig: GetRequestConfig,
     user: string | null,
-    page: number
+    page: number | undefined
   ): Promise<User[]> {
     this.logger.debug(
       `Resolving ${queryType}, ${JSON.stringify(getRequestConfig.url)}`,
