@@ -15,7 +15,7 @@ export class ServiceService {
     this.logger = new Logger('ServiceService');
   }
 
-  resolve(service: Service, page: number, owner: string | null) {
+  resolve(service: Service, page: number | undefined, owner: string | null) {
     if (service.type === 'gql') {
       return this.gqlResolver.resolve(
         ServiceQueryType.all,
