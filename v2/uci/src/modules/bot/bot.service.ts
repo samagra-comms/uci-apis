@@ -68,9 +68,31 @@ export class BotService {
 
   // TODO: restrict type of config
   async start(id: string, config: any) {
-    const totalRecords: number = config.totalRecords;
     const pageSize: number = config.cadence.perPage;
-    let pages = Math.ceil(totalRecords / pageSize);
+    const segmentUrl: string = config.url;
+    const userCountUrl = `${segmentUrl.substring(0, segmentUrl.indexOf('?'))}/count`;
+    const userCount: number = await fetch(
+      userCountUrl,
+      //@ts-ignore
+      { timeout: 5000 }
+    )
+    .then(resp => resp.json())
+    .then(resp => {
+      if (resp.totalCount)
+        return resp.totalCount;
+      else
+        throw new HttpException(
+          'Failed to get user count',
+          HttpStatus.INTERNAL_SERVER_ERROR
+        );
+    })
+    .catch(response => {
+      throw new HttpException(
+        response,
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    });
+    let pages = Math.ceil(userCount / pageSize);
     const promisesFunc: string[] = [];
     for (let page = 1; page <= pages; page++) {
       console.log(
