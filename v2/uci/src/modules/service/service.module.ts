@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { TelemetryService } from 'src/global-services/telemetry.service';
+import { TelemetryService } from '../../global-services/telemetry.service';
 import { SecretsService } from '../secrets/secrets.service';
 import { GQLResolverService } from './gql.resolver';
 import { GetRequestResolverService } from './http-get.resolver';

@@ -4,7 +4,6 @@ import {
   ApolloClient,
   InMemoryCache,
   HttpLink,
-  QueryOptions,
   gql,
   ApolloQueryResult,
 } from '@apollo/client/core';
@@ -77,6 +76,7 @@ export class GQLResolverService {
     queryType: ServiceQueryType,
     gqlConfig: GqlConfig,
     user: string | null,
+    page: number | undefined,
   ): Promise<User[]> {
     const secretPath = `${user}/${gqlConfig.credentials.variable}`;
     const headers = await this.secretsService.getSecretByPath(secretPath);
@@ -85,9 +85,15 @@ export class GQLResolverService {
     const client = this.getClient(gqlConfig.url, headers);
     const variables = gqlConfig.verificationParams;
     gqlConfig.query = gqlConfig.gql as string; //Backwards compatibility
+    let userFetchUrl = gqlConfig.query;
+    if (gqlConfig.cadence.perPage != undefined && page != undefined) {
+      const pageSize = gqlConfig.cadence.perPage;
+      const offset = pageSize * (page - 1);
+      userFetchUrl += `&limit=${pageSize}&offset=${offset}`;
+    }
     const usersOrError: User[] | GqlResolverError = await this.getUsers(
       client,
-      gqlConfig.query,
+      userFetchUrl,
       variables,
     );
     if (usersOrError instanceof Array) {
