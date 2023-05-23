@@ -67,14 +67,17 @@ export class BotService {
   }
 
   // TODO: restrict type of config
-  async start(id: string, config: any) {
+  async start(id: string, config: any, adminToken: string) {
     const pageSize: number = config.cadence.perPage;
     const segmentUrl: string = config.url;
     const userCountUrl = `${segmentUrl.substring(0, segmentUrl.indexOf('?'))}/count`;
     const userCount: number = await fetch(
       userCountUrl,
-      //@ts-ignore
-      { timeout: 5000 }
+      {
+        //@ts-ignore
+        timeout: 5000,
+        headers: { 'admin-token': adminToken }
+      }
     )
     .then(resp => resp.json())
     .then(resp => {
@@ -107,7 +110,7 @@ export class BotService {
     }
     let promises = promisesFunc.map((url) => {
       return limit(() =>
-        fetch(url).then((s) => {
+        fetch(url, { headers: { 'admin-token': adminToken } }).then((s) => {
           this.sleep(1000);
         }),
       );
@@ -363,6 +366,3 @@ export class BotService {
     return `This action removes a #${id} adapter`;
   }
 }
-
-// http://10.139.255.159:9080/campaign/start?campaignId=b9b4ff0d-e37d-4f51-aec2-8b8695f66ef9
-// http://10.139.255.159:9080/start?campaignId=74a937cd-09f6-40cb-8021-b5c69f0f6239
