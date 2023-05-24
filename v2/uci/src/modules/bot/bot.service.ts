@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import {
   Bot,
   BotStatus,
@@ -8,6 +8,7 @@ import { PrismaService } from '../../global-services/prisma.service';
 import { ConfigService } from '@nestjs/config';
 import { caseInsensitiveQueryBuilder } from '../../common/prismaUtils';
 import { CreateBotDto } from './dto/create-bot.dto';
+import { performance } from 'perf_hooks';
 const pLimit = require('p-limit');
 const limit = pLimit(1);
 import fs from 'fs';
@@ -15,10 +16,14 @@ import FormData from 'form-data';
 
 @Injectable()
 export class BotService {
+  private readonly logger: Logger;
+
   constructor(
     private prisma: PrismaService,
     private configService: ConfigService,
-  ) {}
+  ) {
+    this.logger = new Logger(BotService.name);
+  }
 
   private include = {
     users: {
@@ -35,7 +40,9 @@ export class BotService {
   };
 
   pause(id: string) {
-    console.log(this.configService.get('UCI_CORE_BASE_URL'));
+    const startTime = performance.now();
+    this.logger.log(`BotService::pause: Called with id: ${id}`);
+    this.logger.log(`BotService::pause: Calling ${this.configService.get('UCI_CORE_BASE_URL')}/pause endpoint`);
     return fetch(
       `${this.configService.get('UCI_CORE_BASE_URL')}/pause?campaignId=${id}`,
     )
@@ -53,10 +60,11 @@ export class BotService {
         //     console.error(e);
         //     return false;
         //   });
+        this.logger.log(`BotService::pause: Success with id: ${id}. Time taken: ${performance.now() - startTime} milliseconds.`);
         return true;
       })
       .catch((e) => {
-        console.error(e);
+        this.logger.error(`BotService::pause: Failed with id: ${id}, reason: ${e}. Time taken: ${performance.now() - startTime} milliseconds.`);
         return false;
       });
   }
@@ -68,9 +76,12 @@ export class BotService {
 
   // TODO: restrict type of config
   async start(id: string, config: any, adminToken: string) {
+    const startTime = performance.now();
+    this.logger.log(`BotService::start: Called with id: ${id} and config: ${JSON.stringify(config)}`);
     const pageSize: number = config.cadence.perPage;
     const segmentUrl: string = config.url;
     const userCountUrl = `${segmentUrl.substring(0, segmentUrl.indexOf('?'))}/count`;
+    this.logger.log(`BotService::start: Fetching total count from ${userCountUrl}`);
     const userCount: number = await fetch(
       userCountUrl,
       {
@@ -81,25 +92,31 @@ export class BotService {
     )
     .then(resp => resp.json())
     .then(resp => {
-      if (resp.totalCount)
+      if (resp.totalCount) {
+        this.logger.log(`BotService::start: Fetched total count of users: ${resp.totalCount}`);
         return resp.totalCount;
-      else
+      }
+      else {
+        this.logger.error(`BotService::start: Failed to fetch total count of users, reason: Response did not have 'totalCount'.`);
         throw new HttpException(
           'Failed to get user count',
           HttpStatus.INTERNAL_SERVER_ERROR
         );
+      }
     })
-    .catch(response => {
+    .catch(err => {
+      this.logger.error(`BotService::start: Failed to fetch total count of users, reason: ${err}`);
       throw new HttpException(
-        response,
+        err,
         HttpStatus.INTERNAL_SERVER_ERROR
       );
     });
     let pages = Math.ceil(userCount / pageSize);
+    this.logger.log(`BotService::start: Total pages: ${pages}`);
     const promisesFunc: string[] = [];
     for (let page = 1; page <= pages; page++) {
-      console.log(
-        `${this.configService.get(
+      this.logger.log(
+        `BotService::start: Calling endpoint: ${this.configService.get(
           'UCI_CORE_BASE_URL',
         )}/campaign/start?campaignId=${id}&page=${page}`,
       );
@@ -116,10 +133,13 @@ export class BotService {
       );
     });
     return await Promise.all(promises)
-      .then((res) => true)
+      .then((res) => {
+        this.logger.log(`BotService::start: Successfully pushed all pages to campaign. Time taken: ${performance.now() - startTime} milliseconds.`);
+        return true;
+      })
       .catch((err) => {
-        console.log(err);
-        return false;
+        this.logger.error(`BotService::start: Error querying campaign endpoint, reason: ${err}`);
+        throw new InternalServerErrorException();
       });
   }
 
@@ -132,6 +152,8 @@ export class BotService {
     data: CreateBotDto & { ownerID: string; ownerOrgID: string },
     botImage: Express.Multer.File
   ): Promise<Bot | null> {
+    const startTime = performance.now();
+    this.logger.log(`BotService::create: Called with bot name ${data.name}.`);
     // Check for unique name
     const name = data.name;
     const alreadyExists = await this.prisma.bot.findUnique({
@@ -150,6 +172,7 @@ export class BotService {
         timeout: 5000,
       };
 
+      this.logger.log('BotService::create: Uploading bot image to minio.');
       return fetch(
         `${this.configService.get<string>('MINIO_MEDIA_UPLOAD_URL')}`,
         //@ts-ignore
@@ -158,7 +181,7 @@ export class BotService {
       .then(resp => resp.json())
       .then(async resp => {
         if (!resp.fileName) {
-          console.log("Bot image upload failed!");
+          this.logger.log("BotService::create: Bot image upload failed! Reason: Did not receive filename of uploaded file.");
           throw new HttpException(
             'Bot image upload failed',
             HttpStatus.INTERNAL_SERVER_ERROR
@@ -190,9 +213,12 @@ export class BotService {
           },
           botImage: resp.fileName,
         };
-        return this.prisma.bot.create({ data: createData });
+        const prismaResult = await this.prisma.bot.create({ data: createData });
+        this.logger.log(`BotService::create: Bot created successfully. Time taken: ${performance.now() - startTime} milliseconds.`)
+        return prismaResult;
       });
     } else {
+      this.logger.error(`Failed to create Bot. Reason: Bot with name ${data.name} already exists!`)
       throw new HttpException(
         'Bot already exists with the following name',
         HttpStatus.CONFLICT,
@@ -200,11 +226,16 @@ export class BotService {
     }
   }
 
-  findAll(): Promise<Bot[]> {
-    return this.prisma.bot.findMany();
+  async findAll(): Promise<Bot[]> {
+    const startTime = performance.now();
+    const prismaResult = await this.prisma.bot.findMany();
+    this.logger.log(`BotService::findAll: Returning result of all bots. Time taken: ${performance.now() - startTime} milliseconds.`);
+    return prismaResult;
   }
 
   async findAllContextual(ownerID: string | null, ownerOrgID: string | null): Promise<Bot[]> {
+    const startTime = performance.now();
+    this.logger.log(`BotService::findAllContextual: Called with ownerId: ${ownerID} and ownerOrgId: ${ownerOrgID}`);
     const botData = await this.prisma.bot.findMany({
       where: {
         ownerID: ownerID,
@@ -212,9 +243,10 @@ export class BotService {
       },
       include: this.include,
     });
-
+    this.logger.log(`BotService::findAllContextual: Fetched data of ${botData.length} bots.`);
     const promises: Promise<any>[] = [];
     const botsToResolve: Bot[] = [];
+    this.logger.log(`BotService::findAllContextual: Resolving image urls for bots.`);
     botData.forEach(bot => {
       if (bot.botImage) {
         botsToResolve.push(bot);
@@ -232,13 +264,16 @@ export class BotService {
     .then(results => {
       results.forEach((result, index) => {
         if (result.status == 'fulfilled') {
+          this.logger.log(`BotService::findAllContextual: Resolved bot image for bot: ${botsToResolve[index].name}.`);
           botsToResolve[index].botImage = result.value;
         }
         else {
+          this.logger.error(`BotService::findAllContextual: Failed to resolve bot image for bot: ${botsToResolve[index].name}.`);
           botsToResolve[index].botImage = null;
         }
       });
 
+      this.logger.log(`BotService::findAllContextual: Returning bot data. Time taken: ${performance.now() - startTime} milliseconds.`)
       return botData;
     });
   }
@@ -282,6 +317,7 @@ export class BotService {
     ownerID: string,
     ownerOrgID: string,
   ): Promise<{ data: Bot[]; totalCount: number } | null> {
+    const startTime = performance.now();
     let filterQuery: any = {
       ownerID: ownerID,
       ownerOrgID: ownerOrgID,
@@ -319,6 +355,7 @@ export class BotService {
       where: filterQuery,
       include: this.include,
     });
+    this.logger.log(`BotService::find: Returning response of find query. Time taken: ${performance.now() - startTime} milliseconds.`);
     return { data: data, totalCount: count };
   }
 

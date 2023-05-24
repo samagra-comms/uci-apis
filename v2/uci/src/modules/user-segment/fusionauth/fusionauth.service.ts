@@ -52,7 +52,7 @@ export class DeviceManagerService {
       'ENCRYPTION_KEY',
     ) as string;
     this.parsedBase64Key = CryptoJS.enc.Base64.parse(this.encodedBase64Key);
-    this.logger = new Logger('DeviceManagerService');
+    this.logger = new Logger(DeviceManagerService.name);
   }
 
   getUserNameEncrypted = (username) => {
@@ -212,13 +212,17 @@ export class DeviceManagerService {
   };
 
   addDevicenameToRegistry = async (botId, deviceName) => {
+    this.logger.log(`DeviceManagerService::addDevicenameToRegistry: Adding device to`);
+    const startTime = performance.now();
     const user = {
       device: {
         deviceID: deviceName.split(':')[1],
         type: deviceName.split(':')[0],
       },
     };
-    return this.addDeviceToRegistry(botId, user);
+    const resp = this.addDeviceToRegistry(botId, user);
+    this.logger.log(`DeviceManagerService::addDevicenameToRegistry: Added device to registry. Time taken: ${performance.now() - startTime}`)
+    return resp;
   };
 
   addAnonymousDeviceToRegistry = async (username) => {
