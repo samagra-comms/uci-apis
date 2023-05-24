@@ -1,4 +1,3 @@
-import fetch from 'isomorphic-fetch';
 import userSchema from '../service/schema/user.schema.json';
 import { Injectable, Logger } from '@nestjs/common';
 import Ajv from 'ajv';
@@ -68,13 +67,15 @@ export class GetRequestResolverService {
     queryType: ServiceQueryType,
     getRequestConfig: GetRequestConfig,
     user: string | null,
-    page: number | undefined
+    page: number | undefined,
+    adminToken: string
   ): Promise<User[]> {
     this.logger.debug(
       `Resolving ${queryType}, ${JSON.stringify(getRequestConfig.url)}`,
     );
     const secretPath = `${user}/${getRequestConfig.credentials.variable}`;
     const headers = await this.secretsService.getAllSecrets(secretPath);
+    headers['admin-token'] = adminToken;
     // const variables = getRequestConfig.verificationParams;
     const errorNotificationWebhook = getRequestConfig.errorNotificationWebhook;
     this.logger.debug(`Headers: ${JSON.stringify(headers)}`);
@@ -118,7 +119,7 @@ export class GetRequestResolverService {
       headers: headers,
     })
       .then((resp) => resp.json())
-      .then(async (resp) => {
+      .then((resp) => {
         return resp.data?.users === undefined ? resp.data : resp.data.users;
         for (const user of resp.data.users) {
           currentUser = user;

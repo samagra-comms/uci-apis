@@ -15,20 +15,22 @@ export class ServiceService {
     this.logger = new Logger('ServiceService');
   }
 
-  resolve(service: Service, page: number | undefined, owner: string | null) {
+  resolve(service: Service, page: number | undefined, owner: string | null, adminToken: string) {
     if (service.type === 'gql') {
       return this.gqlResolver.resolve(
         ServiceQueryType.all,
         service.config as GqlConfig,
         owner,
-        page
+        page,
+        adminToken
       );
     } else if (service.type === 'get') {
       return this.getRequestResolver.resolve(
         ServiceQueryType.all,
         service.config as GqlConfig,
         owner,
-        page
+        page,
+        adminToken
       );
     } else {
       this.logger.error(`Unknown service type: ${service.type}`);

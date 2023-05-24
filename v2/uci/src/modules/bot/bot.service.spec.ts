@@ -174,7 +174,7 @@ describe('BotService', () => {
         ''
       );
     }
-    await botService.start('testId', mockConfig);
+    await botService.start('testId', mockConfig, 'testAuthToken');
     for (let x = 1; x <= 5; x++) {
       expect(fetchMock.called(
         `${configService.get('UCI_CORE_BASE_URL')}/campaign/start?campaignId=${'testId'}&page=${x}`
