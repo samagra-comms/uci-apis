@@ -15,23 +15,29 @@ export class ServiceService {
     this.logger = new Logger('ServiceService');
   }
 
-  resolve(service: Service, page: number | undefined, owner: string | null, adminToken: string) {
+  async resolve(service: Service, page: number | undefined, owner: string | null, adminToken: string) {
+    const startTime = performance.now();
+    this.logger.log(`ServiceService::resolve: Resolving users. Page: ${page}`);
     if (service.type === 'gql') {
-      return this.gqlResolver.resolve(
+      const resp = await this.gqlResolver.resolve(
         ServiceQueryType.all,
         service.config as GqlConfig,
         owner,
         page,
         adminToken
       );
+      this.logger.log(`ServiceService::resolve: Users resolved: ${resp.length}. Time taken: ${performance.now() - startTime}`);
+      return resp;
     } else if (service.type === 'get') {
-      return this.getRequestResolver.resolve(
+      const resp = await this.getRequestResolver.resolve(
         ServiceQueryType.all,
         service.config as GqlConfig,
         owner,
         page,
         adminToken
       );
+      this.logger.log(`ServiceService::resolve: Users resolved: ${resp.length}. Time taken: ${performance.now() - startTime}`);
+      return resp;
     } else {
       this.logger.error(`Unknown service type: ${service.type}`);
     }

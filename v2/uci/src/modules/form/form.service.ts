@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import digestAuthRequest from '../../common/digestAuthRequest';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -22,10 +22,12 @@ export class FormService {
   errCode =
     ProgramMessages.EXCEPTION_CODE + '_' + ODKMessages.UPLOAD.EXCEPTION_CODE;
   formFile: Express.Multer.File;
+  private readonly logger: Logger;
 
   constructor(
     private configService: ConfigService,
   ) {
+    this.logger = new Logger(FormService.name);
     this.ODK_FILTER_URL = `${this.configService.get<string>(
       'ODK_BASE_URL',
     )}/Aggregate.html#submissions/filter///`;
@@ -72,10 +74,13 @@ export class FormService {
   }
 
   async uploadForm(formFile: Express.Multer.File, mediaFiles: Express.Multer.File[]): Promise<FormUploadStatus> {
+    const startTime = performance.now();
+    this.logger.log(`FormService::uploadForm: Form Upload method called.`);
     await this.login();
     if (mediaFiles && mediaFiles.length > 0) {
       const mediaUploadResult = await this.uploadFormMediaFiles(mediaFiles);
       if (mediaUploadResult.error || !mediaUploadResult.data) {
+        this.logger.error(`FormService::uploadForm: Media Files upload failed!`);
         return {
           status: 'ERROR',
           errorCode: ODKMessages.UPLOAD.EXCEPTION_CODE + '-' + 'CP-0',
@@ -85,6 +90,7 @@ export class FormService {
       }
       const xmlModificationError = this.replaceMediaFileName(formFile, mediaUploadResult.data);
       if (xmlModificationError != '') {
+        this.logger.error('FormService::uploadForm: Failed to replace media file names!');
         return {
           status: 'ERROR',
           errorCode: ODKMessages.UPLOAD.EXCEPTION_CODE + '-' + 'CP-1',
@@ -100,6 +106,7 @@ export class FormService {
         const file = fs.createReadStream(formFile.path);
         formData.append('form_def_file', file, formFile.originalname);
 
+        this.logger.log(`FormService::uploadForm: Uploading form ${formFile.originalname} to ${this.extras.ODK_FORM_UPLOAD_URL}.`);
         const requestOptions = {
           method: 'POST',
           headers: {
@@ -115,9 +122,11 @@ export class FormService {
           .then((response) => response.text())
           .then(async (result): Promise<FormUploadStatus> => {
             if (result.includes('Successful form upload.')) {
+              this.logger.log(`FormService::uploadForm: Form ${formFile.originalname} uploaded to server!`);
               fetch(this.extras.TRANSFORMER_BASE_URL)
                 .then(console.log)
                 .catch(console.log);
+              this.logger.log(`FormService::uploadForm: Parsing form: ${formFile.originalname}`);
               const data = fs.readFileSync(formFile.path);
               try {
                 const formDef = JSON.parse(parser.toJson(data.toString()));
@@ -128,6 +137,7 @@ export class FormService {
                 } else {
                   formID = formDef['h:html']['h:head'].model.instance.data.id;
                 }
+                this.logger.log(`FormService::uploadForm: Form ${formFile.originalname} upload success! Time taken: ${performance.now() - startTime}`);
                 return {
                   status: 'UPLOADED',
                   data: {
@@ -135,6 +145,7 @@ export class FormService {
                   },
                 };
               } catch (e) {
+                this.logger.error(`FormService::uploadForm: Form ${formFile.originalname} parsing failed. Reason: ${e}`);
                 const checkPoint = 'CP-2';
                 return {
                   status: 'ERROR',
@@ -145,6 +156,7 @@ export class FormService {
                 };
               }
             } else {
+              this.logger.error(`FormService::uploadForm: Form ${formFile.originalname} upload failed.`);
               const checkPoint = 'CP-3';
               return {
                 status: 'ERROR',
@@ -155,6 +167,7 @@ export class FormService {
             }
           })
           .catch((error) => {
+            this.logger.error(`FormService::uploadForm: Form ${formFile.originalname} upload failed. Reason: ${error}`);
             console.log({ error });
             const checkPoint = 'CP-4';
             return {
@@ -167,7 +180,7 @@ export class FormService {
         return d;
       },
       function (errorCode): FormUploadStatus {
-        console.log({ errorCode });
+        this.logger.error(`FormService::uploadForm: Form ${formFile.originalname} upload failed. Error Code: ${ errorCode }`);
         const checkPoint = 'CP-5';
         return {
           status: 'ERROR',
@@ -182,6 +195,7 @@ export class FormService {
   }
 
   async uploadFormMediaFiles(mediaFiles: Express.Multer.File[]): Promise<FormMediaUploadStatus> {
+    this.logger.log(`FormService::uploadFormMediaFiles: Trying to upload ${mediaFiles.length} forms.`);
     const promises: any = [];
 
     mediaFiles.forEach((mediaFile: Express.Multer.File) => {
@@ -213,13 +227,14 @@ export class FormService {
     .then((results) => {
       for (let i = 0; i < mediaFiles.length; i++) {
         if (results[i].error == null) {
+          this.logger.log(`FormService::uploadFormMediaFiles: Successfully uploaded media file: ${mediaFiles[i].originalname}.`);
           uploadedMediaNames.set(
             mediaFiles[i].originalname,
             results[i].fileName
           );
         }
         else {
-          console.log(results[i].error);
+          this.logger.error(`FormService::uploadFormMediaFiles: Failed to upload media file: ${mediaFiles[i].originalname}. Reason: ${results[i].error}`);
           resultStatus.error = results[i].error;
           resultStatus.errorCode = results[i].status;
           return resultStatus;
@@ -231,7 +246,7 @@ export class FormService {
       return resultStatus;
     })
     .catch((error) => {
-      console.log(error);
+      this.logger.error(`FormService::uploadFormMediaFiles: MediaFiles upload failed. Reason: ${error}`);
       resultStatus.error = error;
       resultStatus.errorCode = 500;
       return resultStatus;
