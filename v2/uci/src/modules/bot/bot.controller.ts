@@ -11,6 +11,7 @@ import {
   Query,
   Req,
   UploadedFile,
+  UnsupportedMediaTypeException,
 } from '@nestjs/common';
 import { AddResponseObjectInterceptor } from '../../interceptors/addResponseObject.interceptor';
 import { AddOwnerInfoInterceptor } from '../../interceptors/addOwnerInfo.interceptor';
@@ -45,7 +46,7 @@ export const imageFileFilter = (
   callback,
 ) => {
   if (!file.originalname.match(/\.(jpg|jpeg|png|)$/)) {
-    return callback(new Error('Only XML files are allowed!'), false);
+    return callback(new UnsupportedMediaTypeException('Only jpg,jpeg,png files are allowed!'), false);
   }
   callback(null, true);
 };

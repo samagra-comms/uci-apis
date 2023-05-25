@@ -73,23 +73,25 @@ export class FormService {
 
   async uploadForm(formFile: Express.Multer.File, mediaFiles: Express.Multer.File[]): Promise<FormUploadStatus> {
     await this.login();
-    const mediaUploadResult = await this.uploadFormMediaFiles(mediaFiles);
-    if (mediaUploadResult.error || !mediaUploadResult.data) {
-      return {
-        status: 'ERROR',
-        errorCode: ODKMessages.UPLOAD.EXCEPTION_CODE + '-' + 'CP-0',
-        errorMessage: ODKMessages.UPLOAD.UPLOAD_FAIL_MESSAGE,
-        data: {},
-      };
-    }
-    const xmlModificationError = this.replaceMediaFileName(formFile, mediaUploadResult.data);
-    if (xmlModificationError != '') {
-      return {
-        status: 'ERROR',
-        errorCode: ODKMessages.UPLOAD.EXCEPTION_CODE + '-' + 'CP-1',
-        errorMessage: ODKMessages.UPLOAD.UPLOAD_FAIL_MESSAGE,
-        data: {},
-      };
+    if (mediaFiles && mediaFiles.length > 0) {
+      const mediaUploadResult = await this.uploadFormMediaFiles(mediaFiles);
+      if (mediaUploadResult.error || !mediaUploadResult.data) {
+        return {
+          status: 'ERROR',
+          errorCode: ODKMessages.UPLOAD.EXCEPTION_CODE + '-' + 'CP-0',
+          errorMessage: ODKMessages.UPLOAD.UPLOAD_FAIL_MESSAGE,
+          data: {},
+        };
+      }
+      const xmlModificationError = this.replaceMediaFileName(formFile, mediaUploadResult.data);
+      if (xmlModificationError != '') {
+        return {
+          status: 'ERROR',
+          errorCode: ODKMessages.UPLOAD.EXCEPTION_CODE + '-' + 'CP-1',
+          errorMessage: ODKMessages.UPLOAD.UPLOAD_FAIL_MESSAGE,
+          data: {},
+        };
+      }
     }
     this.formFile = formFile;
     return await this.odkClient.request(
