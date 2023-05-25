@@ -22,7 +22,7 @@ export class FormService {
   errCode =
     ProgramMessages.EXCEPTION_CODE + '_' + ODKMessages.UPLOAD.EXCEPTION_CODE;
   formFile: Express.Multer.File;
-  private readonly logger: Logger;
+  logger: Logger;
 
   constructor(
     private configService: ConfigService,
@@ -106,7 +106,7 @@ export class FormService {
         const file = fs.createReadStream(formFile.path);
         formData.append('form_def_file', file, formFile.originalname);
 
-        this.logger.log(`FormService::uploadForm: Uploading form ${formFile.originalname} to ${this.extras.ODK_FORM_UPLOAD_URL}.`);
+        this.extras.logger.log(`FormService::uploadForm: Uploading form ${formFile.originalname} to ${this.extras.ODK_FORM_UPLOAD_URL}.`);
         const requestOptions = {
           method: 'POST',
           headers: {
@@ -122,11 +122,11 @@ export class FormService {
           .then((response) => response.text())
           .then(async (result): Promise<FormUploadStatus> => {
             if (result.includes('Successful form upload.')) {
-              this.logger.log(`FormService::uploadForm: Form ${formFile.originalname} uploaded to server!`);
+              this.extras.logger.log(`FormService::uploadForm: Form ${formFile.originalname} uploaded to server!`);
               fetch(this.extras.TRANSFORMER_BASE_URL)
                 .then(console.log)
                 .catch(console.log);
-              this.logger.log(`FormService::uploadForm: Parsing form: ${formFile.originalname}`);
+              this.extras.logger.log(`FormService::uploadForm: Parsing form: ${formFile.originalname}`);
               const data = fs.readFileSync(formFile.path);
               try {
                 const formDef = JSON.parse(parser.toJson(data.toString()));
@@ -137,7 +137,7 @@ export class FormService {
                 } else {
                   formID = formDef['h:html']['h:head'].model.instance.data.id;
                 }
-                this.logger.log(`FormService::uploadForm: Form ${formFile.originalname} upload success! Time taken: ${performance.now() - startTime}`);
+                this.extras.logger.log(`FormService::uploadForm: Form ${formFile.originalname} upload success! Time taken: ${performance.now() - startTime}`);
                 return {
                   status: 'UPLOADED',
                   data: {
@@ -145,7 +145,7 @@ export class FormService {
                   },
                 };
               } catch (e) {
-                this.logger.error(`FormService::uploadForm: Form ${formFile.originalname} parsing failed. Reason: ${e}`);
+                this.extras.logger.error(`FormService::uploadForm: Form ${formFile.originalname} parsing failed. Reason: ${e}`);
                 const checkPoint = 'CP-2';
                 return {
                   status: 'ERROR',
@@ -156,7 +156,7 @@ export class FormService {
                 };
               }
             } else {
-              this.logger.error(`FormService::uploadForm: Form ${formFile.originalname} upload failed.`);
+              this.extras.logger.error(`FormService::uploadForm: Form ${formFile.originalname} upload failed.`);
               const checkPoint = 'CP-3';
               return {
                 status: 'ERROR',
@@ -167,7 +167,7 @@ export class FormService {
             }
           })
           .catch((error) => {
-            this.logger.error(`FormService::uploadForm: Form ${formFile.originalname} upload failed. Reason: ${error}`);
+            this.extras.logger.error(`FormService::uploadForm: Form ${formFile.originalname} upload failed. Reason: ${error}`);
             console.log({ error });
             const checkPoint = 'CP-4';
             return {
