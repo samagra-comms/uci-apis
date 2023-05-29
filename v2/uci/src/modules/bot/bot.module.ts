@@ -10,6 +10,7 @@ import { SecretsService } from '../secrets/secrets.service';
 import { DeviceManagerService } from '../user-segment/fusionauth/fusionauth.service';
 import { GetRequestResolverService } from '../service/http-get.resolver';
 import { PostRequestResolverService } from '../service/http-post.resolver';
+import { FusionAuthClientProvider } from '../user-segment/fusionauth/fusionauthClientProvider';
 
 @Module({
   controllers: [BotController],
@@ -23,6 +24,7 @@ import { PostRequestResolverService } from '../service/http-post.resolver';
     ConfigService,
     TelemetryService,
     SecretsService,
+    FusionAuthClientProvider,
     DeviceManagerService,
   ],
 })
