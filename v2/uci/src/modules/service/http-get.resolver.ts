@@ -1,5 +1,5 @@
 import userSchema from '../service/schema/user.schema.json';
-import { Injectable, Logger } from '@nestjs/common';
+import { Header, Injectable, Logger } from '@nestjs/common';
 import Ajv from 'ajv';
 import { ConfigService } from '@nestjs/config';
 import { SecretsService } from '../secrets/secrets.service';
@@ -74,8 +74,12 @@ export class GetRequestResolverService {
       `Resolving ${queryType}, ${JSON.stringify(getRequestConfig.url)}`,
     );
     const secretPath = `${user}/${getRequestConfig.credentials.variable}`;
-    const headers = await this.secretsService.getAllSecrets(secretPath);
-    headers['admin-token'] = adminToken;
+    const secrets = await this.secretsService.getAllSecrets(secretPath);
+    const headers = new Headers();
+    secrets.forEach(({ key, value }) => {
+      headers.set(key, value);
+    });
+    headers.set('admin-token', adminToken);
     // const variables = getRequestConfig.verificationParams;
     const errorNotificationWebhook = getRequestConfig.errorNotificationWebhook;
     this.logger.debug(`Headers: ${JSON.stringify(headers)}`);
