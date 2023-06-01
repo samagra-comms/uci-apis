@@ -12,6 +12,7 @@ import { ServiceService } from '../service/service.service';
 import { DeviceManagerService } from '../user-segment/fusionauth/fusionauth.service';
 import { Prisma } from 'prisma/generated/prisma-client-js';
 import fetchMock from 'fetch-mock';
+import { FusionAuthClientProvider } from '../user-segment/fusionauth/fusionauthClientProvider';
 
 class MockPrismaService {
   bot = {
@@ -161,6 +162,7 @@ describe('BotController', () => {
         PostRequestResolverService,
         SecretsService,
         ServiceService,
+        FusionAuthClientProvider,
         DeviceManagerService,
         TelemetryService,
         ConfigService, {
