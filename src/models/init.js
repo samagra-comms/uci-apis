@@ -49,39 +49,39 @@ knex
     Model.knex(knex);
     Transformer.query()
       .then(async (ts) => {
-        // try {
-        //   //throw "Vault Model is not present!";
-        //   await VaultModel.query()
-        //     .findById(1)
-        //     .then((d) => {
-        //       return JSON.parse(VaultModel.decrypt(d.data));
-        //     })
-        //     .catch((e) => {
-        //       const data = require("./../helpers/vaultDataMock.json");
-        //       const encryptedText = VaultModel.encrypt(
-        //         JSON.stringify(data)
-        //       ).toString();
-        //       return VaultModel.query()
-        //         .insert({ id: 1, data: encryptedText })
-        //         .then((s) => data);
-        //     })
-        //     .then((data) => {
-        //       process.env["vault"] = JSON.stringify(data);
-        //     });
-        // } catch (e) {
-        //   if (process.env.ENV === "dev") {
-        //     const data = require("./../helpers/vaultDataMock.json");
-        //     process.env["vault"] = JSON.stringify(data);
-        //   } else {
-        //     console.log(e);
-        //     console.log("Getting Vault data from path in exception");
-        //     const data = require("./../helpers/vaultDataMock2.json");
-        //     console.log(data.data);
-        //     const decryptedText = VaultModel.decrypt(data.data).toString();
-        //     console.log(decryptedText);
-        //     process.env["vault"] = decryptedText;
-        //   }
-        // }
+        try {
+          throw "Vault Model is not present!";
+          await VaultModel.query()
+            .findById(1)
+            .then((d) => {
+              return JSON.parse(VaultModel.decrypt(d.data));
+            })
+            .catch((e) => {
+              const data = require("./../helpers/vaultDataMock.json");
+              const encryptedText = VaultModel.encrypt(
+                JSON.stringify(data)
+              ).toString();
+              return VaultModel.query()
+                .insert({ id: 1, data: encryptedText })
+                .then((s) => data);
+            })
+            .then((data) => {
+              process.env["vault"] = JSON.stringify(data);
+            });
+        } catch (e) {
+          if (process.env.ENV === "dev") {
+            const data = require("./../helpers/vaultDataMock.json");
+            process.env["vault"] = JSON.stringify(data);
+          } else {
+            console.log(e);
+            console.log("Getting Vault data from path in exception");
+            const data = require("./../helpers/vaultDataMock2.json");
+            console.log(data.data);
+            const decryptedText = VaultModel.decrypt(data.data).toString();
+            console.log(decryptedText);
+            process.env["vault"] = decryptedText;
+          }
+        }
 
         console.log(
           `Model Initialization: ${
