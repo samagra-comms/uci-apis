@@ -186,7 +186,7 @@ describe('BotController', () => {
     let submittedToken;
     fetchMock.getOnce('http://testSegmentUrl/segments/1/mentors?deepLink=nipunlakshya://chatbot&limit=1&offset=0', (url, options) => {
       if (options.headers) {
-        submittedToken = options.headers['admin-token'];
+        submittedToken = new Headers(options.headers).get('admin-token');
       }
       return {
         data : {
@@ -199,6 +199,7 @@ describe('BotController', () => {
     });
     fetchMock.getOnce(`${configService.get('UCI_CORE_BASE_URL')}/campaign/start?campaignId=testBotId&page=1`, (url, options) => {
       submittedToken = new Headers(options.headers).get('admin-token');
+      return true;
     });
     await botController.startOne(botId, headers);
     expect(fetchMock.called(`${configService.get('UCI_CORE_BASE_URL')}/campaign/start?campaignId=testBotId&page=1`)).toBe(true);
