@@ -13,6 +13,19 @@ const pLimit = require('p-limit');
 const limit = pLimit(1);
 import fs from 'fs';
 import FormData from 'form-data';
+import Redis from 'ioredis';
+
+const redisHost = process.env.REDIS_HOST;
+const redisPort = process.env.REDIS_PORT;
+
+if (!redisHost || !redisPort) {
+  throw new Error('REDIS_HOST or REDIS_PORT environment variable is missing');
+}
+
+const redisClient = new Redis({
+  host: redisHost,
+  port: parseInt(redisPort, 10),
+});
 
 @Injectable()
 export class BotService {
@@ -85,32 +98,32 @@ export class BotService {
     const userCount: number = await fetch(
       userCountUrl,
       {
-        //@ts-ignore
-        timeout: 5000,
+      //@ts-ignore
+      timeout: 5000,
         headers: { 'admin-token': adminToken }
       }
     )
     .then(resp => resp.json())
     .then(resp => {
-      if (resp.totalCount) {
+        if (resp.totalCount) {
         this.logger.log(`BotService::start: Fetched total count of users: ${resp.totalCount}`);
-        return resp.totalCount;
+          return resp.totalCount;
       }
       else {
         this.logger.error(`BotService::start: Failed to fetch total count of users, reason: Response did not have 'totalCount'.`);
-        throw new HttpException(
-          'Failed to get user count',
+          throw new HttpException(
+            'Failed to get user count',
           HttpStatus.INTERNAL_SERVER_ERROR
-        );
-      }
-    })
+          );
+        }
+      })
     .catch(err => {
       this.logger.error(`BotService::start: Failed to fetch total count of users, reason: ${err}`);
       throw new HttpException(
         err,
         HttpStatus.INTERNAL_SERVER_ERROR
-      );
-    });
+        );
+      });
     let pages = Math.ceil(userCount / pageSize);
     this.logger.log(`BotService::start: Total pages: ${pages}`);
     const promisesFunc: string[] = [];
@@ -180,43 +193,45 @@ export class BotService {
       )
       .then(resp => resp.json())
       .then(async resp => {
-        if (!resp.fileName) {
+          if (!resp.fileName) {
           this.logger.log("BotService::create: Bot image upload failed! Reason: Did not receive filename of uploaded file.");
-          throw new HttpException(
-            'Bot image upload failed',
+            throw new HttpException(
+              'Bot image upload failed',
             HttpStatus.INTERNAL_SERVER_ERROR
-          );
-        }
-        const createData = {
-          startingMessage: data.startingMessage,
-          name: data.name,
-          ownerID: data.ownerid,
-          ownerOrgID: data.ownerorgid,
-          status:
+            );
+          }
+          const createData = {
+            startingMessage: data.startingMessage,
+            name: data.name,
+            ownerID: data.ownerid,
+            ownerOrgID: data.ownerorgid,
+            status:
             data.status === 'enabled' ? BotStatus.ENABLED : BotStatus.DISABLED,
-          startDate: this.getDateFromString(data.startDate),
-          endDate: this.getDateFromString(data.endDate),
-          tags: data.tags,
-          logicIDs: {
-            connect: data.logic.map((logic) => {
-              return {
-                id: logic,
-              };
-            }),
-          },
-          users: {
-            connect: data.users.map((user) => {
-              return {
-                id: user,
-              };
-            }),
-          },
-          botImage: resp.fileName,
-        };
+            startDate: this.getDateFromString(data.startDate),
+            endDate: this.getDateFromString(data.endDate),
+            tags: data.tags,
+            logicIDs: {
+              connect: data.logic.map((logic) => {
+                return {
+                  id: logic,
+                };
+              }),
+            },
+            users: {
+              connect: data.users.map((user) => {
+                return {
+                  id: user,
+                };
+              }),
+            },
+            botImage: resp.fileName,
+          };
         const prismaResult = await this.prisma.bot.create({ data: createData });
+        const cacheKey = `*`;
+        await redisClient.del(cacheKey);
         this.logger.log(`BotService::create: Bot created successfully. Time taken: ${performance.now() - startTime} milliseconds.`)
-        return prismaResult;
-      });
+          return prismaResult;
+        });
     } else {
       this.logger.error(`Failed to create Bot. Reason: Bot with name ${data.name} already exists!`)
       throw new HttpException(
@@ -235,47 +250,60 @@ export class BotService {
 
   async findAllContextual(ownerID: string | null, ownerOrgID: string | null): Promise<Bot[]> {
     const startTime = performance.now();
-    this.logger.log(`BotService::findAllContextual: Called with ownerId: ${ownerID} and ownerOrgId: ${ownerOrgID}`);
-    const botData = await this.prisma.bot.findMany({
-      where: {
-        ownerID: ownerID,
-        ownerOrgID: ownerOrgID,
-      },
-      include: this.include,
-    });
+    this.logger.log(
+      `BotService::findAllContextual: Called with ownerId: ${ownerID} and ownerOrgId: ${ownerOrgID}`,
+    );
+    // Check if the data is already cached
+    const cacheKey = `findAllContextual:${ownerID}:${ownerOrgID}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      const cachedBots = JSON.parse(cachedData);
+      this.logger.log(
+        `BotService::findAllContextual: Returning cached data of ${cachedBots.length} bots.`,
+      );
+      return cachedBots;
+    } else {
+      const botData = await this.prisma.bot.findMany({
+        where: {
+          ownerID: ownerID,
+          ownerOrgID: ownerOrgID,
+        },
+        include: this.include,
+      });
     this.logger.log(`BotService::findAllContextual: Fetched data of ${botData.length} bots.`);
-    const promises: Promise<any>[] = [];
-    const botsToResolve: Bot[] = [];
+      const promises: Promise<any>[] = [];
+      const botsToResolve: Bot[] = [];
     this.logger.log(`BotService::findAllContextual: Resolving image urls for bots.`);
     botData.forEach(bot => {
-      if (bot.botImage) {
-        botsToResolve.push(bot);
-        promises.push(
-          fetch(
+        if (bot.botImage) {
+          botsToResolve.push(bot);
+          promises.push(
+            fetch(
             `${this.configService.get<string>('MINIO_GET_SIGNED_FILE_URL')}?fileName=${bot.botImage}`,
-            //@ts-ignore
+              //@ts-ignore
             {timeout: 5000}
           ).then(resp => resp.text())
-        );
-      }
-    });
-
+          );
+        }
+      });
+    await redisClient.set(cacheKey, JSON.stringify(botData));
     return Promise.allSettled(promises)
     .then(results => {
-      results.forEach((result, index) => {
-        if (result.status == 'fulfilled') {
+        results.forEach((result, index) => {
+          if (result.status == 'fulfilled') {
           this.logger.log(`BotService::findAllContextual: Resolved bot image for bot: ${botsToResolve[index].name}.`);
-          botsToResolve[index].botImage = result.value;
+            botsToResolve[index].botImage = result.value;
         }
         else {
           this.logger.error(`BotService::findAllContextual: Failed to resolve bot image for bot: ${botsToResolve[index].name}.`);
-          botsToResolve[index].botImage = null;
-        }
-      });
+            botsToResolve[index].botImage = null;
+          }
+        });
 
       this.logger.log(`BotService::findAllContextual: Returning bot data. Time taken: ${performance.now() - startTime} milliseconds.`)
-      return botData;
-    });
+        return botData;
+      });
+    }
   }
 
   findByQuery(query: any) {
@@ -287,7 +315,7 @@ export class BotService {
     });
   }
 
-  findOne(id: string): Promise<Prisma.BotGetPayload<{
+  async findOne(id: string): Promise<Prisma.BotGetPayload<{
     include: {
       users: {
         include: {
@@ -302,10 +330,19 @@ export class BotService {
       };
     };
   }> | null> {
-    return this.prisma.bot.findUnique({
-      where: { id },
-      include: this.include,
-    });
+    const cacheKey = `findOne:${id}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      const cachedBot = JSON.parse(cachedData);
+      return cachedBot;
+    } else {
+      const bot = await this.prisma.bot.findUnique({
+        where: { id },
+        include: this.include,
+      });
+      await redisClient.set(cacheKey, JSON.stringify(bot));
+      return bot;
+    }
   }
 
   async find(

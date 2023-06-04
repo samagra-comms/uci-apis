@@ -58,6 +58,7 @@
     "fetch-mock": "^9.11.0",
     "graphql": "^16.5.0",
     "graphql-tag": "^2.12.6",
+    "ioredis": "^5.3.2",
     "isomorphic-fetch": "^3.0.0",
     "jest-mock-extended": "^2.0.5",
     "kafkajs": "^1.16.0",
