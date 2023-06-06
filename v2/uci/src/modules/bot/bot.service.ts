@@ -238,9 +238,6 @@ export class BotService {
   async findAllContextual(ownerID: string | null, ownerOrgID: string | null): Promise<Bot[]> {
     const cacheKey = `bots_${ownerID}_${ownerOrgID}`;
     const cachedBots = await this.cacheManager.get(cacheKey);
-
-    console.log(cachedBots)
-
     if (cachedBots) {
       return cachedBots;
     }
