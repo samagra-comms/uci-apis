@@ -22,7 +22,7 @@ export class BotService {
   constructor(
     private prisma: PrismaService,
     private configService: ConfigService,
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    @Inject(CACHE_MANAGER) public cacheManager: Cache,
   ) {
     this.logger = new Logger(BotService.name);
   }
