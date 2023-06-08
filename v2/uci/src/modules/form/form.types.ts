@@ -19,3 +19,10 @@ export type FormUploadStatus = {
   errorMessage?: string;
   data?: any;
 };
+
+export type FormMediaUploadStatus = {
+  status: 'PENDING' | 'UPLOADED' | 'ERROR';
+  error?: string;
+  errorCode?: number;
+  data?: any;
+}

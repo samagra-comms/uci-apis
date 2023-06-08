@@ -1,21 +1,13 @@
 import FusionAuthClient, {
-  LoginRequest,
-  LoginResponse,
-  RegistrationRequest,
   RegistrationResponse,
-  SearchRequest,
-  SearchResponse,
-  Sort,
-  UUID,
-  User,
-  UserRegistration,
-  UserRequest,
   UserResponse,
 } from '@fusionauth/typescript-client';
 
 import ClientResponse from '@fusionauth/typescript-client/build/src/ClientResponse';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { retryPromiseWithDelay } from '../../../common/retry';
+import { FusionAuthClientProvider } from './fusionauthClientProvider';
 
 export enum FAStatus {
   SUCCESS = 'USER_ADDED',
@@ -25,8 +17,6 @@ export enum FAStatus {
 
 const CryptoJS = require('crypto-js');
 const AES = require('crypto-js/aes');
-const assert = require('assert');
-const { response } = require('express');
 const _ = require('lodash');
 
 CryptoJS.lib.WordArray.words;
@@ -40,11 +30,11 @@ export class DeviceManagerService {
   parsedBase64Key: string;
   logger: Logger;
 
-  constructor(private readonly configService: ConfigService) {
-    this.client = new FusionAuthClient(
-      configService.get<string>('FUSIONAUTH_KEY') as string,
-      configService.get<string>('FUSIONAUTH_URL') as string,
-    );
+  constructor(
+    configService: ConfigService,
+    fusionAuthClientProvider: FusionAuthClientProvider
+  ) {
+    this.client = fusionAuthClientProvider.getClient();
     this.anonymousBotId = configService.get<string>(
       'FUSIONAUTH_ANONYMOUS_BOT_APP_ID',
     ) as string;
@@ -52,7 +42,7 @@ export class DeviceManagerService {
       'ENCRYPTION_KEY',
     ) as string;
     this.parsedBase64Key = CryptoJS.enc.Base64.parse(this.encodedBase64Key);
-    this.logger = new Logger('DeviceManagerService');
+    this.logger = new Logger(DeviceManagerService.name);
   }
 
   getUserNameEncrypted = (username) => {
@@ -78,13 +68,17 @@ export class DeviceManagerService {
   };
 
   addBotToRegistry = async (botID) => {
-    return await this.client
-      .createApplication(botID, { application: { name: botID } })
-      .then((response) => {
+    return await retryPromiseWithDelay(
+        () => {return this.client.createApplication(botID, { application: { name: botID } })},
+        2,
+        2000
+      )
+      .then(() => {
         this.logger.log('Bot Added to Registry: ' + botID);
       })
       .catch((e) => {
         this.logger.error(JSON.stringify(e));
+        throw new InternalServerErrorException(e);
       });
   };
 
@@ -95,7 +89,7 @@ export class DeviceManagerService {
         return { status: true, user: response.response.application };
       })
       .catch((e) => {
-        this.logger.error(`Bot doesn't exist in Registry: ${botID}`);
+        this.logger.log(`Bot doesn't exist in Registry: ${botID}`);
         return { status: false, user: null };
       });
   };
@@ -107,7 +101,7 @@ export class DeviceManagerService {
         return { status: true, user: response.response.user };
       })
       .catch((e) => {
-        this.logger.error(`Device doesn't exist in Registry: ${username}`);
+        this.logger.log(`Device doesn't exist in Registry: ${username}`);
         return { status: false, user: null };
       });
   };
@@ -146,8 +140,11 @@ export class DeviceManagerService {
 
       if (fullName === '') delete userRequestJSON.user.fullName;
 
-      return await this.client
-        .register("", userRequestJSON)
+      return await retryPromiseWithDelay(
+          () => this.client.register("", userRequestJSON),
+          2,
+          2000
+        )
         .then((response: ClientResponse<RegistrationResponse>) => {
           return {
             userId: response.response.user?.id,
@@ -182,12 +179,15 @@ export class DeviceManagerService {
       if (isUserRegistered)
         return { userId: user?.id, status: FAStatus.USER_EXISTS };
       else {
-        return await this.client
-          .register(isDeviceExisting.user?.id as string, {
-            registration: {
-              applicationId: botId,
-            },
-          })
+        return await retryPromiseWithDelay(
+            () => this.client.register(isDeviceExisting.user?.id as string, {
+              registration: {
+                applicationId: botId,
+              },
+            }),
+            2,
+            2000
+          )
           .then((response) => {
             this.logger.log(
               `Device ${deviceString} added Successfully to Bot: ${botId}`,
@@ -212,13 +212,17 @@ export class DeviceManagerService {
   };
 
   addDevicenameToRegistry = async (botId, deviceName) => {
+    this.logger.log(`DeviceManagerService::addDevicenameToRegistry: Adding device to`);
+    const startTime = performance.now();
     const user = {
       device: {
         deviceID: deviceName.split(':')[1],
         type: deviceName.split(':')[0],
       },
     };
-    return this.addDeviceToRegistry(botId, user);
+    const resp = this.addDeviceToRegistry(botId, user);
+    this.logger.log(`DeviceManagerService::addDevicenameToRegistry: Added device to registry. Time taken: ${performance.now() - startTime}`)
+    return resp;
   };
 
   addAnonymousDeviceToRegistry = async (username) => {

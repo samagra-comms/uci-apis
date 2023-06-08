@@ -1,7 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { TelemetryService } from '../../global-services/telemetry.service';
-import fetch from 'node-fetch';
 import digestAuthRequest from '../../common/digestAuthRequest';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const FormData = require('form-data');
@@ -12,7 +10,7 @@ import {
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const fs = require('fs');
 import parser from 'xml2json';
-import { FormUploadStatus } from './form.types';
+import { FormMediaUploadStatus, FormUploadStatus } from './form.types';
 
 @Injectable()
 export class FormService {
@@ -20,14 +18,16 @@ export class FormService {
   ODK_FILTER_URL: string;
   ODK_FORM_UPLOAD_URL: string;
   TRANSFORMER_BASE_URL: string;
+  MINIO_MEDIA_UPLOAD_URL: string;
   errCode =
     ProgramMessages.EXCEPTION_CODE + '_' + ODKMessages.UPLOAD.EXCEPTION_CODE;
   formFile: Express.Multer.File;
+  logger: Logger;
 
   constructor(
     private configService: ConfigService,
-    private telemetryService: TelemetryService,
   ) {
+    this.logger = new Logger(FormService.name);
     this.ODK_FILTER_URL = `${this.configService.get<string>(
       'ODK_BASE_URL',
     )}/Aggregate.html#submissions/filter///`;
@@ -37,6 +37,9 @@ export class FormService {
     this.TRANSFORMER_BASE_URL = `${this.configService.get<string>(
       'TRANSFORMER_BASE_URL',
     )}`;
+    this.MINIO_MEDIA_UPLOAD_URL = `${this.configService.get<string>(
+      'MINIO_MEDIA_UPLOAD_URL'
+    )}`
 
     this.odkClient = new digestAuthRequest(
       'GET',
@@ -70,15 +73,40 @@ export class FormService {
     });
   }
 
-  async uploadForm(formFile: Express.Multer.File): Promise<FormUploadStatus> {
-    await this.login().catch((err) => console.error(`Failed to login to ODK! Reason ${err}.`));
+  async uploadForm(formFile: Express.Multer.File, mediaFiles: Express.Multer.File[]): Promise<FormUploadStatus> {
+    const startTime = performance.now();
+    this.logger.log(`FormService::uploadForm: Form Upload method called.`);
+    await this.login();
+    if (mediaFiles && mediaFiles.length > 0) {
+      const mediaUploadResult = await this.uploadFormMediaFiles(mediaFiles);
+      if (mediaUploadResult.error || !mediaUploadResult.data) {
+        this.logger.error(`FormService::uploadForm: Media Files upload failed!`);
+        return {
+          status: 'ERROR',
+          errorCode: ODKMessages.UPLOAD.EXCEPTION_CODE + '-' + 'CP-0',
+          errorMessage: ODKMessages.UPLOAD.UPLOAD_FAIL_MESSAGE,
+          data: {},
+        };
+      }
+      const xmlModificationError = this.replaceMediaFileName(formFile, mediaUploadResult.data);
+      if (xmlModificationError != '') {
+        this.logger.error('FormService::uploadForm: Failed to replace media file names!');
+        return {
+          status: 'ERROR',
+          errorCode: ODKMessages.UPLOAD.EXCEPTION_CODE + '-' + 'CP-1',
+          errorMessage: ODKMessages.UPLOAD.UPLOAD_FAIL_MESSAGE,
+          data: {},
+        };
+      }
+    }
     this.formFile = formFile;
-    return this.odkClient.request(
+    return await this.odkClient.request(
       async function (data): Promise<FormUploadStatus> {
         const formData = new FormData();
         const file = fs.createReadStream(formFile.path);
         formData.append('form_def_file', file, formFile.originalname);
 
+        this.extras.logger.log(`FormService::uploadForm: Uploading form ${formFile.originalname} to ${this.extras.ODK_FORM_UPLOAD_URL}.`);
         const requestOptions = {
           method: 'POST',
           headers: {
@@ -94,9 +122,11 @@ export class FormService {
           .then((response) => response.text())
           .then(async (result): Promise<FormUploadStatus> => {
             if (result.includes('Successful form upload.')) {
+              this.extras.logger.log(`FormService::uploadForm: Form ${formFile.originalname} uploaded to server!`);
               fetch(this.extras.TRANSFORMER_BASE_URL)
                 .then(console.log)
                 .catch(console.log);
+              this.extras.logger.log(`FormService::uploadForm: Parsing form: ${formFile.originalname}`);
               const data = fs.readFileSync(formFile.path);
               try {
                 const formDef = JSON.parse(parser.toJson(data.toString()));
@@ -107,6 +137,7 @@ export class FormService {
                 } else {
                   formID = formDef['h:html']['h:head'].model.instance.data.id;
                 }
+                this.extras.logger.log(`FormService::uploadForm: Form ${formFile.originalname} upload success! Time taken: ${performance.now() - startTime}`);
                 return {
                   status: 'UPLOADED',
                   data: {
@@ -114,7 +145,8 @@ export class FormService {
                   },
                 };
               } catch (e) {
-                const checkPoint = 'CP-1';
+                this.extras.logger.error(`FormService::uploadForm: Form ${formFile.originalname} parsing failed. Reason: ${e}`);
+                const checkPoint = 'CP-2';
                 return {
                   status: 'ERROR',
                   errorCode:
@@ -124,7 +156,8 @@ export class FormService {
                 };
               }
             } else {
-              const checkPoint = 'CP-2';
+              this.extras.logger.error(`FormService::uploadForm: Form ${formFile.originalname} upload failed.`);
+              const checkPoint = 'CP-3';
               return {
                 status: 'ERROR',
                 errorCode: ODKMessages.UPLOAD.EXCEPTION_CODE + '-' + checkPoint,
@@ -134,8 +167,9 @@ export class FormService {
             }
           })
           .catch((error) => {
+            this.extras.logger.error(`FormService::uploadForm: Form ${formFile.originalname} upload failed. Reason: ${error}`);
             console.log({ error });
-            const checkPoint = 'CP-3';
+            const checkPoint = 'CP-4';
             return {
               status: 'ERROR',
               errorCode: ODKMessages.UPLOAD.EXCEPTION_CODE + '-' + checkPoint,
@@ -146,8 +180,8 @@ export class FormService {
         return d;
       },
       function (errorCode): FormUploadStatus {
-        console.log({ errorCode });
-        const checkPoint = 'CP-4';
+        this.logger.error(`FormService::uploadForm: Form ${formFile.originalname} upload failed. Error Code: ${ errorCode }`);
+        const checkPoint = 'CP-5';
         return {
           status: 'ERROR',
           errorCode: ODKMessages.UPLOAD.EXCEPTION_CODE + '-' + checkPoint,
@@ -158,5 +192,97 @@ export class FormService {
       null,
       this,
     );
+  }
+
+  async uploadFormMediaFiles(mediaFiles: Express.Multer.File[]): Promise<FormMediaUploadStatus> {
+    this.logger.log(`FormService::uploadFormMediaFiles: Trying to upload ${mediaFiles.length} forms.`);
+    const promises: any = [];
+
+    mediaFiles.forEach((mediaFile: Express.Multer.File) => {
+      const formData = new FormData();
+      const fileToUpload = fs.createReadStream(mediaFile.path);
+      formData.append('file', fileToUpload, mediaFile.originalname);
+
+      const requestOptions = {
+        method: 'POST',
+        body: formData,
+        timeout: 10000,
+      };
+
+      const promise = fetch(
+        this.MINIO_MEDIA_UPLOAD_URL,
+        requestOptions
+      )
+      .then((response) => response.json());
+
+      promises.push(promise);
+    });
+
+    const uploadedMediaNames: Map<string, string> = new Map();
+    const resultStatus: FormMediaUploadStatus = {
+      status: 'PENDING'
+    };
+
+    return Promise.all(promises)
+    .then((results) => {
+      for (let i = 0; i < mediaFiles.length; i++) {
+        if (results[i].error == null) {
+          this.logger.log(`FormService::uploadFormMediaFiles: Successfully uploaded media file: ${mediaFiles[i].originalname}.`);
+          uploadedMediaNames.set(
+            mediaFiles[i].originalname,
+            results[i].fileName
+          );
+        }
+        else {
+          this.logger.error(`FormService::uploadFormMediaFiles: Failed to upload media file: ${mediaFiles[i].originalname}. Reason: ${results[i].error}`);
+          resultStatus.error = results[i].error;
+          resultStatus.errorCode = results[i].status;
+          return resultStatus;
+        }
+      }
+
+      resultStatus.status = 'UPLOADED';
+      resultStatus.data = uploadedMediaNames;
+      return resultStatus;
+    })
+    .catch((error) => {
+      this.logger.error(`FormService::uploadFormMediaFiles: MediaFiles upload failed. Reason: ${error}`);
+      resultStatus.error = error;
+      resultStatus.errorCode = 500;
+      return resultStatus;
+    });
+  }
+
+  replaceMediaFileName(formFile: Express.Multer.File, uploadedMediaNames: Map<string, string>): string {
+    try {
+      let data = fs.readFileSync(formFile.path, 'utf-8');
+      uploadedMediaNames.forEach((value: string, key: string) => {
+        data = data.replaceAll(`{${key}}`, this.getReplacementStringForFileType(value));
+      });
+      fs.writeFileSync(formFile.path, data);
+      return '';
+    } catch (err) {
+      return err;
+    }
+  }
+
+  getReplacementStringForFileType(mediaFileName: string): string {
+    const imageFileExtensions = ['.jpg', '.jpeg', '.png', '.gif'];
+    const videoFileExtensions = ['.mp4', '.mov', '.wmv', '.avi', '.mkv', '.flv', '.webm'];
+    const documentFileExtensions = ['.pdf'];
+    const extension: string = mediaFileName.substring(mediaFileName.lastIndexOf('.'));
+    if (imageFileExtensions.includes(extension)) {
+      return `<text id="/data/tunnel/display_cdn_image:label"><value>${mediaFileName}</value><value form="image">jr://images/yes</value></text>`;
+    }
+    else if (videoFileExtensions.includes(extension)) {
+      return `<text id="/data/tunnel/display_cdn_video:label"><value>${mediaFileName}</value><value form="image">jr://images/yes</value></text>`;
+    }
+    else if (documentFileExtensions.includes(extension)) {
+      return `<text id="/data/tunnel/display_cdn_document:label"><value>${mediaFileName}</value><value form="image">jr://images/yes</value></text>`;
+    }
+    else {
+      console.log("Unsupported File!");
+      return '';
+    }
   }
 }

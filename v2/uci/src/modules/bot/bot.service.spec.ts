@@ -21,6 +21,18 @@ class MockPrismaService {
   }
 }
 
+class MockConfigService {
+  get(envString: string): string {
+    switch (envString) {
+      case 'MINIO_MEDIA_UPLOAD_URL': return 'http://minio_upload_url';
+      case 'ODK_BASE_URL': return 'http://odk_form_upload_url';
+      case 'TRANSFORMER_BASE_URL': return 'http://transformer_base_url';
+      case 'UCI_CORE_BASE_URL': return 'http://uci_core_base_url';
+      default: return '';
+    }
+  }
+}
+
 const mockCreateBotDto: CreateBotDto & { ownerID: string; ownerOrgID: string } = {
   startingMessage: "Namaste Bot Test",
   name: "TestName",
@@ -92,6 +104,23 @@ const mockBotsResolved = [{
   "logicIDs": []
 }];
 
+const mockConfig = {
+  "url": "http://mytesturl?",
+  "type": "GET",
+  "cadence": {
+    "perPage": 20,
+    "retries": 5,
+    "timeout": 60,
+    "concurrent": true,
+    "pagination": true,
+    "concurrency": 10,
+    "retries-interval": 10
+  },
+  "pageParam": "page",
+  "credentials": {},
+  "totalRecords": 1
+};
+
 describe('BotService', () => {
   let botService: BotService;
   let configService: ConfigService;
@@ -101,7 +130,10 @@ describe('BotService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BotService,
-        ConfigService,
+        ConfigService, {
+          provide: ConfigService,
+          useClass: MockConfigService
+        },
         PrismaService, {
           provide: PrismaService,
           useClass: MockPrismaService,
@@ -129,5 +161,25 @@ describe('BotService', () => {
     );
     const response = await botService.findAllContextual(null, null);
     expect(response).toEqual(mockBotsResolved);
+    fetchMock.restore();
+  });
+
+  it('bot picks totalCount from config url', async () => {
+    fetchMock.getOnce('http://mytesturl/count', {
+      totalCount: 100
+    });
+    for (let x = 1; x <= 5; x++) {
+      fetchMock.getOnce(
+        `${configService.get('UCI_CORE_BASE_URL')}/campaign/start?campaignId=${'testId'}&page=${x}`,
+        ''
+      );
+    }
+    await botService.start('testId', mockConfig, 'testAuthToken');
+    for (let x = 1; x <= 5; x++) {
+      expect(fetchMock.called(
+        `${configService.get('UCI_CORE_BASE_URL')}/campaign/start?campaignId=${'testId'}&page=${x}`
+      )).toBe(true);
+    }
+    fetchMock.restore();
   });
 });
