@@ -173,7 +173,8 @@ export class BotService {
         body: formData,
         timeout: 5000,
       };
-
+      
+      await this.cacheManager.reset();
       this.logger.log('BotService::create: Uploading bot image to minio.');
       return fetch(
         `${this.configService.get<string>('MINIO_MEDIA_UPLOAD_URL')}`,
