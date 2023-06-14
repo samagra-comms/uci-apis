@@ -75,7 +75,7 @@ export class BotService {
   }
 
   // TODO: restrict type of config
-  async start(id: string, config: any, adminToken: string) {
+  async start(id: string, config: any, conversationToken: string) {
     const startTime = performance.now();
     this.logger.log(`BotService::start: Called with id: ${id} and config: ${JSON.stringify(config)}`);
     const pageSize: number = config.cadence.perPage;
@@ -87,7 +87,7 @@ export class BotService {
       {
         //@ts-ignore
         timeout: 5000,
-        headers: { 'admin-token': adminToken }
+        headers: { 'Conversation-Authorization': conversationToken }
       }
     )
     .then(resp => resp.json())
@@ -127,7 +127,7 @@ export class BotService {
     }
     let promises = promisesFunc.map((url) => {
       return limit(() =>
-        fetch(url, { headers: { 'admin-token': adminToken } }).then((s) => {
+        fetch(url, { headers: { 'Conversation-Authorization': conversationToken } }).then((s) => {
           this.sleep(1000);
         }),
       );
