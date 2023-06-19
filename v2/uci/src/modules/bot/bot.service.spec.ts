@@ -5,6 +5,8 @@ import { PrismaService } from '../../global-services/prisma.service';
 import { CreateBotDto } from './dto/create-bot.dto';
 import stream from 'stream';
 import fetchMock from 'fetch-mock';
+import {CACHE_MANAGER} from "@nestjs/common";
+import { CacheModule } from '@nestjs/common';
 
 
 class MockPrismaService {
@@ -129,9 +131,11 @@ describe('BotService', () => {
   let botService: BotService;
   let configService: ConfigService;
   let prismaService: PrismaService;
+  let cacheManager: any;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [CacheModule.register({})],
       providers: [
         BotService,
         ConfigService, {
@@ -148,6 +152,7 @@ describe('BotService', () => {
     botService = module.get<BotService>(BotService);
     configService = module.get<ConfigService>(ConfigService);
     prismaService = module.get<PrismaService>(PrismaService);
+    cacheManager = module.get<any>(CACHE_MANAGER);
   });
 
   it('create bot test', async () => {
@@ -187,6 +192,30 @@ describe('BotService', () => {
       )).toBe(true);
     }
     fetchMock.restore();
+  });
+
+  it('caches bot data', async () => {
+    const mockCachedBots = [{ id: 'testId', name: 'TestBot' }];
+    const cacheKey = 'bots_null_null';
+    botService.cacheManager.get = jest.fn().mockResolvedValue(mockCachedBots);
+    const result = await botService.findAllContextual(null, null);
+    expect(botService.cacheManager.get).toHaveBeenCalledWith(cacheKey);
+    expect(result).toEqual(mockCachedBots);
+  });
+  
+  it('caches bot data for findOne', async () => {
+    const mockBotId = 'testId';
+    const mockBotData = {
+      id: mockBotId,
+      name: 'TestBot',
+      users: [{ id: 'user1', name: 'User1' }],
+      logicIDs: [{ id: 'logic1', transformers: [], adapter: {} }]
+    };
+    const cacheKey = `bot_${mockBotId}`;
+    botService.cacheManager.get = jest.fn().mockResolvedValue(mockBotData);
+    const result = await botService.findOne(mockBotId);
+    expect(botService.cacheManager.get).toHaveBeenCalledWith(cacheKey);
+    expect(result).toEqual(mockBotData);
   });
 
   it('get single bot data test', async () => {

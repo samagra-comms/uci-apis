@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, InternalServerErrorException, Logger, Inject,CACHE_MANAGER} from '@nestjs/common';
 import {
   Bot,
   BotStatus,
@@ -13,6 +13,7 @@ const pLimit = require('p-limit');
 const limit = pLimit(1);
 import fs from 'fs';
 import FormData from 'form-data';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 export class BotService {
@@ -21,6 +22,7 @@ export class BotService {
   constructor(
     private prisma: PrismaService,
     private configService: ConfigService,
+    @Inject(CACHE_MANAGER) public cacheManager: Cache,
   ) {
     this.logger = new Logger(BotService.name);
   }
@@ -171,7 +173,8 @@ export class BotService {
         body: formData,
         timeout: 5000,
       };
-
+      
+      await this.cacheManager.reset();
       this.logger.log('BotService::create: Uploading bot image to minio.');
       return fetch(
         `${this.configService.get<string>('MINIO_MEDIA_UPLOAD_URL')}`,
@@ -234,6 +237,12 @@ export class BotService {
   }
 
   async findAllContextual(ownerID: string | null, ownerOrgID: string | null): Promise<Bot[]> {
+    const cacheKey = `bots_${ownerID}_${ownerOrgID}`;
+    const cachedBots = await this.cacheManager.get(cacheKey);
+    if (cachedBots) {
+      return cachedBots;
+    }
+
     const startTime = performance.now();
     this.logger.log(`BotService::findAllContextual: Called with ownerId: ${ownerID} and ownerOrgId: ${ownerOrgID}`);
     const botData = await this.prisma.bot.findMany({
@@ -278,9 +287,10 @@ export class BotService {
         }
       });
 
-      this.logger.log(`BotService::findAllContextual: Returning bot data. Time taken: ${performance.now() - startTime} milliseconds.`)
-      return botData;
-    });
+        this.logger.log(`BotService::findAllContextual: Returning bot data. Time taken: ${performance.now() - startTime} milliseconds.`);
+        this.cacheManager.set(cacheKey, botData);
+        return botData;
+      });
   }
 
   findByQuery(query: any) {
@@ -308,6 +318,12 @@ export class BotService {
     };
   }> | null> {
     const startTime = performance.now();
+    const cacheKey = `bot_${id}`;
+    let bot = await this.cacheManager.get(cacheKey);
+    if (bot) {
+      this.logger.log(`BotService::findOne: Returning response of find one query. Time taken: ${performance.now() - startTime} milliseconds.`);
+      return bot;
+    }
     const botData = await this.prisma.bot.findUnique({
       where: { id },
       include: this.include,

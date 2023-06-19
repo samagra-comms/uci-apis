@@ -1,4 +1,4 @@
-import { Module, Type } from '@nestjs/common';
+import { Module, Type, CacheModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -26,6 +26,7 @@ import { PostRequestResolverService } from './modules/service/http-post.resolver
 import { HealthModule } from './health/health.module';
 import { FusionAuthClientProvider } from './modules/user-segment/fusionauth/fusionauthClientProvider';
 
+import * as redisStore from 'cache-manager-redis-store';
 // const prismaServiceProvider = (env: string | undefined): Type<any> => {
 //   switch (env) {
 //     case 'development':
@@ -59,6 +60,15 @@ import { FusionAuthClientProvider } from './modules/user-segment/fusionauth/fusi
     AuthModule,
     FormModule,
     HealthModule,
+    CacheModule.register(
+      {
+      isGlobal: true,
+      store: redisStore,
+      host: process.env.REDIS_HOST,
+      port: process.env.REDIS_PORT,
+      ttl: 86400, //seconds
+    }
+    ),
   ],
   controllers: [AppController, ServiceController],
   providers: [
