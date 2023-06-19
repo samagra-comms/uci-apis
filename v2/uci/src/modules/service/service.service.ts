@@ -15,7 +15,7 @@ export class ServiceService {
     this.logger = new Logger('ServiceService');
   }
 
-  async resolve(service: Service, page: number | undefined, owner: string | null, adminToken: string) {
+  async resolve(service: Service, page: number | undefined, owner: string | null, conversationToken: string) {
     const startTime = performance.now();
     this.logger.log(`ServiceService::resolve: Resolving users. Page: ${page}`);
     if (service.type === 'gql') {
@@ -24,7 +24,7 @@ export class ServiceService {
         service.config as GqlConfig,
         owner,
         page,
-        adminToken
+        conversationToken
       );
       this.logger.log(`ServiceService::resolve: Users resolved: ${resp.length}. Time taken: ${performance.now() - startTime}`);
       return resp;
@@ -34,7 +34,7 @@ export class ServiceService {
         service.config as GqlConfig,
         owner,
         page,
-        adminToken
+        conversationToken
       );
       this.logger.log(`ServiceService::resolve: Users resolved: ${resp.length}. Time taken: ${performance.now() - startTime}`);
       return resp;

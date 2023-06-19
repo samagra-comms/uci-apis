@@ -77,7 +77,7 @@ export class BotService {
   }
 
   // TODO: restrict type of config
-  async start(id: string, config: any, adminToken: string) {
+  async start(id: string, config: any, conversationToken: string) {
     const startTime = performance.now();
     this.logger.log(`BotService::start: Called with id: ${id} and config: ${JSON.stringify(config)}`);
     const pageSize: number = config.cadence.perPage;
@@ -89,7 +89,7 @@ export class BotService {
       {
         //@ts-ignore
         timeout: 5000,
-        headers: { 'admin-token': adminToken }
+        headers: { 'Conversation-Authorization': conversationToken }
       }
     )
     .then(resp => resp.json())
@@ -129,7 +129,7 @@ export class BotService {
     }
     let promises = promisesFunc.map((url) => {
       return limit(() =>
-        fetch(url, { headers: { 'admin-token': adminToken } }).then((s) => {
+        fetch(url, { headers: { 'Conversation-Authorization': conversationToken } }).then((s) => {
           this.sleep(1000);
         }),
       );
@@ -264,7 +264,12 @@ export class BotService {
             `${this.configService.get<string>('MINIO_GET_SIGNED_FILE_URL')}?fileName=${bot.botImage}`,
             //@ts-ignore
             {timeout: 5000}
-          ).then(resp => resp.text())
+          ).then(resp => {
+            if (!resp.ok) {
+              throw new Error("Failed to resolve minio image");
+            }
+            return resp.text();
+          })
         );
       }
     });
@@ -312,18 +317,47 @@ export class BotService {
       };
     };
   }> | null> {
+    const startTime = performance.now();
     const cacheKey = `bot_${id}`;
     let bot = await this.cacheManager.get(cacheKey);
-    if (!bot) {
-      bot = await this.prisma.bot.findUnique({
-        where: { id },
-        include: this.include,
-      });
-      if (bot) {
-        await this.cacheManager.set(cacheKey, bot);
-      }
+    if (bot) {
+      this.logger.log(`BotService::findOne: Returning response of find one query. Time taken: ${performance.now() - startTime} milliseconds.`);
+      return bot;
     }
-    return bot;
+    const botData = await this.prisma.bot.findUnique({
+      where: { id },
+      include: this.include,
+    });
+    if (!botData) {
+      this.logger.log(`BotService::findOne: No bot found with this id.`);
+      return null;
+    }
+    if (!botData.botImage) {
+      this.logger.log(`BotService::findOne: Returning response of find one query. Time taken: ${performance.now() - startTime} milliseconds.`);
+      return botData;
+    }
+    // Resolve bot image
+    return fetch(
+      `${this.configService.get<string>('MINIO_GET_SIGNED_FILE_URL')}?fileName=${botData.botImage}`,
+      //@ts-ignore
+      {timeout: 5000}
+    )
+    .then(resp => {
+      if (!resp.ok) {
+        throw new Error("Failed to resolve minio image");
+      }
+      return resp.text();
+    })
+    .then(resp => {
+      botData.botImage = resp;
+      this.logger.log(`BotService::findOne: Returning response of find one query. Time taken: ${performance.now() - startTime} milliseconds.`);
+      return botData;
+    })
+    .catch(err => {
+      botData.botImage = null;
+      this.logger.log(`BotService::findOne: Bot image resolution failed, returning response of find one query. Time taken: ${performance.now() - startTime} milliseconds.`);
+      return botData;
+    });
   }
 
   async find(

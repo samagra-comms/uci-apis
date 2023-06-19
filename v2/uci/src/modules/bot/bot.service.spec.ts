@@ -14,11 +14,14 @@ class MockPrismaService {
     create: () => {
       return 'testBotCreated';
     },
-    findUnique: () => {
-      return null;
+    findUnique: (filter) => {
+      if (filter.where.name === 'testBotNotExisting' || filter.where.id === 'testBotIdNotExisting')
+        return null;
+      else
+        return JSON.parse(JSON.stringify(mockBotsDb[0]));
     },
     findMany: () => {
-      return mockBotsDb;
+      return JSON.parse(JSON.stringify(mockBotsDb));
     }
   }
 }
@@ -27,6 +30,7 @@ class MockConfigService {
   get(envString: string): string {
     switch (envString) {
       case 'MINIO_MEDIA_UPLOAD_URL': return 'http://minio_upload_url';
+      case 'MINIO_GET_SIGNED_FILE_URL': return 'http://minio_file_signed_url';
       case 'ODK_BASE_URL': return 'http://odk_form_upload_url';
       case 'TRANSFORMER_BASE_URL': return 'http://transformer_base_url';
       case 'UCI_CORE_BASE_URL': return 'http://uci_core_base_url';
@@ -155,12 +159,14 @@ describe('BotService', () => {
     fetchMock.postOnce(`${configService.get<string>('MINIO_MEDIA_UPLOAD_URL')}`, {
       fileName: 'testFileName'
     });
-    const response = await botService.create(mockCreateBotDto, mockFile);
+    const mockCreateBotDtoCopy: CreateBotDto & { ownerID: string; ownerOrgID: string } = JSON.parse(JSON.stringify(mockCreateBotDto));
+    mockCreateBotDtoCopy.name = 'testBotNotExisting';
+    const response = await botService.create(mockCreateBotDtoCopy, mockFile);
     expect(response).toEqual('testBotCreated');
     fetchMock.restore();
   });
 
-  it('get bot data test', async () => {
+  it('get bot all data test', async () => {
     fetchMock.getOnce(`${configService.get<string>('MINIO_GET_SIGNED_FILE_URL')}?fileName=testImageFile`,
       'testImageUrl'
     );
@@ -210,5 +216,25 @@ describe('BotService', () => {
     const result = await botService.findOne(mockBotId);
     expect(botService.cacheManager.get).toHaveBeenCalledWith(cacheKey);
     expect(result).toEqual(mockBotData);
+  });
+
+  it('get single bot data test', async () => {
+    fetchMock.getOnce(`${configService.get<string>('MINIO_GET_SIGNED_FILE_URL')}/?fileName=testImageFile`,
+      'testImageUrl'
+    );
+    const response = await botService.findOne('testBotIdExisting');
+    expect(response).toEqual(mockBotsResolved[0]);
+    fetchMock.restore();
+  });
+
+  it('get single bot data returns null image when minio request fails', async () => {
+    fetchMock.getOnce(`${configService.get<string>('MINIO_GET_SIGNED_FILE_URL')}/?fileName=testImageFile`,
+      () => { throw new Error(); }
+    );
+    const response = await botService.findOne('testBotIdExisting');
+    const mockBotResolvedCopy = JSON.parse(JSON.stringify(mockBotsResolved[0]));
+    mockBotResolvedCopy.botImage = null;
+    expect(response).toEqual(mockBotResolvedCopy);
+    fetchMock.restore();
   });
 });
