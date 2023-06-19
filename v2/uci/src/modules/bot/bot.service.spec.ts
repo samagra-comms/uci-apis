@@ -218,6 +218,19 @@ describe('BotService', () => {
     expect(result).toEqual(mockBotData);
   });
 
+  it('cache is set for bot data findOne', async () => {
+    const mockBotId = 'testBotIdExisting';
+    botService.cacheManager.get = jest.fn().mockResolvedValue(null);
+    fetchMock.getOnce(`${configService.get<string>('MINIO_GET_SIGNED_FILE_URL')}/?fileName=testImageFile`,
+      'testImageUrl'
+    );
+    botService.cacheManager.get = jest.fn().mockResolvedValue(null);
+    botService.cacheManager.set = jest.fn();
+    await botService.findOne(mockBotId);
+    expect(botService.cacheManager.set);
+    fetchMock.restore();
+  });
+
   it('get single bot data test', async () => {
     fetchMock.getOnce(`${configService.get<string>('MINIO_GET_SIGNED_FILE_URL')}/?fileName=testImageFile`,
       'testImageUrl'
