@@ -333,6 +333,7 @@ export class BotService {
       return null;
     }
     if (!botData.botImage) {
+      this.cacheManager.set(cacheKey, botData);
       this.logger.log(`BotService::findOne: Returning response of find one query. Time taken: ${performance.now() - startTime} milliseconds.`);
       return botData;
     }
@@ -350,6 +351,7 @@ export class BotService {
     })
     .then(resp => {
       botData.botImage = resp;
+      this.cacheManager.set(cacheKey, botData);
       this.logger.log(`BotService::findOne: Returning response of find one query. Time taken: ${performance.now() - startTime} milliseconds.`);
       return botData;
     })
