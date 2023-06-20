@@ -77,13 +77,13 @@ export class GQLResolverService {
     gqlConfig: GqlConfig,
     user: string | null,
     page: number | undefined,
-    adminToken: string,
+    conversationToken: string,
   ): Promise<User[]> {
     const secretPath = `${user}/${gqlConfig.credentials.variable}`;
     const headers = await this.secretsService.getSecretByPath(secretPath);
     gqlConfig.url = headers.url; //Backwards compatibility
     delete headers.url;
-    headers['admin-token'] = adminToken;
+    headers['Conversation-Authorization'] = conversationToken;
     const client = this.getClient(gqlConfig.url, headers);
     const variables = gqlConfig.verificationParams;
     gqlConfig.query = gqlConfig.gql as string; //Backwards compatibility

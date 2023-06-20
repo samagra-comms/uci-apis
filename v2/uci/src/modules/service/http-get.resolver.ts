@@ -68,7 +68,7 @@ export class GetRequestResolverService {
     getRequestConfig: GetRequestConfig,
     user: string | null,
     page: number | undefined,
-    adminToken: string
+    conversationToken: string
   ): Promise<User[]> {
     this.logger.debug(
       `Resolving ${queryType}, ${JSON.stringify(getRequestConfig.url)}`,
@@ -79,7 +79,7 @@ export class GetRequestResolverService {
     secrets.forEach(({ key, value }) => {
       headers.set(key, value);
     });
-    headers.set('admin-token', adminToken);
+    headers.set('Conversation-Authorization', conversationToken);
     // const variables = getRequestConfig.verificationParams;
     const errorNotificationWebhook = getRequestConfig.errorNotificationWebhook;
     this.logger.debug(`Headers: ${JSON.stringify(headers)}`);
