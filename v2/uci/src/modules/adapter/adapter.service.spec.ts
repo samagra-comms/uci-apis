@@ -23,44 +23,46 @@ describe('AdaptersService', () => {
     name: 'mockName',
   };
 
+  const mockPrismaServiceValue = {
+    adapter: {
+      create: jest.fn(async (adapterDTO) => {
+        return {
+          id: 'mockID',
+          createdAt: 1000000000000,
+          updatedAt: 1000000000000,
+          channel: adapterDTO.data.channel,
+          provider: adapterDTO.data.provider,
+          config: adapterDTO.data.config,
+          name: adapterDTO.data.name,
+        };
+      }),
+      findMany: jest.fn().mockReturnValue([
+        {
+          ...mockAdapter,
+        },
+      ]),
+      findUnique: jest.fn((filter) => {
+        const res = { ...mockAdapter };
+        res.id = filter.where.id;
+        return res;
+      }),
+      update: jest.fn((payload) => {
+        return {
+          id: payload.where.id,
+          createdAt: 1000000000000,
+          updatedAt: 1000000000000,
+          ...payload.data,
+        };
+      }),
+    },
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         {
           provide: PrismaService,
-          useValue: {
-            adapter: {
-              create: jest.fn(async (adapterDTO) => {
-                return {
-                  id: 'mockID',
-                  createdAt: 1000000000000,
-                  updatedAt: 1000000000000,
-                  channel: adapterDTO.data.channel,
-                  provider: adapterDTO.data.provider,
-                  config: adapterDTO.data.config,
-                  name: adapterDTO.data.name,
-                };
-              }),
-              findMany: jest.fn().mockReturnValue([
-                {
-                  ...mockAdapter,
-                },
-              ]),
-              findUnique: jest.fn((filter) => {
-                const res = { ...mockAdapter };
-                res.id = filter.where.id;
-                return res;
-              }),
-              update: jest.fn((payload) => {
-                return {
-                  id: payload.where.id,
-                  createdAt: 1000000000000,
-                  updatedAt: 1000000000000,
-                  ...payload.data,
-                };
-              }),
-            },
-          },
+          useValue: { ...mockPrismaServiceValue },
         },
         AdaptersService,
         TelemetryService,
