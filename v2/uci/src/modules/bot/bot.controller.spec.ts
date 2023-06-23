@@ -181,12 +181,12 @@ describe('BotController', () => {
   });
 
   it('bot start passes admin token to segment url', async () => {
-    const headers = {'Conversation-Authorization': 'testAuthToken'};
+    const headers = {'conversation-authorization': 'testAuthToken'};
     const botId = 'testBotId';
     let submittedToken;
     fetchMock.getOnce('http://testSegmentUrl/segments/1/mentors?deepLink=nipunlakshya://chatbot&limit=1&offset=0', (url, options) => {
       if (options.headers) {
-        submittedToken = new Headers(options.headers).get('Conversation-Authorization');
+        submittedToken = new Headers(options.headers).get('conversation-authorization');
       }
       return {
         data : {
@@ -198,7 +198,7 @@ describe('BotController', () => {
       totalCount: 1
     });
     fetchMock.getOnce(`${configService.get('UCI_CORE_BASE_URL')}/campaign/start?campaignId=testBotId&page=1`, (url, options) => {
-      submittedToken = new Headers(options.headers).get('Conversation-Authorization');
+      submittedToken = new Headers(options.headers).get('conversation-authorization');
       return true;
     });
     await botController.startOne(botId, headers);

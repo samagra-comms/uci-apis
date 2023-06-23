@@ -79,7 +79,7 @@ export class GetRequestResolverService {
     secrets.forEach(({ key, value }) => {
       headers.set(key, value);
     });
-    headers.set('Conversation-Authorization', conversationToken);
+    headers.set('conversation-authorization', conversationToken);
     // const variables = getRequestConfig.verificationParams;
     const errorNotificationWebhook = getRequestConfig.errorNotificationWebhook;
     this.logger.debug(`Headers: ${JSON.stringify(headers)}`);

@@ -90,7 +90,7 @@ export class BotService {
       {
         //@ts-ignore
         timeout: 5000,
-        headers: { 'Conversation-Authorization': conversationToken }
+        headers: { 'conversation-authorization': conversationToken }
       }
     )
     .then(resp => resp.json())
@@ -130,7 +130,7 @@ export class BotService {
     }
     let promises = promisesFunc.map((url) => {
       return limit(() =>
-        fetch(url, { headers: { 'Conversation-Authorization': conversationToken } }).then((s) => {
+        fetch(url, { headers: { 'conversation-authorization': conversationToken } }).then((s) => {
           this.sleep(1000);
         }),
       );

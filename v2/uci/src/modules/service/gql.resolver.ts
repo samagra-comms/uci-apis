@@ -83,7 +83,7 @@ export class GQLResolverService {
     const headers = await this.secretsService.getSecretByPath(secretPath);
     gqlConfig.url = headers.url; //Backwards compatibility
     delete headers.url;
-    headers['Conversation-Authorization'] = conversationToken;
+    headers['conversation-authorization'] = conversationToken;
     const client = this.getClient(gqlConfig.url, headers);
     const variables = gqlConfig.verificationParams;
     gqlConfig.query = gqlConfig.gql as string; //Backwards compatibility
