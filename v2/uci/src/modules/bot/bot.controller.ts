@@ -194,7 +194,7 @@ export class BotController {
       };
     }> | null = await this.botService.findOne(id);
     console.log(bot?.users[0].all);
-    const res = await this.botService.start(id, bot?.users[0].all?.config, headers['Conversation-Authorization']);
+    const res = await this.botService.start(id, bot?.users[0].all?.config, headers['conversation-authorization']);
     return res;
   }
 
@@ -266,7 +266,7 @@ export class BotController {
     }> | null = await this.botService.findOne(id);
     bot ? console.log('Users for the bot', bot['users']) : '';
     if (bot && bot.users[0].all) {
-      const users = await this.service.resolve(bot.users[0].all, page, bot.ownerID, headers['Conversation-Authorization']);
+      const users = await this.service.resolve(bot.users[0].all, page, bot.ownerID, headers['conversation-authorization']);
       return users;
     }
     return bot;

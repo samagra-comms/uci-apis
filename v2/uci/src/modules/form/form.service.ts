@@ -257,32 +257,12 @@ export class FormService {
     try {
       let data = fs.readFileSync(formFile.path, 'utf-8');
       uploadedMediaNames.forEach((value: string, key: string) => {
-        data = data.replaceAll(`{${key}}`, this.getReplacementStringForFileType(value));
+        data = data.replaceAll(`{${key}}`, value);
       });
       fs.writeFileSync(formFile.path, data);
       return '';
     } catch (err) {
       return err;
-    }
-  }
-
-  getReplacementStringForFileType(mediaFileName: string): string {
-    const imageFileExtensions = ['.jpg', '.jpeg', '.png', '.gif'];
-    const videoFileExtensions = ['.mp4', '.mov', '.wmv', '.avi', '.mkv', '.flv', '.webm'];
-    const documentFileExtensions = ['.pdf'];
-    const extension: string = mediaFileName.substring(mediaFileName.lastIndexOf('.'));
-    if (imageFileExtensions.includes(extension)) {
-      return `<text id="/data/tunnel/display_cdn_image:label"><value>${mediaFileName}</value><value form="image">jr://images/yes</value></text>`;
-    }
-    else if (videoFileExtensions.includes(extension)) {
-      return `<text id="/data/tunnel/display_cdn_video:label"><value>${mediaFileName}</value><value form="image">jr://images/yes</value></text>`;
-    }
-    else if (documentFileExtensions.includes(extension)) {
-      return `<text id="/data/tunnel/display_cdn_document:label"><value>${mediaFileName}</value><value form="image">jr://images/yes</value></text>`;
-    }
-    else {
-      console.log("Unsupported File!");
-      return '';
     }
   }
 }

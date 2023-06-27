@@ -22,6 +22,7 @@ export class BotService {
   constructor(
     private prisma: PrismaService,
     private configService: ConfigService,
+    //@ts-ignore
     @Inject(CACHE_MANAGER) public cacheManager: Cache,
   ) {
     this.logger = new Logger(BotService.name);
@@ -89,7 +90,7 @@ export class BotService {
       {
         //@ts-ignore
         timeout: 5000,
-        headers: { 'Conversation-Authorization': conversationToken }
+        headers: { 'conversation-authorization': conversationToken }
       }
     )
     .then(resp => resp.json())
@@ -129,7 +130,7 @@ export class BotService {
     }
     let promises = promisesFunc.map((url) => {
       return limit(() =>
-        fetch(url, { headers: { 'Conversation-Authorization': conversationToken } }).then((s) => {
+        fetch(url, { headers: { 'conversation-authorization': conversationToken } }).then((s) => {
           this.sleep(1000);
         }),
       );
@@ -237,13 +238,14 @@ export class BotService {
   }
 
   async findAllContextual(ownerID: string | null, ownerOrgID: string | null): Promise<Bot[]> {
+    const startTime = performance.now();
     const cacheKey = `bots_${ownerID}_${ownerOrgID}`;
     const cachedBots = await this.cacheManager.get(cacheKey);
     if (cachedBots) {
+      this.logger.log(`BotService::findAllContextual: Returning bot data. Time taken: ${performance.now() - startTime} milliseconds.`);
       return cachedBots;
     }
 
-    const startTime = performance.now();
     this.logger.log(`BotService::findAllContextual: Called with ownerId: ${ownerID} and ownerOrgId: ${ownerOrgID}`);
     const botData = await this.prisma.bot.findMany({
       where: {
