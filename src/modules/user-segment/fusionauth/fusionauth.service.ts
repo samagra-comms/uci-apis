@@ -82,6 +82,24 @@ export class DeviceManagerService {
       });
   };
 
+  addBotsToRegistry = async (botIDs: string[]): Promise<void> => {
+    try {
+      const promises = botIDs.map(async (botID) => {
+        try {
+          await this.client.createApplication(botID, { application: { name: botID } });
+        } catch (error) {
+          console.error(`Failed to add bot ${botID}:`, error);
+        }
+      });
+
+      await Promise.all(promises);
+      console.log('All bots added to the registry.');
+    } catch (error) {
+      console.log('Error occurred while adding bots:', error);
+      throw new InternalServerErrorException('Failed to add all bots to the registry.');
+    }
+  };
+
   botExists = async (botID) => {
     return this.client
       .retrieveApplication(botID)

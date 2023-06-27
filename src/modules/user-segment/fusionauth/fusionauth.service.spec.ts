@@ -49,9 +49,21 @@ class MockFusionAuthClient {
   }
 }
 
+class MockFusionAuthClientBulkInsertion {
+  async createApplication(_botID: string, _request: ApplicationRequest): Promise<any> {
+    return Promise.resolve('Test resolve');
+  }
+}
+
 class MockFusionAuthClientProvider {
   getClient() {
     return new MockFusionAuthClient();
+  }
+}
+
+class MockFusionAuthClientProviderBulkInsertion {
+  getClient() {
+    return new MockFusionAuthClientBulkInsertion();
   }
 }
 
@@ -97,4 +109,33 @@ describe('FormController', () => {
     await deviceManagerService.addDeviceToRegistry('exists', { device : { type: 'exist', deviceID: 'test' } });
     await deviceManagerService.addDeviceToRegistry('exists', { device : { type: 'doesNotExist', deviceID: 'test' } });
   }, 20000);
+});
+
+describe('DeviceManagerService', () => {
+  let deviceManagerService: DeviceManagerService;
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        DeviceManagerService,
+        FusionAuthClientProvider,
+        {
+          provide: FusionAuthClientProvider,
+          useClass: MockFusionAuthClientProviderBulkInsertion,
+        },
+        ConfigService,
+        {
+          provide: ConfigService,
+          useClass: MockConfigService,
+        },
+      ],
+    }).compile();
+
+    deviceManagerService = module.get<DeviceManagerService>(DeviceManagerService);
+  });
+
+  it('should add multiple bots to the registry', async () => {
+    const botIDs = ['bot0', 'bot1', 'bot2', 'bot3', 'bot4', 'bot5', 'bot6', 'bot7', 'bot8', 'bot9', 'bot10'];
+    await expect(deviceManagerService.addBotsToRegistry(botIDs)).resolves.toBeUndefined();
+  }, 60000);
 });
