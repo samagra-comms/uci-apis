@@ -20,4 +20,6 @@ export class CreateBotDto {
   endDate: string;
   ownerid: string;
   ownerorgid: string;
+  purpose: string | undefined;
+  description: string | undefined;
 }

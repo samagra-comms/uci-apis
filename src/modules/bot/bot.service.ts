@@ -201,6 +201,8 @@ export class BotService {
           startDate: this.getDateFromString(data.startDate),
           endDate: this.getDateFromString(data.endDate),
           tags: data.tags,
+          purpose: data.purpose,
+          description: data.description,
           logicIDs: {
             connect: data.logic.map((logic) => {
               return {
