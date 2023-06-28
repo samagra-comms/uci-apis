@@ -194,7 +194,7 @@ export class BotService {
           ownerID: data.ownerid,
           ownerOrgID: data.ownerorgid,
           status:
-            data.status === 'enabled' ? BotStatus.ENABLED : BotStatus.DISABLED,
+            data.status && data.status.toLocaleLowerCase() === 'enabled' ? BotStatus.ENABLED : BotStatus.DISABLED,
           startDate: this.getDateFromString(data.startDate),
           endDate: this.getDateFromString(data.endDate),
           tags: data.tags,
