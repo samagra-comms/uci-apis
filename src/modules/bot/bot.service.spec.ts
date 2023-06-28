@@ -11,8 +11,13 @@ import { CacheModule } from '@nestjs/common';
 
 class MockPrismaService {
   bot = {
-    create: () => {
-      return 'testBotCreated';
+    create: (createData) => {
+      const mockBotsDbCopy = JSON.parse(JSON.stringify(mockBotsDb[0]));
+      if (createData.data.purpose)
+        mockBotsDbCopy.purpose = createData.data.purpose;
+      if (createData.data.description)
+        mockBotsDbCopy.description = createData.data.description;
+      return mockBotsDbCopy;
     },
     findUnique: (filter) => {
       if (filter.where.name === 'testBotNotExisting' || filter.where.id === 'testBotIdNotExisting')
@@ -47,6 +52,8 @@ const mockCreateBotDto: CreateBotDto & { ownerID: string; ownerOrgID: string } =
   status: "enabled",
   startDate: "2023-05-4",
   endDate: "2025-12-01",
+  purpose: "TestPurpose",
+  description: "TestDescription",
   ownerid: "",
   ownerorgid: "",
   tags: [],
@@ -80,8 +87,8 @@ const mockBotsDb = [{
   "startingMessage": "Namaste Bot Test",
   "ownerID": null,
   "ownerOrgID": null,
-  "purpose": null,
-  "description": null,
+  "purpose": "TestPurpose",
+  "description": "TestDescription",
   "startDate": "2023-05-03T00:00:00.000Z",
   "endDate": "2025-12-01T00:00:00.000Z",
   "status": "ENABLED",
@@ -99,8 +106,8 @@ const mockBotsResolved = [{
   "startingMessage": "Namaste Bot Test",
   "ownerID": null,
   "ownerOrgID": null,
-  "purpose": null,
-  "description": null,
+  "purpose": "TestPurpose",
+  "description": "TestDescription",
   "startDate": "2023-05-03T00:00:00.000Z",
   "endDate": "2025-12-01T00:00:00.000Z",
   "status": "ENABLED",
@@ -162,7 +169,7 @@ describe('BotService', () => {
     const mockCreateBotDtoCopy: CreateBotDto & { ownerID: string; ownerOrgID: string } = JSON.parse(JSON.stringify(mockCreateBotDto));
     mockCreateBotDtoCopy.name = 'testBotNotExisting';
     const response = await botService.create(mockCreateBotDtoCopy, mockFile);
-    expect(response).toEqual('testBotCreated');
+    expect(response).toEqual(mockBotsDb[0]);
     fetchMock.restore();
   });
 
@@ -248,6 +255,22 @@ describe('BotService', () => {
     const mockBotResolvedCopy = JSON.parse(JSON.stringify(mockBotsResolved[0]));
     mockBotResolvedCopy.botImage = null;
     expect(response).toEqual(mockBotResolvedCopy);
+    fetchMock.restore();
+  });
+
+  it('bot create updates purpose and description in database', async () => {
+    fetchMock.postOnce(`${configService.get<string>('MINIO_MEDIA_UPLOAD_URL')}`, {
+      fileName: 'testFileName'
+    });
+    const mockCreateBotDtoCopy: CreateBotDto & { ownerID: string; ownerOrgID: string } = JSON.parse(JSON.stringify(mockCreateBotDto));
+    mockCreateBotDtoCopy.name = 'testBotNotExisting';
+    mockCreateBotDtoCopy.purpose = 'testPurposeUpdate';
+    mockCreateBotDtoCopy.description = 'testDescriptionUpdate';
+    const response = await botService.create(mockCreateBotDtoCopy, mockFile);
+    const mockBotDbResponse = JSON.parse(JSON.stringify(mockBotsDb[0]));
+    mockBotDbResponse.purpose = 'testPurposeUpdate';
+    mockBotDbResponse.description = 'testDescriptionUpdate';
+    expect(response).toEqual(mockBotDbResponse);
     fetchMock.restore();
   });
 });
