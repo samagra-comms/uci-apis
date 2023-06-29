@@ -4,6 +4,7 @@ import fetchMock from 'fetch-mock';
 import { ConfigService } from '@nestjs/config';
 import stream from 'stream';
 import fs from 'fs';
+import { ServiceUnavailableException } from '@nestjs/common';
 
 const mockXmlFile: Express.Multer.File = {
   fieldname: 'testFieldXML',
@@ -94,6 +95,7 @@ describe('FormService', () => {
 
   afterEach(async () => {
     fs.unlinkSync('src/modules/form/raw/testing_form_copy.xml');
+    fetchMock.restore();
   });
 
   it('form upload test', async () => {
@@ -116,5 +118,28 @@ describe('FormService', () => {
     const sentFileContent = fs.readFileSync('src/modules/form/raw/testing_form_copy.xml');
     const expectedFileContent = fs.readFileSync('src/modules/form/raw/expected_xml_media_upload.xml');
     expect(sentFileContent).toEqual(expectedFileContent);
+  });
+
+  it('form upload throws service unavailable exception when minio is unavailable', async () => {
+    fetchMock.postOnce(`${configService.get('MINIO_MEDIA_UPLOAD_URL')}`, () => {
+      throw new Error();
+    });
+
+    expect(formService.uploadForm(mockXmlFile, mockMediaFiles))
+    .rejects
+    .toThrowError(new ServiceUnavailableException('Media upload failed!'));
+  });
+
+  it('form upload throws service unavailable exception when ODK server is unavailable', async () => {
+    fetchMock.postOnce(`${configService.get('MINIO_MEDIA_UPLOAD_URL')}`, {
+      fileName: 'testMediaFile.png'
+    });
+    fetchMock.postOnce(`${configService.get('ODK_BASE_URL')}/formUpload`, () => {
+      throw new Error();
+    });
+
+    expect(formService.uploadForm(mockXmlFile, mockMediaFiles))
+    .rejects
+    .toThrowError(new ServiceUnavailableException('Failed to upload form file!'));
   });
 });

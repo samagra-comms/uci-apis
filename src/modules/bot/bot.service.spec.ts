@@ -5,7 +5,7 @@ import { PrismaService } from '../../global-services/prisma.service';
 import { CreateBotDto } from './dto/create-bot.dto';
 import stream from 'stream';
 import fetchMock from 'fetch-mock';
-import {CACHE_MANAGER} from "@nestjs/common";
+import {CACHE_MANAGER, ConflictException, HttpException, InternalServerErrorException, NotFoundException, ServiceUnavailableException} from "@nestjs/common";
 import { CacheModule } from '@nestjs/common';
 
 
@@ -137,8 +137,6 @@ const mockConfig = {
 describe('BotService', () => {
   let botService: BotService;
   let configService: ConfigService;
-  let prismaService: PrismaService;
-  let cacheManager: any;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -158,8 +156,6 @@ describe('BotService', () => {
 
     botService = module.get<BotService>(BotService);
     configService = module.get<ConfigService>(ConfigService);
-    prismaService = module.get<PrismaService>(PrismaService);
-    cacheManager = module.get<any>(CACHE_MANAGER);
   });
 
   it('create bot test', async () => {
@@ -272,5 +268,20 @@ describe('BotService', () => {
     mockBotDbResponse.description = 'testDescriptionUpdate';
     expect(response).toEqual(mockBotDbResponse);
     fetchMock.restore();
+  });
+
+  it('bot service returns proper error message when bot already exists', async () => {
+    const mockCreateBotDtoCopy: CreateBotDto & { ownerID: string; ownerOrgID: string } = JSON.parse(JSON.stringify(mockCreateBotDto));
+    mockCreateBotDtoCopy.name = 'testBotIdExisting';
+    expect(botService.create(mockCreateBotDtoCopy, mockFile)).rejects.toThrowError(new ConflictException('Bot already exists with the following name'));
+  });
+
+  it('bot service returns proper error message on minio image upload failure', async () => {
+    fetchMock.postOnce(`${configService.get<string>('MINIO_MEDIA_UPLOAD_URL')}`, () => {
+      throw new InternalServerErrorException();
+    });
+    const mockCreateBotDtoCopy: CreateBotDto & { ownerID: string; ownerOrgID: string } = JSON.parse(JSON.stringify(mockCreateBotDto));
+    mockCreateBotDtoCopy.name = 'testBotNotExisting';
+    expect(botService.create(mockCreateBotDtoCopy, mockFile)).rejects.toThrowError(new ServiceUnavailableException('Bot image upload failed!'));
   });
 });
