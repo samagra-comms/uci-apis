@@ -82,24 +82,38 @@ export class DeviceManagerService {
       });
   };
 
-  addBotsToRegistry = async (botIDs: string[]): Promise<void> => {
+  addBotsToRegistry = async (botIDs: string[]): Promise<string[]> => {
     try {
       const promises = botIDs.map(async (botID) => {
         try {
           await this.client.createApplication(botID, { application: { name: botID } });
+          return botID; // Return the botID if it is successfully added to the registry
         } catch (error) {
           console.error(`Failed to add bot ${botID}:`, error);
+          return `Cannot add bot ${botID}`; // Return custom error message for failed bot IDs
         }
       });
-
-      await Promise.all(promises);
-      console.log('All bots added to the registry.');
+  
+      const results = await Promise.allSettled(promises);
+      const successfulBotIDs: string[] = [];
+  
+      results.forEach((result) => {
+        if (result.status === 'fulfilled' && typeof result.value === 'string' && !result.value.startsWith('Cannot')) {
+          successfulBotIDs.push(result.value);
+        }
+      });
+  
+      if (successfulBotIDs.length === botIDs.length) {
+        console.log('All bots added to the registry.');
+      }
+  
+      return successfulBotIDs;
     } catch (error) {
       console.log('Error occurred while adding bots:', error);
       throw new InternalServerErrorException('Failed to add all bots to the registry.');
     }
   };
-
+  
   botExists = async (botID) => {
     return this.client
       .retrieveApplication(botID)

@@ -109,6 +109,19 @@ describe('FormController', () => {
     await deviceManagerService.addDeviceToRegistry('exists', { device : { type: 'exist', deviceID: 'test' } });
     await deviceManagerService.addDeviceToRegistry('exists', { device : { type: 'doesNotExist', deviceID: 'test' } });
   }, 20000);
+
+  it('should return failed bot IDs when adding bots to the registry fails', async () => {
+    const botIDs = ['bot0', 'bot1', 'bot2', 'bot3', 'bot4', 'bot5', 'bot6', 'bot7', 'bot8', 'bot9', 'bot10'];
+    const failedBotIDs = ['bot0', 'bot2', 'bot4', 'bot6', 'bot8', 'bot10'];
+  
+    const successfulBotIDs = await deviceManagerService.addBotsToRegistry(botIDs);
+  
+    expect(successfulBotIDs.length).toBe(5);
+  
+    failedBotIDs.forEach((botID) => {
+      expect(successfulBotIDs).not.toContain(botID); 
+    });
+  }, 60000);
 });
 
 describe('DeviceManagerService', () => {
@@ -136,6 +149,12 @@ describe('DeviceManagerService', () => {
 
   it('should add multiple bots to the registry', async () => {
     const botIDs = ['bot0', 'bot1', 'bot2', 'bot3', 'bot4', 'bot5', 'bot6', 'bot7', 'bot8', 'bot9', 'bot10'];
-    await expect(deviceManagerService.addBotsToRegistry(botIDs)).resolves.toBeUndefined();
+    const successfulBotIDs = await deviceManagerService.addBotsToRegistry(botIDs);
+  
+    expect(successfulBotIDs.length).toBe(11); // Ensure all bot IDs are added successfully
+  
+    successfulBotIDs.forEach((botID) => {
+      expect(botID).not.toMatch(/^Cannot add bot/); // Ensure there are no failed bot IDs
+    });
   }, 60000);
 });
