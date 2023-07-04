@@ -73,12 +73,16 @@ export class GetRequestResolverService {
     this.logger.debug(
       `Resolving ${queryType}, ${JSON.stringify(getRequestConfig.url)}`,
     );
-    const secretPath = `${user}/${getRequestConfig.credentials.variable}`;
-    const secrets = await this.secretsService.getAllSecrets(secretPath);
     const headers = new Headers();
-    secrets.forEach(({ key, value }) => {
-      headers.set(key, value);
-    });
+    if (!getRequestConfig.credentials && Object.keys(getRequestConfig.credentials).length != 0) {
+      //@ts-ignore  
+      const secretPath = `${user}/${getRequestConfig.credentials.variable}`;
+      console.log(secretPath);
+      const secrets = await this.secretsService.getAllSecrets(secretPath);
+      secrets.forEach(({ key, value }) => {
+        headers.set(key, value);
+      });
+    }
     headers.set('conversation-authorization', conversationToken);
     // const variables = getRequestConfig.verificationParams;
     const errorNotificationWebhook = getRequestConfig.errorNotificationWebhook;
