@@ -1,75 +1,102 @@
-import { Test, TestingModule } from '@nestjs/testing';
-
-import { ConfigService } from '@nestjs/config';
+import { Test } from '@nestjs/testing';
 import { SecretsService } from './secrets.service';
-import * as HasuraSecret from './types/hasura.secret';
-import * as Headers from './types/headers.secret';
-import * as WhatsappGupshup from './types/whatsapp.gupshup.secret';
+import { VaultClientProvider } from './secrets.service.provider';
 
 describe('SecretsService', () => {
-  let service: SecretsService;
+  let secretsService: SecretsService;
+  let vaultClientProvider: VaultClientProvider;
+  let vaultClient: any;
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [SecretsService, ConfigService],
+    vaultClient = {
+      read: jest.fn(),
+      list: jest.fn(),
+      write: jest.fn(),
+      clear: jest.fn(),
+    };
+
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        SecretsService,
+        {
+          provide: VaultClientProvider,
+          useValue: {
+            getClient: jest.fn(() => vaultClient),
+          },
+        },
+      ],
     }).compile();
 
-    service = module.get<SecretsService>(SecretsService);
+    secretsService = moduleRef.get<SecretsService>(SecretsService);
+    vaultClientProvider = moduleRef.get<VaultClientProvider>(VaultClientProvider);
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
+  describe('getSecret', () => {
+    it('should return the secret value for the given path and key', async () => {
+      const path = 'path';
+      const key = 'key';
+      const secretValue = 'secret';
+
+      vaultClient.read.mockResolvedValueOnce({ __data: { [key]: secretValue } });
+
+      const result = await secretsService.getSecret(path, key);
+
+      expect(result).toEqual(secretValue);
+      expect(vaultClientProvider.getClient).toHaveBeenCalled();
+      expect(vaultClient.read).toHaveBeenCalledWith(`kv/${path}`);
+    });
   });
 
-  it('should add simple secret to path', async () => {
-    await service.setSecret('user1', { key: 'test' });
-    const secret = await service.getSecret('user1', 'key');
-    expect(secret).toBe('test');
+  describe('getSecretByPath', () => {
+    it('should return all secrets for the given path', async () => {
+      const path = 'path';
+      const secrets = { key1: 'secret1', key2: 'secret2' };
+
+      vaultClient.read.mockResolvedValueOnce({ __data: secrets });
+
+      const result = await secretsService.getSecretByPath(path);
+
+      expect(result).toEqual(secrets);
+      expect(vaultClientProvider.getClient).toHaveBeenCalled();
+      expect(vaultClient.read).toHaveBeenCalledWith(`kv/${path}`);
+    });
   });
 
-  it('should add hasura secret to path', async () => {
-    /**
-     * {
-     *   "hasuraLocal": {
-     *     "baseURL": "http://localhost:8080",
-     *     "adminSecret": "4GeEB2JCU5rBdLvQ4AbeqqrPGu7kk9SZDhJUZm7A",
-     *    }
-     * }
-     */
-    const hasuraSecretData: HasuraSecret.default = {
-      baseURL: 'http://localhost:8080',
-      adminSecret: '4GeEB2JCU5rBdLvQ4AbeqqrPGu7kk9SZDhJUZm7A',
-    };
+  describe('setSecret', () => {
+    it('should write the given secret value to the specified path', async () => {
+      const path = 'path';
+      const secretValue = { key: 'value' };
 
-    await service.setSecret('user1/hasuraLocal', hasuraSecretData);
-    const secret = await service.getSecretByPath('user1/hasuraLocal');
-    expect(secret).toStrictEqual(hasuraSecretData);
+      vaultClient.write.mockResolvedValueOnce();
+
+      const result = await secretsService.setSecret(path, secretValue);
+
+      expect(result).toBeUndefined();
+      expect(vaultClientProvider.getClient).toHaveBeenCalled();
+      expect(vaultClient.write).toHaveBeenCalledWith(`kv/${path}`, secretValue);
+    });
   });
 
-  it('should add header as secret to path', async () => {
-    const headersForService: Headers.default = {
-      Authorization: '4GeEB2JCU5rBdLvQ4AbeqqrPGu7kk9SZDhJUZm7A',
-    };
+  describe('getAllSecrets', () => {
+    it('should return all secrets under the given path', async () => {
+      const path = 'path';
+      const keys = ['key1', 'key2'];
+      const secrets = { key1: 'secret1', key2: 'secret2' };
 
-    await service.setSecret('user1/headersForService', headersForService);
-    const secret = await service.getSecretByPath('user1/headersForService');
-    expect(secret).toStrictEqual(headersForService);
-  });
+      vaultClient.list.mockResolvedValueOnce({ data: { keys } });
+      vaultClient.read.mockImplementation(async (p) => ({ __data: secrets[p.split('/').pop()] }));
 
-  it('should add WA Gupshup as secret to path', async () => {
-    const WAGupshupSecret: WhatsappGupshup.default = {
-      usernameHSM: 'string',
-      passwordHSM: 'string',
-      username2Way: 'string',
-      password2Way: 'string',
-    };
+      const result = await secretsService.getAllSecrets(path);
 
-    await service.setSecret('user1/WAGupshupSecret', WAGupshupSecret);
-    const secret = await service.getSecretByPath('user1/WAGupshupSecret');
-    expect(secret).toStrictEqual(WAGupshupSecret);
-  });
-
-  afterAll(async () => {
-    // await service.deleteSecret('user1', 'key');
+      expect(result).toEqual([
+        { key1: 'secret1' },
+        { key2: 'secret2' },
+      ]);
+      expect(vaultClientProvider.getClient).toHaveBeenCalled();
+      expect(vaultClient.list).toHaveBeenCalledWith(path);
+      expect(vaultClient.read).toHaveBeenCalledTimes(2);
+      expect(vaultClient.read).toHaveBeenNthCalledWith(1, `kv/${path}/key1`);
+      expect(vaultClient.read).toHaveBeenCalledWith(`kv/${path}/key2`);
+    });
   });
 });

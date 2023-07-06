@@ -7,6 +7,7 @@ import { GetRequestResolverService } from './http-get.resolver';
 import { PostRequestResolverService } from './http-post.resolver';
 import { ServiceController } from './service.controller';
 import { ServiceService } from './service.service';
+import { VaultClientProvider } from '../secrets/secrets.service.provider';
 
 @Module({
   controllers: [ServiceController],
@@ -18,6 +19,7 @@ import { ServiceService } from './service.service';
     SecretsService,
     GetRequestResolverService,
     PostRequestResolverService,
+    VaultClientProvider,
   ],
 })
 export class ServiceModule {}

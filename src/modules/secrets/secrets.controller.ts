@@ -63,15 +63,15 @@ export class SecretsController {
     }
   }
 
-  @Delete(':variableName')
-  async deleteAll(
-    @Param('variableName') variableName: string,
-    @Body() body: any,
-  ): Promise<any> {
-    if (variableName) {
-      return this.secretService.deleteSecret(body.ownerId + '/' + variableName);
-    } else {
-      return this.secretService.deleteAllSecrets(body.ownerId);
-    }
-  }
+  // @Delete(':variableName')
+  // async deleteAll(
+  //   @Param('variableName') variableName: string,
+  //   @Body() body: any,
+  // ): Promise<any> {
+  //   if (variableName) {
+  //     return this.secretService.deleteSecret(body.ownerId + '/' + variableName);
+  //   } else {
+  //     return this.secretService.deleteAllSecrets(body.ownerId);
+  //   }
+  // }
 }

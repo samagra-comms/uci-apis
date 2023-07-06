@@ -25,21 +25,9 @@ import { GetRequestResolverService } from './modules/service/http-get.resolver';
 import { PostRequestResolverService } from './modules/service/http-post.resolver';
 import { HealthModule } from './health/health.module';
 import { FusionAuthClientProvider } from './modules/user-segment/fusionauth/fusionauthClientProvider';
+import { VaultClientProvider } from './modules/secrets/secrets.service.provider';
 
 import * as redisStore from 'cache-manager-redis-store';
-// const prismaServiceProvider = (env: string | undefined): Type<any> => {
-//   switch (env) {
-//     case 'development':
-//     case 'production':
-//       return PrismaService;
-//     case 'test':
-//       return PrismaServiceMock;
-//     // case 'e2e':
-//     //   return PrismaServiceMockE2E;
-//     default:
-//       return PrismaService;
-//   }
-// };
 
 @Module({
   imports: [
@@ -82,6 +70,7 @@ import * as redisStore from 'cache-manager-redis-store';
     SecretsService,
     FusionAuthClientProvider,
     DeviceManagerService,
+    VaultClientProvider,
   ],
 })
 export class AppModule {}

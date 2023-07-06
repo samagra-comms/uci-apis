@@ -30,7 +30,6 @@
     "@fastify/static": "5.0.0",
     "@fusionauth/typescript-client": "^1.38.0",
     "@golevelup/ts-jest": "^0.3.3",
-    "@mittwald/vaults": "1.4.4",
     "@nestjs/axios": "^2.0.0",
     "@nestjs/common": "^8.0.0",
     "@nestjs/config": "^1.1.6",
@@ -47,6 +46,8 @@
     "@types/passport-jwt": "^3.0.6",
     "add": "^2.0.6",
     "apollo-cache-inmemory": "^1.6.6",
+    "cache-manager": "^4.1.0",
+    "cache-manager-redis-store": "^2.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.13.2",
     "expect-type": "^0.13.0",
@@ -62,6 +63,7 @@
     "jest-mock-extended": "^2.0.5",
     "kafkajs": "^1.16.0",
     "lodash": "^4.17.21",
+    "node-vault-client": "^0.6.1",
     "p-limit": "3.1.0",
     "passport": "^0.5.2",
     "passport-jwt": "^4.0.0",
@@ -76,9 +78,7 @@
     "uuid": "^8.3.2",
     "xml2json": "^0.12.0",
     "xmlhttprequest": "^1.8.0",
-    "yarn": "^1.22.18",
-    "cache-manager": "^4.1.0",
-    "cache-manager-redis-store": "^2.0.0"
+    "yarn": "^1.22.18"
   },
   "devDependencies": {
     "@compodoc/compodoc": "^1.1.18",
