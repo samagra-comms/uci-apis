@@ -74,7 +74,7 @@ export class GetRequestResolverService {
       `Resolving ${queryType}, ${JSON.stringify(getRequestConfig.url)}`,
     );
     const headers = new Headers();
-    if (!getRequestConfig.credentials && Object.keys(getRequestConfig.credentials).length != 0) {
+    if (getRequestConfig.credentials && Object.keys(getRequestConfig.credentials).length != 0) {
       //@ts-ignore  
       const secretPath = `${user}/${getRequestConfig.credentials.variable}`;
       console.log(secretPath);
