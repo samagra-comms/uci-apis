@@ -10,26 +10,29 @@ export class SecretsService {
   }
 
   async getSecret(path: string, key: string) {
-    const consolidatedPath = 'kv/'+path;
-    const kvPairs = await this.vaultClient.read (consolidatedPath);
+    const fullpath = 'kv/'+path;
+    const kvPairs = await this.vaultClient.read (fullpath);
     return kvPairs.__data[key];
   }
 
   async getSecretByPath(path: string): Promise<any> {
     console.log('getSecretByPath method called');
-    const kvPairs = await this.vaultClient.read('kv/'+ path)
+    const fullpath = 'kv/'+path;
+    const kvPairs = await this.vaultClient.read(fullpath)
     return kvPairs.__data;
   }
 
   async setSecret(path: string, value: { [key: string]: string }) {
     console.log('SetSecret method called');
-    return await this.vaultClient.write('kv/'+ path, value);
+    const fullpath = 'kv/'+path;
+    return await this.vaultClient.write(fullpath, value);
   }
 
   async getAllSecrets(path: string): Promise<any> {
     const data: any[] = [];
     try {
-      const keys = await (await this.vaultClient.list(path)).data.keys;
+      const fullpath = 'kv/' + path;
+      const keys = await (await this.vaultClient.list(fullpath)).__data.keys;
       for (const key of keys) {
         const dataAtKey = await this.getSecretByPath(path + '/' + key);
         data.push({ [`${key}`]: dataAtKey });
@@ -41,17 +44,17 @@ export class SecretsService {
     return data;
   }
 
-  // async deleteSecret(path: string) {
-  //   path = "8f7ee860-0163-4229-9d2a-01cef53145ba\test";
-  //   await this.vaultClient.write(path, {});
-  //   return true;
-  // }
+  async deleteSecret(path: string) {
+    await this.vaultClient.write('kv/'+ path, {"":""});
+    return true;
+  }
 
-  // async deleteAllSecrets(path: any): Promise<any> {
-  //   const keys = await (await this.vaultClient.list(path)).data.keys;
-  //   for (const key of keys) {
-  //     await this.deleteSecret(path + '/' + key);
-  //   }
-  //   return true;
-  // }
+  async deleteAllSecrets(path: any): Promise<any> {
+    const fullpath = 'kv/' + path;
+    const keys = await (await this.vaultClient.list(fullpath)).__data.keys;
+    for (const key of keys) {
+      await this.deleteSecret(path + '/' + key);
+    }
+    return true;
+  }
 }
