@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, Logger, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import digestAuthRequest from '../../common/digestAuthRequest';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -81,22 +81,12 @@ export class FormService {
       const mediaUploadResult = await this.uploadFormMediaFiles(mediaFiles);
       if (mediaUploadResult.error || !mediaUploadResult.data) {
         this.logger.error(`FormService::uploadForm: Media Files upload failed!`);
-        return {
-          status: 'ERROR',
-          errorCode: ODKMessages.UPLOAD.EXCEPTION_CODE + '-' + 'CP-0',
-          errorMessage: ODKMessages.UPLOAD.UPLOAD_FAIL_MESSAGE,
-          data: {},
-        };
+        throw new ServiceUnavailableException('Media upload failed!');
       }
       const xmlModificationError = this.replaceMediaFileName(formFile, mediaUploadResult.data);
       if (xmlModificationError != '') {
         this.logger.error('FormService::uploadForm: Failed to replace media file names!');
-        return {
-          status: 'ERROR',
-          errorCode: ODKMessages.UPLOAD.EXCEPTION_CODE + '-' + 'CP-1',
-          errorMessage: ODKMessages.UPLOAD.UPLOAD_FAIL_MESSAGE,
-          data: {},
-        };
+        throw new InternalServerErrorException('Error while replacing media file name(s) in form file.');
       }
     }
     this.formFile = formFile;
@@ -146,48 +136,23 @@ export class FormService {
                 };
               } catch (e) {
                 this.extras.logger.error(`FormService::uploadForm: Form ${formFile.originalname} parsing failed. Reason: ${e}`);
-                const checkPoint = 'CP-2';
-                return {
-                  status: 'ERROR',
-                  errorCode:
-                    ODKMessages.UPLOAD.EXCEPTION_CODE + '-' + checkPoint,
-                  errorMessage: ODKMessages.UPLOAD.UPLOAD_FAIL_MESSAGE,
-                  data: {},
-                };
+                throw new BadRequestException('Error parsing form file!');
               }
             } else {
               this.extras.logger.error(`FormService::uploadForm: Form ${formFile.originalname} upload failed.`);
-              const checkPoint = 'CP-3';
-              return {
-                status: 'ERROR',
-                errorCode: ODKMessages.UPLOAD.EXCEPTION_CODE + '-' + checkPoint,
-                errorMessage: ODKMessages.UPLOAD.UPLOAD_FAIL_MESSAGE,
-                data: {},
-              };
+              throw new ServiceUnavailableException('Failed to upload form file!');
             }
           })
           .catch((error) => {
             this.extras.logger.error(`FormService::uploadForm: Form ${formFile.originalname} upload failed. Reason: ${error}`);
             console.log({ error });
-            const checkPoint = 'CP-4';
-            return {
-              status: 'ERROR',
-              errorCode: ODKMessages.UPLOAD.EXCEPTION_CODE + '-' + checkPoint,
-              errorMessage: ODKMessages.UPLOAD.UPLOAD_FAIL_MESSAGE,
-              data: {},
-            };
+            throw new ServiceUnavailableException('Failed to upload form file!');
           });
         return d;
       },
       function (errorCode): FormUploadStatus {
         this.logger.error(`FormService::uploadForm: Form ${formFile.originalname} upload failed. Error Code: ${ errorCode }`);
-        const checkPoint = 'CP-5';
-        return {
-          status: 'ERROR',
-          errorCode: ODKMessages.UPLOAD.EXCEPTION_CODE + '-' + checkPoint,
-          errorMessage: ODKMessages.UPLOAD.UPLOAD_FAIL_MESSAGE,
-          data: {},
-        };
+        throw new InternalServerErrorException('Failed to upload form file!');
       },
       null,
       this,

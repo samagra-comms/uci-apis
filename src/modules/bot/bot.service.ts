@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, InternalServerErrorException, Logger, Inject,CACHE_MANAGER} from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, InternalServerErrorException, Logger, Inject,CACHE_MANAGER, ServiceUnavailableException} from '@nestjs/common';
 import {
   Bot,
   BotStatus,
@@ -185,11 +185,8 @@ export class BotService {
       .then(resp => resp.json())
       .then(async resp => {
         if (!resp.fileName) {
-          this.logger.log("BotService::create: Bot image upload failed! Reason: Did not receive filename of uploaded file.");
-          throw new HttpException(
-            'Bot image upload failed',
-            HttpStatus.INTERNAL_SERVER_ERROR
-          );
+          this.logger.error("BotService::create: Bot image upload failed! Reason: Did not receive filename of uploaded file.");
+          throw new ServiceUnavailableException('Bot image upload failed!');
         }
         const createData = {
           startingMessage: data.startingMessage,
@@ -222,6 +219,10 @@ export class BotService {
         const prismaResult = await this.prisma.bot.create({ data: createData });
         this.logger.log(`BotService::create: Bot created successfully. Time taken: ${performance.now() - startTime} milliseconds.`)
         return prismaResult;
+      })
+      .catch(err => {
+        this.logger.error(`BotService::create: Bot image upload failed! Reason: ${err}`);
+        throw new ServiceUnavailableException('Bot image upload failed!');
       });
     } else {
       this.logger.error(`Failed to create Bot. Reason: Bot with name ${data.name} already exists!`)

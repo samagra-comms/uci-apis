@@ -13,16 +13,27 @@ import { DeviceManagerService } from '../user-segment/fusionauth/fusionauth.serv
 import { Prisma } from 'prisma/generated/prisma-client-js';
 import fetchMock from 'fetch-mock';
 import { FusionAuthClientProvider } from '../user-segment/fusionauth/fusionauthClientProvider';
+import { BadRequestException, CacheModule } from '@nestjs/common';
 
 class MockPrismaService {
   bot = {
-    findUnique: () => {
-      return mockBotData;
+    findUnique: (filter) => {
+      if (filter.where.name === 'testBotNotExisting' || filter.where.id === 'testBotIdNotExisting') {
+        return null;
+      }
+      const mockBotDataCopy = JSON.parse(JSON.stringify(mockBotData));
+      if (filter.where.id == 'disabled') {
+        mockBotDataCopy['status'] = 'DISABLED';
+      }
+      if (filter.where.id == 'noUser') {
+        mockBotDataCopy['users'] = []
+      }
+      return mockBotDataCopy;
     },
   }
 }
 
-class mockConfigService {
+class MockConfigService {
   get(envString: string): string {
     switch (envString) {
       case 'MINIO_MEDIA_UPLOAD_URL': return 'http://minio_upload_url';
@@ -152,9 +163,9 @@ describe('BotController', () => {
   let configService: ConfigService;
 
   beforeEach(async () => {
-    jest.setTimeout(30000);
     const module: TestingModule = await Test.createTestingModule({
       controllers: [BotController],
+      imports: [CacheModule.register({})],
       providers: [
         BotService,
         GQLResolverService,
@@ -167,7 +178,7 @@ describe('BotController', () => {
         TelemetryService,
         ConfigService, {
           provide: ConfigService,
-          useClass: mockConfigService,
+          useClass: MockConfigService,
         },
         PrismaService, {
           provide: PrismaService,
@@ -209,5 +220,13 @@ describe('BotController', () => {
     expect(fetchMock.called('http://testSegmentUrl/segments/1/mentors?deepLink=nipunlakshya://chatbot&limit=1&offset=0')).toBe(true);
     expect(submittedToken).toEqual('testAuthToken');
     fetchMock.restore();
+  });
+
+  it('bot start returns bad request on non existent bot', async () => {
+    expect(botController.startOne('testBotIdNotExisting', {})).rejects.toThrowError(new BadRequestException('Bot does not exist'));
+  });
+
+  it('bot start returns bad request when bot does not have user data', async () => {
+    expect(botController.startOne('noUser', {})).rejects.toThrowError(new BadRequestException('Bot does not contain user segment data'));
   });
 });

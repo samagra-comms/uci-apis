@@ -12,6 +12,8 @@ import {
   Req,
   UploadedFile,
   UnsupportedMediaTypeException,
+  BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { AddResponseObjectInterceptor } from '../../interceptors/addResponseObject.interceptor';
 import { AddOwnerInfoInterceptor } from '../../interceptors/addOwnerInfo.interceptor';
@@ -19,7 +21,7 @@ import { AddAdminHeaderInterceptor } from '../../interceptors/addAdminHeader.int
 import { BotService } from './bot.service';
 import { AddROToResponseInterceptor } from '../../interceptors/addROToResponse.interceptor';
 import { ServiceService } from '../service/service.service';
-import { Bot, Prisma } from 'prisma/generated/prisma-client-js';
+import { Prisma } from 'prisma/generated/prisma-client-js';
 import { DeviceManagerService } from '../user-segment/fusionauth/fusionauth.service';
 import { CreateBotDto } from './dto/create-bot.dto';
 import { ApiConsumes } from '@nestjs/swagger';
@@ -53,11 +55,15 @@ export const imageFileFilter = (
 
 @Controller('bot')
 export class BotController {
+  private readonly logger: Logger;
+
   constructor(
     private readonly botService: BotService,
     private readonly service: ServiceService,
     private readonly deviceManagerService: DeviceManagerService,
-  ) {}
+  ) {
+    this.logger = new Logger(BotController.name);
+  }
 
   @ApiConsumes('multipart/form-data')
   @Post()
@@ -193,8 +199,16 @@ export class BotController {
         };
       };
     }> | null = await this.botService.findOne(id);
+    if (!bot) {
+      this.logger.error(`Start called on a bot which does not exist. BotId: ${id}`);
+      throw new BadRequestException('Bot does not exist');
+    }
+    if (!bot.users || bot.users.length == 0 || !bot.users[0].all) {
+      this.logger.error(`User Segment data not found in bot. BotId: ${id}`);
+      throw new BadRequestException('Bot does not contain user segment data');
+    }
     console.log(bot?.users[0].all);
-    const res = await this.botService.start(id, bot?.users[0].all?.config, headers['conversation-authorization']);
+    const res = await this.botService.start(id, bot.users[0].all?.config, headers['conversation-authorization']);
     return res;
   }
 
