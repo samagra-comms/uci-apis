@@ -159,9 +159,13 @@ export class BotService {
     this.logger.log(`BotService::create: Called with bot name ${data.name}.`);
     // Check for unique name
     const name = data.name;
-    const alreadyExists = await this.prisma.bot.findUnique({
+    const startingMessage = data.startingMessage;
+    const alreadyExists = await this.prisma.bot.findFirst({
       where: {
-        name,
+        OR: [
+          { name: name },
+          { startingMessage: startingMessage }
+        ]
       },
     });
     if (!alreadyExists) {
@@ -225,9 +229,9 @@ export class BotService {
         throw new ServiceUnavailableException('Bot image upload failed!');
       });
     } else {
-      this.logger.error(`Failed to create Bot. Reason: Bot with name ${data.name} already exists!`)
+      this.logger.error(`Failed to create Bot. Reason: Bot with name '${data.name}' or starting message '${data.startingMessage}' already exists!`)
       throw new HttpException(
-        'Bot already exists with the following name',
+        'Bot already exists with the following name or starting message!',
         HttpStatus.CONFLICT,
       );
     }

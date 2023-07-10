@@ -26,6 +26,15 @@ const MockPrismaService = {
       else
         return JSON.parse(JSON.stringify(mockBotsDb[0]));
     },
+    findFirst: (filter) => {
+      const { name, startingMessage } = filter.where.OR.reduce((acc, obj) => {
+        return { ...acc, ...obj };
+      }, {});
+      if ((name && name.includes("NotExisting")) && (startingMessage && startingMessage.includes("NotExisting"))) {
+        return null;
+      }
+      return JSON.parse(JSON.stringify(mockBotsDb[0]));
+    },
     findMany: () => {
       return JSON.parse(JSON.stringify(mockBotsDb));
     },
@@ -324,9 +333,21 @@ describe('BotService', () => {
     });
     const mockCreateBotDtoCopy: CreateBotDto & { ownerID: string; ownerOrgID: string } = JSON.parse(JSON.stringify(mockCreateBotDto));
     mockCreateBotDtoCopy.name = 'testBotNotExisting';
+    mockCreateBotDtoCopy.startingMessage = 'testBotStartingMessageNotExisting';
     const response = await botService.create(mockCreateBotDtoCopy, mockFile);
     expect(response).toEqual(mockBotsDb[0]);
     fetchMock.restore();
+  });
+
+  it('create bot with same name or id throws error', async () => {
+    const mockCreateBotDtoCopy: CreateBotDto & { ownerID: string; ownerOrgID: string } = JSON.parse(JSON.stringify(mockCreateBotDto));
+    mockCreateBotDtoCopy.name = 'testBotExistingName';
+    expect(botService.create(mockCreateBotDtoCopy, mockFile)).rejects
+    .toThrowError(new ConflictException("Bot already exists with the following name or starting message!"));
+    const mockCreateBotDtoCopy2: CreateBotDto & { ownerID: string; ownerOrgID: string } = JSON.parse(JSON.stringify(mockCreateBotDto));
+    mockCreateBotDtoCopy2.startingMessage = 'testBotExistingStartingMessage';
+    expect(botService.create(mockCreateBotDtoCopy2, mockFile)).rejects
+    .toThrowError(new ConflictException("Bot already exists with the following name or starting message!"));
   });
 
   it('get bot all data test', async () => {
@@ -420,6 +441,7 @@ describe('BotService', () => {
     });
     const mockCreateBotDtoCopy: CreateBotDto & { ownerID: string; ownerOrgID: string } = JSON.parse(JSON.stringify(mockCreateBotDto));
     mockCreateBotDtoCopy.name = 'testBotNotExisting';
+    mockCreateBotDtoCopy.startingMessage = 'testBotStartingMessageNotExisting';
     mockCreateBotDtoCopy.purpose = 'testPurposeUpdate';
     mockCreateBotDtoCopy.description = 'testDescriptionUpdate';
     const response = await botService.create(mockCreateBotDtoCopy, mockFile);
@@ -430,18 +452,13 @@ describe('BotService', () => {
     fetchMock.restore();
   });
 
-  it('bot service returns proper error message when bot already exists', async () => {
-    const mockCreateBotDtoCopy: CreateBotDto & { ownerID: string; ownerOrgID: string } = JSON.parse(JSON.stringify(mockCreateBotDto));
-    mockCreateBotDtoCopy.name = 'testBotIdExisting';
-    expect(botService.create(mockCreateBotDtoCopy, mockFile)).rejects.toThrowError(new ConflictException('Bot already exists with the following name'));
-  });
-
   it('bot service returns proper error message on minio image upload failure', async () => {
     fetchMock.postOnce(`${configService.get<string>('MINIO_MEDIA_UPLOAD_URL')}`, () => {
       throw new InternalServerErrorException();
     });
     const mockCreateBotDtoCopy: CreateBotDto & { ownerID: string; ownerOrgID: string } = JSON.parse(JSON.stringify(mockCreateBotDto));
     mockCreateBotDtoCopy.name = 'testBotNotExisting';
+    mockCreateBotDtoCopy.startingMessage = 'testBotStartingMessageNotExisting';
     expect(botService.create(mockCreateBotDtoCopy, mockFile)).rejects.toThrowError(new ServiceUnavailableException('Bot image upload failed!'));
   });
 
