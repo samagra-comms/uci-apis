@@ -1,35 +1,44 @@
 {
-  "cSpell.words": [
-    "cnonce",
-    "ekstep",
-    "Fastify",
-    "Haryana",
-    "Hasura",
-    "microservices",
-    "nestjs",
-    "Netcore",
-    "Organisation",
-    "organisations",
-    "originalname",
-    "ownerid",
-    "ownerorgid",
-    "Panipat",
-    "POSTGRES",
-    "undici"
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "vsicons.associations.files": [
+    {
+      "icon": "nest_interceptor_ts",
+      "extensions": ["interceptor.ts"]
+    },
+    {
+      "icon": "nest_controller_ts",
+      "extensions": ["controller.ts"]
+    },
+    {
+      "icon": "nest_module_ts",
+      "extensions": ["module.ts"]
+    },
+    {
+      "icon": "nest_service_ts",
+      "extensions": ["service.ts"]
+    },
+    {
+      "icon": "nest_guard_ts",
+      "extensions": ["guard.ts"]
+    },
+    {
+      "icon": "nest_guard_ts",
+      "extensions": ["guard.ts"]
+    },
+    {
+      "icon": "nest_guard_ts",
+      "extensions": ["guard.ts"]
+    },
+    {
+      "icon": "prisma",
+      "extensions": ["prisma"]
+    }
   ],
-  "search.exclude": {
-    "**/node_modules": true,
-    "**/bower_components": true,
-    "**/vendor": true,
-    "**/documentation": true,
-    "v2/uci/documentation": true
-  },
   "[javascript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.formatOnSave": true
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.formatOnSave": true
+  "files.associations": {
+    "*.env.*": "env",
+    ".env": "env"
   }
 }
