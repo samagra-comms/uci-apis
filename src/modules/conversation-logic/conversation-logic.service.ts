@@ -48,6 +48,7 @@ export class ConversationLogicService {
     console.info({ tansformerConfigs });
     const createData = {
       name: data.name,
+      description: data.description,
       adapter: {
         connect: {
           id: data.adapter,
