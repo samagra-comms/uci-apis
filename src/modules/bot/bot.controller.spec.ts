@@ -10,10 +10,11 @@ import { SecretsService } from '../secrets/secrets.service';
 import { TelemetryService } from '../../global-services/telemetry.service';
 import { ServiceService } from '../service/service.service';
 import { DeviceManagerService } from '../user-segment/fusionauth/fusionauth.service';
-import { Prisma } from 'prisma/generated/prisma-client-js';
+import { BotStatus, Prisma } from '../../../prisma/generated/prisma-client-js';
 import fetchMock from 'fetch-mock';
 import { FusionAuthClientProvider } from '../user-segment/fusionauth/fusionauthClientProvider';
-import { BadRequestException, CacheModule } from '@nestjs/common';
+import { BadRequestException, CacheModule, ServiceUnavailableException } from '@nestjs/common';
+import { VaultClientProvider } from '../secrets/secrets.service.provider';
 
 class MockPrismaService {
   bot = {
@@ -23,7 +24,7 @@ class MockPrismaService {
       }
       const mockBotDataCopy = JSON.parse(JSON.stringify(mockBotData));
       if (filter.where.id == 'disabled') {
-        mockBotDataCopy['status'] = 'DISABLED';
+        mockBotDataCopy['status'] = BotStatus.DISABLED;
       }
       if (filter.where.id == 'noUser') {
         mockBotDataCopy['users'] = []
@@ -176,6 +177,7 @@ describe('BotController', () => {
         FusionAuthClientProvider,
         DeviceManagerService,
         TelemetryService,
+        VaultClientProvider,
         ConfigService, {
           provide: ConfigService,
           useClass: MockConfigService,
@@ -229,4 +231,8 @@ describe('BotController', () => {
   it('bot start returns bad request when bot does not have user data', async () => {
     expect(botController.startOne('noUser', {})).rejects.toThrowError(new BadRequestException('Bot does not contain user segment data'));
   });
+
+  it('disabled bot returns unavailable error',async () => {
+    await expect(() => botController.startOne('disabled', {})).rejects.toThrowError(ServiceUnavailableException);
+  })
 });
