@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, InternalServerErrorException, Logger, Inject,CACHE_MANAGER, ServiceUnavailableException} from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, InternalServerErrorException, Logger, Inject,CACHE_MANAGER, ServiceUnavailableException, NotFoundException} from '@nestjs/common';
 import {
   Bot,
   BotStatus,
@@ -449,12 +449,16 @@ export class BotService {
     });
   }
 
-  update(id: string, updateAdapterDto: any) {
-    return this.prisma.adapter.update({
+  async update(id: string, updateBotDto: any) {
+    const existingBot = await this.findOne(id);
+    if (!existingBot) {
+      throw new NotFoundException("Bot does not exist!")
+    }
+    return this.prisma.bot.update({
       where: {
         id,
       },
-      data: updateAdapterDto,
+      data: updateBotDto,
     });
   }
 
