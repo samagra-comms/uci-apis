@@ -458,12 +458,14 @@ export class BotService {
     if (!existingBot) {
       throw new NotFoundException("Bot does not exist!")
     }
-    return this.prisma.bot.update({
+    const updatedBot = await this.prisma.bot.update({
       where: {
         id,
       },
       data: updateBotDto,
     });
+    await this.cacheManager.reset();
+    return updatedBot;
   }
 
   remove(id: string) {
