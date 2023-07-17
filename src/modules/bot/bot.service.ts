@@ -371,7 +371,7 @@ export class BotService {
     });
   }
 
-  async find(
+  async search(
     perPage: number,
     page: number,
     name: string,
@@ -379,12 +379,10 @@ export class BotService {
     match: boolean,
     ownerID: string,
     ownerOrgID: string,
+    sortBy: string | undefined,
   ): Promise<{ data: Bot[]; totalCount: number } | null> {
     const startTime = performance.now();
-    let filterQuery: any = {
-      ownerID: ownerID,
-      ownerOrgID: ownerOrgID,
-    };
+    let filterQuery: any = {};
     if (name || startingMessage) {
       filterQuery.OR = [
         {
@@ -397,60 +395,24 @@ export class BotService {
         },
       ];
     }
-    if (!ownerID || !ownerOrgID) {
-      delete filterQuery.ownerID;
-      delete filterQuery.ownerOrgID;
-      filterQuery.OR = [
-        {
-          name: match ? name : caseInsensitiveQueryBuilder(name),
-        },
-        {
-          startingMessage: match
-            ? startingMessage
-            : caseInsensitiveQueryBuilder(startingMessage),
-        },
-      ];
+    if (ownerID || ownerOrgID) {
+      filterQuery.ownerID = ownerID;
+      filterQuery.ownerOrgID = ownerOrgID;
     }
-    const count = await this.prisma.bot.count({ where: filterQuery });
+    if (!sortBy) {
+      sortBy = 'id';
+    }
     const data = await this.prisma.bot.findMany({
       skip: perPage * (page - 1),
       take: perPage,
       where: filterQuery,
       include: this.include,
+      orderBy: {
+        [sortBy]: 'asc'
+      }
     });
     this.logger.log(`BotService::find: Returning response of find query. Time taken: ${performance.now() - startTime} milliseconds.`);
-    return { data: data, totalCount: count };
-  }
-
-  async findForAdmin(
-    perPage: number,
-    page: number,
-    name: string,
-    startingMessage: string,
-    match: boolean,
-    ownerID: string,
-    ownerOrgID: string,
-  ): Promise<Bot[] | null> {
-    let filterQuery: any = {
-      ownerID: ownerID,
-      ownerOrgID: ownerOrgID,
-      OR: [
-        {
-          name: match ? name : caseInsensitiveQueryBuilder(name),
-        },
-        {
-          startingMessage: match
-            ? startingMessage
-            : caseInsensitiveQueryBuilder(startingMessage),
-        },
-      ],
-    };
-    return this.prisma.bot.findMany({
-      skip: perPage * (page - 1),
-      take: perPage,
-      where: filterQuery,
-      include: this.include,
-    });
+    return { data: data, totalCount: data.length };
   }
 
   async update(id: string, updateBotDto: any) {

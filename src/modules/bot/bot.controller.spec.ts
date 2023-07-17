@@ -265,4 +265,18 @@ describe('BotController', () => {
     expect(resp).toBeTruthy();
     updateParametersPassed = [];
   })
+
+  it('search throws error on unknown search fields', async () => {
+    expect(botController.search(
+      '1',
+      '1',
+      '',
+      '',
+      'true',
+      'nonExistent',
+      {}
+    ))
+    .rejects
+    .toThrowError(new BadRequestException(`sorting by 'nonExistent' is not supported!`));
+  });
 });
