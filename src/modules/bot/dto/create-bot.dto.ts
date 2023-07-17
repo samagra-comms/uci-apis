@@ -1,3 +1,5 @@
+import { BotStatus } from "prisma/generated/prisma-client-js";
+
 const exampleForDTO = {
   startingMessage: 'Hi Test Bot - 6',
   name: 'Test Bot - 6',
@@ -15,7 +17,7 @@ export class CreateBotDto {
   tags: string[];
   users: string[];
   logic: string[];
-  status: string;
+  status: BotStatus;
   startDate: string;
   endDate: string;
   ownerid: string;

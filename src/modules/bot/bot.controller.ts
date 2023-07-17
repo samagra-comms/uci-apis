@@ -296,7 +296,26 @@ export class BotController {
     AddOwnerInfoInterceptor,
     AddROToResponseInterceptor,
   )
-  update(@Param('id') id: string, @Body() updateBotDto: any) {
+  update(@Param('id') id: string, @Body() body: any) {
+    const fieldsToInclude = [
+      "startingMessage",
+      "name",
+      "tags",
+      "users",
+      "logic",
+      "status",
+      "endDate",
+      "ownerid",
+      "ownerorgid",
+      "purpose",
+      "description"
+    ];
+    const updateBotDto = Object.entries(body).reduce((acc, [key, value]) => {
+      if (value !== undefined && fieldsToInclude.includes(key)) {
+        acc[key] = value;
+      }
+      return acc;
+    }, {});
     return this.botService.update(id, updateBotDto);
   }
 
