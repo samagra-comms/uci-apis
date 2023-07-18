@@ -5,12 +5,13 @@ import { PrismaService } from '../../global-services/prisma.service';
 import { CreateBotDto } from './dto/create-bot.dto';
 import stream from 'stream';
 import fetchMock from 'fetch-mock';
-import {CACHE_MANAGER, ConflictException, HttpException, InternalServerErrorException, NotFoundException, ServiceUnavailableException} from "@nestjs/common";
+import {ConflictException, InternalServerErrorException, NotFoundException, ServiceUnavailableException} from "@nestjs/common";
 import { CacheModule } from '@nestjs/common';
+import { BotStatus } from '../../../prisma/generated/prisma-client-js';
 
 
-class MockPrismaService {
-  bot = {
+const MockPrismaService = {
+  bot: {
     create: (createData) => {
       const mockBotsDbCopy = JSON.parse(JSON.stringify(mockBotsDb[0]));
       if (createData.data.purpose)
@@ -25,9 +26,19 @@ class MockPrismaService {
       else
         return JSON.parse(JSON.stringify(mockBotsDb[0]));
     },
+    findFirst: (filter) => {
+      const { name, startingMessage } = filter.where.OR.reduce((acc, obj) => {
+        return { ...acc, ...obj };
+      }, {});
+      if ((name && name.includes("NotExisting")) && (startingMessage && startingMessage.includes("NotExisting"))) {
+        return null;
+      }
+      return JSON.parse(JSON.stringify(mockBotsDb[0]));
+    },
     findMany: () => {
       return JSON.parse(JSON.stringify(mockBotsDb));
-    }
+    },
+    update: jest.fn()
   }
 }
 
@@ -49,7 +60,7 @@ const mockCreateBotDto: CreateBotDto & { ownerID: string; ownerOrgID: string } =
   name: "TestName",
   users: [],
   logic: [],
-  status: "enabled",
+  status: BotStatus.ENABLED,
   startDate: "2023-05-4",
   endDate: "2025-12-01",
   purpose: "TestPurpose",
@@ -94,8 +105,87 @@ const mockBotsDb = [{
   "status": "ENABLED",
   "tags": [],
   "botImage": "testImageFile",
-  "users": [],
-  "logicIDs": []
+  "users": [
+    {
+      "id": "testUserId",
+      "createdAt": "2023-05-05T09:26:14.817Z",
+      "updatedAt": "2023-05-05T09:26:14.818Z",
+      "name": "Testing User Segment - 1",
+      "description": null,
+      "count": 0,
+      "category": null,
+      "allServiceID": "testServiceId",
+      "byPhoneServiceID": "testPhoneServiceId",
+      "byIDServiceID": null,
+      "botId": null,
+      "all": {
+        "id": "testId",
+        "createdAt": "2023-05-05T09:25:49.482Z",
+        "updatedAt": "2023-05-05T09:25:49.482Z",
+        "type": "get",
+        "config": {
+          "url": "http://testSegmentUrl/segments/1/mentors?deepLink=nipunlakshya://chatbot",
+          "type": "GET",
+          "cadence": {
+            "perPage": 1,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": true,
+            "concurrency": 10,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": {},
+          "totalRecords": 1
+        },
+        "name": null
+      }
+    }
+  ],
+  "logicIDs": [
+    {
+      "id": "testLogicId",
+      "name": "Load Test Firebase Broadcast Logic",
+      "createdAt": "2023-05-05T09:28:11.910Z",
+      "updatedAt": "2023-05-05T09:28:11.911Z",
+      "description": null,
+      "adapterId": "testAdapterId",
+      "transformers": [
+        {
+          "id": "testTransformerId",
+          "createdAt": "2023-05-05T09:28:11.894Z",
+          "updatedAt": "2023-05-05T09:28:11.912Z",
+          "meta": {
+            "body": "Hello ${name}-${phoneNo}, Test Notification",
+            "type": "broadcast",
+            "title": "Firebase Test Notification",
+            "params": [
+              "name",
+              "phoneNo"
+            ],
+            "templateType": "JS_TEMPLATE_LITERALS"
+          },
+          "transformerId": "testTransformerId",
+          "conversationLogicId": "testConversationLogicId"
+        }
+      ],
+      "adapter": {
+        "id": "testAdapterId",
+        "createdAt": "2023-03-18T06:02:41.824Z",
+        "updatedAt": "2023-03-18T06:02:41.824Z",
+        "channel": "web",
+        "provider": "firebase",
+        "config": {
+          "credentials": {
+            "vault": "testVault",
+            "variable": "nl-app-firebase-notification"
+          }
+        },
+        "name": "Test Firebase Adapter"
+      }
+    }
+  ]
 }];
 
 const mockBotsResolved = [{
@@ -113,8 +203,87 @@ const mockBotsResolved = [{
   "status": "ENABLED",
   "tags": [],
   "botImage": "testImageUrl",
-  "users": [],
-  "logicIDs": []
+  "users": [
+    {
+      "id": "testUserId",
+      "createdAt": "2023-05-05T09:26:14.817Z",
+      "updatedAt": "2023-05-05T09:26:14.818Z",
+      "name": "Testing User Segment - 1",
+      "description": null,
+      "count": 0,
+      "category": null,
+      "allServiceID": "testServiceId",
+      "byPhoneServiceID": "testPhoneServiceId",
+      "byIDServiceID": null,
+      "botId": null,
+      "all": {
+        "id": "testId",
+        "createdAt": "2023-05-05T09:25:49.482Z",
+        "updatedAt": "2023-05-05T09:25:49.482Z",
+        "type": "get",
+        "config": {
+          "url": "http://testSegmentUrl/segments/1/mentors?deepLink=nipunlakshya://chatbot",
+          "type": "GET",
+          "cadence": {
+            "perPage": 1,
+            "retries": 5,
+            "timeout": 60,
+            "concurrent": true,
+            "pagination": true,
+            "concurrency": 10,
+            "retries-interval": 10
+          },
+          "pageParam": "page",
+          "credentials": {},
+          "totalRecords": 1
+        },
+        "name": null
+      }
+    }
+  ],
+  "logicIDs": [
+    {
+      "id": "testLogicId",
+      "name": "Load Test Firebase Broadcast Logic",
+      "createdAt": "2023-05-05T09:28:11.910Z",
+      "updatedAt": "2023-05-05T09:28:11.911Z",
+      "description": null,
+      "adapterId": "testAdapterId",
+      "transformers": [
+        {
+          "id": "testTransformerId",
+          "createdAt": "2023-05-05T09:28:11.894Z",
+          "updatedAt": "2023-05-05T09:28:11.912Z",
+          "meta": {
+            "body": "Hello ${name}-${phoneNo}, Test Notification",
+            "type": "broadcast",
+            "title": "Firebase Test Notification",
+            "params": [
+              "name",
+              "phoneNo"
+            ],
+            "templateType": "JS_TEMPLATE_LITERALS"
+          },
+          "transformerId": "testTransformerId",
+          "conversationLogicId": "testConversationLogicId"
+        }
+      ],
+      "adapter": {
+        "id": "testAdapterId",
+        "createdAt": "2023-03-18T06:02:41.824Z",
+        "updatedAt": "2023-03-18T06:02:41.824Z",
+        "channel": "web",
+        "provider": "firebase",
+        "config": {
+          "credentials": {
+            "vault": "testVault",
+            "variable": "nl-app-firebase-notification"
+          }
+        },
+        "name": "Test Firebase Adapter"
+      }
+    }
+  ]
 }];
 
 const mockConfig = {
@@ -149,7 +318,7 @@ describe('BotService', () => {
         },
         PrismaService, {
           provide: PrismaService,
-          useClass: MockPrismaService,
+          useValue: MockPrismaService,
         }
       ],
     }).compile();
@@ -164,9 +333,21 @@ describe('BotService', () => {
     });
     const mockCreateBotDtoCopy: CreateBotDto & { ownerID: string; ownerOrgID: string } = JSON.parse(JSON.stringify(mockCreateBotDto));
     mockCreateBotDtoCopy.name = 'testBotNotExisting';
+    mockCreateBotDtoCopy.startingMessage = 'testBotStartingMessageNotExisting';
     const response = await botService.create(mockCreateBotDtoCopy, mockFile);
     expect(response).toEqual(mockBotsDb[0]);
     fetchMock.restore();
+  });
+
+  it('create bot with same name or id throws error', async () => {
+    const mockCreateBotDtoCopy: CreateBotDto & { ownerID: string; ownerOrgID: string } = JSON.parse(JSON.stringify(mockCreateBotDto));
+    mockCreateBotDtoCopy.name = 'testBotExistingName';
+    expect(botService.create(mockCreateBotDtoCopy, mockFile)).rejects
+    .toThrowError(new ConflictException("Bot already exists with the following name or starting message!"));
+    const mockCreateBotDtoCopy2: CreateBotDto & { ownerID: string; ownerOrgID: string } = JSON.parse(JSON.stringify(mockCreateBotDto));
+    mockCreateBotDtoCopy2.startingMessage = 'testBotExistingStartingMessage';
+    expect(botService.create(mockCreateBotDtoCopy2, mockFile)).rejects
+    .toThrowError(new ConflictException("Bot already exists with the following name or starting message!"));
   });
 
   it('get bot all data test', async () => {
@@ -260,6 +441,7 @@ describe('BotService', () => {
     });
     const mockCreateBotDtoCopy: CreateBotDto & { ownerID: string; ownerOrgID: string } = JSON.parse(JSON.stringify(mockCreateBotDto));
     mockCreateBotDtoCopy.name = 'testBotNotExisting';
+    mockCreateBotDtoCopy.startingMessage = 'testBotStartingMessageNotExisting';
     mockCreateBotDtoCopy.purpose = 'testPurposeUpdate';
     mockCreateBotDtoCopy.description = 'testDescriptionUpdate';
     const response = await botService.create(mockCreateBotDtoCopy, mockFile);
@@ -270,18 +452,57 @@ describe('BotService', () => {
     fetchMock.restore();
   });
 
-  it('bot service returns proper error message when bot already exists', async () => {
-    const mockCreateBotDtoCopy: CreateBotDto & { ownerID: string; ownerOrgID: string } = JSON.parse(JSON.stringify(mockCreateBotDto));
-    mockCreateBotDtoCopy.name = 'testBotIdExisting';
-    expect(botService.create(mockCreateBotDtoCopy, mockFile)).rejects.toThrowError(new ConflictException('Bot already exists with the following name'));
-  });
-
   it('bot service returns proper error message on minio image upload failure', async () => {
     fetchMock.postOnce(`${configService.get<string>('MINIO_MEDIA_UPLOAD_URL')}`, () => {
       throw new InternalServerErrorException();
     });
     const mockCreateBotDtoCopy: CreateBotDto & { ownerID: string; ownerOrgID: string } = JSON.parse(JSON.stringify(mockCreateBotDto));
     mockCreateBotDtoCopy.name = 'testBotNotExisting';
+    mockCreateBotDtoCopy.startingMessage = 'testBotStartingMessageNotExisting';
     expect(botService.create(mockCreateBotDtoCopy, mockFile)).rejects.toThrowError(new ServiceUnavailableException('Bot image upload failed!'));
   });
+
+  it('bot start passes admin token to segment url', async () => {
+    const botId = 'testBotId';
+    let submittedToken;
+    fetchMock.getOnce('http://testSegmentUrl/segments/1/mentors?deepLink=nipunlakshya://chatbot&limit=1&offset=0', (url, options) => {
+      if (options.headers) {
+        submittedToken = options.headers ? options.headers['conversation-authorization'] : '';
+      }
+      return {
+        data : {
+          users: []
+        }
+      };
+    });
+    fetchMock.getOnce('http://testSegmentUrl/segments/1/mentors/count', {
+      totalCount: 1
+    });
+    fetchMock.getOnce(`${configService.get('UCI_CORE_BASE_URL')}/campaign/start?campaignId=testBotId&page=1`, (url, options) => {
+      submittedToken = options.headers ? options.headers['conversation-authorization'] : '';
+      return true;
+    });
+    await botService.start(botId, mockBotsDb[0].users[0].all.config,'testAuthToken');
+    expect(fetchMock.called(`${configService.get('UCI_CORE_BASE_URL')}/campaign/start?campaignId=testBotId&page=1`)).toBe(true);
+    expect(submittedToken).toEqual('testAuthToken');
+    fetchMock.restore();
+  });
+
+  it('bot update throws NotFoundException when non existent bot is updated',async () => {
+    expect(botService.update('testBotIdNotExisting', {
+      'status': 'DISABLED'
+    }))
+    .rejects
+    .toThrowError(new NotFoundException('Bot does not exist!'));
+  })
+
+  it('bot update calls prisma update',async () => {
+    fetchMock.getOnce(`${configService.get<string>('MINIO_GET_SIGNED_FILE_URL')}/?fileName=testImageFile`,
+      'testImageUrl'
+    );
+    await botService.update('testBotIdExisting', {
+      'status': 'DISABLED'
+    });
+    expect(MockPrismaService.bot.update).toHaveBeenCalled();
+  })
 });

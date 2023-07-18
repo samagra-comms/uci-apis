@@ -10,10 +10,10 @@ import { SecretsService } from '../secrets/secrets.service';
 import { TelemetryService } from '../../global-services/telemetry.service';
 import { ServiceService } from '../service/service.service';
 import { DeviceManagerService } from '../user-segment/fusionauth/fusionauth.service';
-import { Prisma } from 'prisma/generated/prisma-client-js';
-import fetchMock from 'fetch-mock';
+import { BotStatus, Prisma } from '../../../prisma/generated/prisma-client-js';
 import { FusionAuthClientProvider } from '../user-segment/fusionauth/fusionauthClientProvider';
-import { BadRequestException, CacheModule } from '@nestjs/common';
+import { BadRequestException, CacheModule, ServiceUnavailableException } from '@nestjs/common';
+import { VaultClientProvider } from '../secrets/secrets.service.provider';
 
 class MockPrismaService {
   bot = {
@@ -23,7 +23,7 @@ class MockPrismaService {
       }
       const mockBotDataCopy = JSON.parse(JSON.stringify(mockBotData));
       if (filter.where.id == 'disabled') {
-        mockBotDataCopy['status'] = 'DISABLED';
+        mockBotDataCopy['status'] = BotStatus.DISABLED;
       }
       if (filter.where.id == 'noUser') {
         mockBotDataCopy['users'] = []
@@ -43,6 +43,33 @@ class MockConfigService {
       case 'POSTHOG_API_KEY': return 'POSTHOG_KEY';
       default: return '';
     }
+  }
+}
+
+class MockBotService {
+  findOne(id: string) {
+    if (id === 'testBotIdNotExisting') {
+      return null;
+    }
+    const mockBotDataCopy = JSON.parse(JSON.stringify(mockBotData));
+    if (id == 'disabled') {
+      mockBotDataCopy['status'] = BotStatus.DISABLED;
+    }
+    if (id == 'noUser') {
+      mockBotDataCopy['users'] = []
+    }
+    return mockBotDataCopy;
+  }
+
+  update(id: string, updateBotDto: any) {
+    let resp: boolean = true;
+    Object.entries(updateBotDto).reduce((acc, [key, value]) => {
+      if (!updateParametersPassed.includes(key)) {
+        resp = false;
+      }
+      return acc;
+    }, {});
+    return resp;
   }
 }
 
@@ -74,7 +101,7 @@ const mockBotData: Prisma.BotGetPayload<{
   "endDate": new Date("20org0124-12-01T00:00:00.000Z"),
   "status": "ENABLED",
   "tags": [],
-  "botImage": null,
+  "botImage": 'testBotImage',
   "users": [
     {
       "id": "testUserId",
@@ -158,6 +185,22 @@ const mockBotData: Prisma.BotGetPayload<{
   ]
 };
 
+const botUpdateValidParameters = [
+  "startingMessage",
+  "name",
+  "tags",
+  "users",
+  "logic",
+  "status",
+  "endDate",
+  "ownerid",
+  "ownerorgid",
+  "purpose",
+  "description"
+];
+
+let updateParametersPassed: string[] = [];
+
 describe('BotController', () => {
   let botController: BotController;
   let configService: ConfigService;
@@ -167,7 +210,6 @@ describe('BotController', () => {
       controllers: [BotController],
       imports: [CacheModule.register({})],
       providers: [
-        BotService,
         GQLResolverService,
         GetRequestResolverService,
         PostRequestResolverService,
@@ -176,6 +218,7 @@ describe('BotController', () => {
         FusionAuthClientProvider,
         DeviceManagerService,
         TelemetryService,
+        VaultClientProvider,
         ConfigService, {
           provide: ConfigService,
           useClass: MockConfigService,
@@ -183,43 +226,16 @@ describe('BotController', () => {
         PrismaService, {
           provide: PrismaService,
           useClass: MockPrismaService,
+        },
+        BotService, {
+          provide: BotService,
+          useClass: MockBotService,
         }
       ],
     }).compile();
 
     botController = module.get<BotController>(BotController);
     configService = module.get<ConfigService>(ConfigService);
-  });
-
-  it('bot start passes admin token to segment url', async () => {
-    const headers = {'conversation-authorization': 'testAuthToken'};
-    const botId = 'testBotId';
-    let submittedToken;
-    fetchMock.getOnce('http://testSegmentUrl/segments/1/mentors?deepLink=nipunlakshya://chatbot&limit=1&offset=0', (url, options) => {
-      if (options.headers) {
-        submittedToken = new Headers(options.headers).get('conversation-authorization');
-      }
-      return {
-        data : {
-          users: []
-        }
-      };
-    });
-    fetchMock.getOnce('http://testSegmentUrl/segments/1/mentors/count', {
-      totalCount: 1
-    });
-    fetchMock.getOnce(`${configService.get('UCI_CORE_BASE_URL')}/campaign/start?campaignId=testBotId&page=1`, (url, options) => {
-      submittedToken = new Headers(options.headers).get('conversation-authorization');
-      return true;
-    });
-    await botController.startOne(botId, headers);
-    expect(fetchMock.called(`${configService.get('UCI_CORE_BASE_URL')}/campaign/start?campaignId=testBotId&page=1`)).toBe(true);
-    expect(submittedToken).toEqual('testAuthToken');
-    submittedToken = '';
-    await botController.getAllUsers(botId, headers, 1);
-    expect(fetchMock.called('http://testSegmentUrl/segments/1/mentors?deepLink=nipunlakshya://chatbot&limit=1&offset=0')).toBe(true);
-    expect(submittedToken).toEqual('testAuthToken');
-    fetchMock.restore();
   });
 
   it('bot start returns bad request on non existent bot', async () => {
@@ -229,4 +245,24 @@ describe('BotController', () => {
   it('bot start returns bad request when bot does not have user data', async () => {
     expect(botController.startOne('noUser', {})).rejects.toThrowError(new BadRequestException('Bot does not contain user segment data'));
   });
+
+  it('disabled bot returns unavailable error',async () => {
+    await expect(() => botController.startOne('disabled', {})).rejects.toThrowError(ServiceUnavailableException);
+  })
+
+  it('update only passes relevant bot data to bot service', async () => {
+    updateParametersPassed = [
+      'status',
+      'tags'
+    ];
+    const resp = await botController.update('testBotId', {
+      'irrelevant_parameter1': 'test',
+      'irrelevant_parameter2': 'test',
+      'status': 'test',
+      'tags': 'test',
+      'irrelevant_parameter3': 'test',
+    });
+    expect(resp).toBeTruthy();
+    updateParametersPassed = [];
+  })
 });

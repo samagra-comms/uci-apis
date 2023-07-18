@@ -9,11 +9,11 @@ import {
   UseInterceptors,
   Headers,
   Query,
-  Req,
   UploadedFile,
   UnsupportedMediaTypeException,
   BadRequestException,
   Logger,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { AddResponseObjectInterceptor } from '../../interceptors/addResponseObject.interceptor';
 import { AddOwnerInfoInterceptor } from '../../interceptors/addOwnerInfo.interceptor';
@@ -21,7 +21,7 @@ import { AddAdminHeaderInterceptor } from '../../interceptors/addAdminHeader.int
 import { BotService } from './bot.service';
 import { AddROToResponseInterceptor } from '../../interceptors/addROToResponse.interceptor';
 import { ServiceService } from '../service/service.service';
-import { Prisma } from 'prisma/generated/prisma-client-js';
+import { BotStatus, Prisma } from '../../../prisma/generated/prisma-client-js';
 import { DeviceManagerService } from '../user-segment/fusionauth/fusionauth.service';
 import { CreateBotDto } from './dto/create-bot.dto';
 import { ApiConsumes } from '@nestjs/swagger';
@@ -208,7 +208,10 @@ export class BotController {
       throw new BadRequestException('Bot does not contain user segment data');
     }
     console.log(bot?.users[0].all);
-    const res = await this.botService.start(id, bot.users[0].all?.config, headers['conversation-authorization']);
+    if (bot?.status != BotStatus.ENABLED) {
+      throw new ServiceUnavailableException("Bot is not enabled!");
+    }
+    const res = await this.botService.start(id, bot?.users[0].all?.config, headers['conversation-authorization']);
     return res;
   }
 
@@ -293,7 +296,26 @@ export class BotController {
     AddOwnerInfoInterceptor,
     AddROToResponseInterceptor,
   )
-  update(@Param('id') id: string, @Body() updateBotDto: any) {
+  update(@Param('id') id: string, @Body() body: any) {
+    const fieldsToInclude = [
+      "startingMessage",
+      "name",
+      "tags",
+      "users",
+      "logic",
+      "status",
+      "endDate",
+      "ownerid",
+      "ownerorgid",
+      "purpose",
+      "description"
+    ];
+    const updateBotDto = Object.entries(body).reduce((acc, [key, value]) => {
+      if (value !== undefined && fieldsToInclude.includes(key)) {
+        acc[key] = value;
+      }
+      return acc;
+    }, {});
     return this.botService.update(id, updateBotDto);
   }
 
