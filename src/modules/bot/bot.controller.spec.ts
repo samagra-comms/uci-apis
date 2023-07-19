@@ -190,11 +190,11 @@ const botUpdateValidParameters = [
   "name",
   "tags",
   "users",
-  "logic",
+  "logicIDs",
   "status",
   "endDate",
-  "ownerid",
-  "ownerorgid",
+  "ownerID",
+  "ownerOrgID",
   "purpose",
   "description"
 ];
