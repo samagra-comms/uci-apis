@@ -9,7 +9,7 @@ class PrismaServiceMock {
   };
 }
 
-describe.skip('AppController', () => {
+describe('AppController', () => {
   let appController: AppController;
   let appService: AppService;
 
