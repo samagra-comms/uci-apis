@@ -5,7 +5,7 @@ import { PrismaService } from '../../global-services/prisma.service';
 import { CreateBotDto } from './dto/create-bot.dto';
 import stream from 'stream';
 import fetchMock from 'fetch-mock';
-import {ConflictException, InternalServerErrorException, NotFoundException, ServiceUnavailableException} from "@nestjs/common";
+import {BadRequestException, ConflictException, InternalServerErrorException, NotFoundException, ServiceUnavailableException} from "@nestjs/common";
 import { CacheModule } from '@nestjs/common';
 import { BotStatus } from '../../../prisma/generated/prisma-client-js';
 
@@ -504,5 +504,18 @@ describe('BotService', () => {
       'status': 'DISABLED'
     });
     expect(MockPrismaService.bot.update).toHaveBeenCalled();
+    fetchMock.restore();
+  })
+
+  it('bot update throws on invalid date format',async () => {
+    fetchMock.getOnce(`${configService.get<string>('MINIO_GET_SIGNED_FILE_URL')}/?fileName=testImageFile`,
+      'testImageUrl'
+    );
+    await expect(botService.update('testBotIdExisting', {
+      'endDate': '1129-299-092'
+    }))
+    .rejects
+    .toThrowError(new BadRequestException(`Bad date format. Please provide date in 'yyyy-mm-yy' format.`));
+    fetchMock.restore();
   })
 });

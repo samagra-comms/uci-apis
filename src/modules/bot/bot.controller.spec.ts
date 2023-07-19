@@ -41,6 +41,8 @@ class MockConfigService {
       case 'TRANSFORMER_BASE_URL': return 'http://transformer_base_url';
       case 'UCI_CORE_BASE_URL': return 'http://uci_core_base_url';
       case 'POSTHOG_API_KEY': return 'POSTHOG_KEY';
+      case 'VAULT_TOKEN': return 'testVaultToken';
+      case 'VAULT_ADDR': return 'testVaultAddress';
       default: return '';
     }
   }
@@ -190,11 +192,11 @@ const botUpdateValidParameters = [
   "name",
   "tags",
   "users",
-  "logic",
+  "logicIDs",
   "status",
   "endDate",
-  "ownerid",
-  "ownerorgid",
+  "ownerID",
+  "ownerOrgID",
   "purpose",
   "description"
 ];

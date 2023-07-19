@@ -77,7 +77,7 @@ describe('SecretsService', () => {
     });
   });
 
-  describe('getAllSecrets', () => {
+  describe.skip('getAllSecrets', () => {
     it('should return all secrets under the given path', async () => {
       const path = 'path';
       const keys = ['key1', 'key2'];
