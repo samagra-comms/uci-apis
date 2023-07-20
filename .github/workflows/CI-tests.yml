@@ -5,7 +5,7 @@ on:
   pull_request:
 
 jobs:
-  test:
+  Tests:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,6 +23,8 @@ jobs:
       - name: Generate Prisma Client and Test
         run: npx prisma generate && yarn test 2>&1 | tee test-report.txt
         continue-on-error: true
+        env:
+          PSQL_DB_URL: postgresql://john_doe:secretpassword@localhost:5432/mydatabase
 
       - name: Check Test Results
         run: |
