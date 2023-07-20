@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UserSegmentController } from './user-segment.controller';
 import { UserSegmentService } from './user-segment.service';
 
-describe.skip('UserSegmentController', () => {
+describe('UserSegmentController', () => {
   let controller: UserSegmentController;
 
   const mockUserSegment = {
@@ -46,8 +46,27 @@ describe.skip('UserSegmentController', () => {
     }),
 
     findOne: jest.fn((id) => {
-      const response = { ...mockUserSegment };
-      response.id = id;
+      const response = {
+        id,
+        createdAt: 1000,
+        updatedAt: 1000,
+        name: 'mockUserSegment',
+        all: {
+          connect: {
+            id: 7,
+          },
+        },
+        byPhone: {
+          connect: {
+            id: 8,
+          },
+        },
+        byId: {
+          connect: {
+            id: 9,
+          },
+        },
+      };
       return { ...response };
     }),
 
@@ -80,7 +99,7 @@ describe.skip('UserSegmentController', () => {
   });
 
   describe('create', () => {
-    it('should crate a user object', () => {
+    it('should create a user object', () => {
       const user: any = {};
 
       expect(controller.create(user)).toEqual({
@@ -105,7 +124,7 @@ describe.skip('UserSegmentController', () => {
   });
 
   describe('findOne', () => {
-    it('should return the object having same id', () => {
+    it('should return specific user info', () => {
       const response = { ...mockUserSegment };
       response.id = '456';
 
@@ -115,7 +134,7 @@ describe.skip('UserSegmentController', () => {
   });
 
   describe('update', () => {
-    it('should returj the updated user object', () => {
+    it('should return the updated user object', () => {
       const response = { ...mockUserSegment };
       response.name = 'mock2';
 
@@ -145,7 +164,7 @@ describe.skip('UserSegmentController', () => {
   });
 
   describe('delete', () => {
-    it('should return 1 after successful deletion', () => {
+    it('should successfuly delete a user segment', () => {
       const id = '123';
       expect(controller.remove(id)).toEqual({ id });
 
