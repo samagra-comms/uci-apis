@@ -33,4 +33,3 @@ jobs:
           context: "."
           push: true
           tags: samagragovernance/uci-apis:${{ steps.vars.outputs.tag }}
-          build-args: NPM_TOKEN=${{secrets.TOKEN}}
