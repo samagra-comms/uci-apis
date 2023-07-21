@@ -1,0 +1,36 @@
+name: Run Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  Tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16.18
+
+      - name: Install Dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Generate Prisma Client and Test
+        run: npx prisma generate && yarn test 2>&1 | tee test-report.txt
+        continue-on-error: true
+        env:
+          PSQL_DB_URL: postgresql://john_doe:secretpassword@localhost:5432/mydatabase
+
+      - name: Check Test Results
+        run: |
+          if grep -qi "Test Suites: .* failed" test-report.txt; then
+            echo "Tests have failed."
+            exit 1
+          else
+            echo "Tests have passed."
+          fi 

@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, InternalServerErrorException, Logger, Inject,CACHE_MANAGER, ServiceUnavailableException, NotFoundException} from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, InternalServerErrorException, Logger, Inject,CACHE_MANAGER, ServiceUnavailableException, NotFoundException, BadRequestException} from '@nestjs/common';
 import {
   Bot,
   BotStatus,
@@ -457,6 +457,31 @@ export class BotService {
     const existingBot = await this.findOne(id);
     if (!existingBot) {
       throw new NotFoundException("Bot does not exist!")
+    }
+    if (updateBotDto.logicIDs) {
+      updateBotDto.logicIDs = {
+        set: updateBotDto.logicIDs.map((logic) => {
+          return {
+            id: logic,
+          };
+        }),
+      }
+    }
+    if (updateBotDto.users) {
+      updateBotDto.users = {
+        set: updateBotDto.users.map((user) => {
+          return {
+            id: user,
+          };
+        }),
+      }
+    }
+    if (updateBotDto.endDate) {
+      const dateRegex: RegExp = /^\d{4}-\d{2}-\d{2}$/;
+      if (!dateRegex.test(updateBotDto.endDate)) {
+        throw new BadRequestException(`Bad date format. Please provide date in 'yyyy-mm-yy' format.`)
+      }
+      updateBotDto.endDate = new Date(updateBotDto.endDate);
     }
     const updatedBot = await this.prisma.bot.update({
       where: {

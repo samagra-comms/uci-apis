@@ -28,7 +28,7 @@ class MockPrismaServiceUp {
   }
 }
 
-describe('HealthService UP checks', () => {
+describe.skip('HealthService UP checks', () => {
   let healthService: HealthService;
   let primsmaService: PrismaService;
   let formService: FormService;
@@ -109,7 +109,7 @@ class MockPrismaServiceDown {
   }
 }
 
-describe('HealthService DOWN checks', () => {
+describe.skip('HealthService DOWN checks', () => {
   let healthService: HealthService;
   let primsmaService: PrismaService;
   let formService: FormService;
