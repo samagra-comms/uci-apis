@@ -515,7 +515,7 @@ describe('BotService', () => {
       'endDate': '1129-299-092'
     }))
     .rejects
-    .toThrowError(new BadRequestException(`Bad date format. Please provide date in 'yyyy-mm-yy' format.`));
+    .toThrowError(new BadRequestException(`Bad date format. Please provide date in 'yyyy-mm-dd' format.`));
     fetchMock.restore();
   })
 });
