@@ -479,7 +479,7 @@ export class BotService {
     if (updateBotDto.endDate) {
       const dateRegex: RegExp = /^\d{4}-\d{2}-\d{2}$/;
       if (!dateRegex.test(updateBotDto.endDate)) {
-        throw new BadRequestException(`Bad date format. Please provide date in 'yyyy-mm-yy' format.`)
+        throw new BadRequestException(`Bad date format. Please provide date in 'yyyy-mm-dd' format.`)
       }
       updateBotDto.endDate = new Date(updateBotDto.endDate);
     }
