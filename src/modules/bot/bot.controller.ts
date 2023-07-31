@@ -118,17 +118,37 @@ export class BotController {
     AddOwnerInfoInterceptor,
     AddROToResponseInterceptor,
   )
-  find(
-    @Query('perPage') perPage: string,
-    @Query('page') page: string,
+  async search(
+    @Query('perPage') perPage: string | undefined,
+    @Query('page') page: string | undefined,
     @Query('name') name: string,
     @Query('startingMessage') startingMessage: string,
     @Query('match') match: 'true' | 'false',
+    @Query('sortBy') sortBy: string | undefined,
     @Body() body: any,
   ) {
-    if (!perPage) perPage = '10';
-    if (!page) page = '1';
-    return this.botService.find(
+    if (!perPage) {
+      this.logger.log('perPage not provided, defaulting to 10.');
+      perPage = '10';
+    }
+    if (!page) {
+      this.logger.log('page not provided, defaulting to 1.');
+      page = '1';
+    }
+    const allowedSortingFields = [
+      "startingMessage",
+      "name",
+      "status",
+      "createdDate",
+      "endDate",
+      "ownerid",
+      "ownerorgid",
+    ];
+    if (sortBy && !allowedSortingFields.includes(sortBy)) {
+      this.logger.error(`sorting by '${sortBy}' is not supported!`);
+      throw new BadRequestException(`sorting by '${sortBy}' is not supported!`);
+    }
+    return await this.botService.search(
       parseInt(perPage),
       parseInt(page),
       name,
@@ -136,32 +156,7 @@ export class BotController {
       match === 'true',
       body.ownerId,
       body.ownerOrgId,
-    );
-  }
-
-  @Get('/search/internal')
-  @UseInterceptors(
-    AddResponseObjectInterceptor,
-    AddAdminHeaderInterceptor,
-    AddOwnerInfoInterceptor,
-    AddROToResponseInterceptor,
-  )
-  findForAdmin(
-    @Query('perPage') perPage: string,
-    @Query('page') page: string,
-    @Query('name') name: string,
-    @Query('startingMessage') startingMessage: string,
-    @Query('match') match: 'true' | 'false',
-    @Body() body: any,
-  ) {
-    return this.botService.findForAdmin(
-      parseInt(perPage),
-      parseInt(page),
-      name,
-      startingMessage,
-      match === 'true',
-      body.ownerId,
-      body.ownerOrgId,
+      sortBy,
     );
   }
 

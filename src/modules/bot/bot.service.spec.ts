@@ -35,8 +35,13 @@ const MockPrismaService = {
       }
       return JSON.parse(JSON.stringify(mockBotsDb[0]));
     },
-    findMany: () => {
-      return JSON.parse(JSON.stringify(mockBotsDb));
+    findMany: (filter) => {
+      if (filter.orderBy && filter.orderBy.sortParameter) {
+        return 'sortedBots';
+      }
+      else {
+        return JSON.parse(JSON.stringify(mockBotsDb));
+      }
     },
     update: jest.fn()
   }
@@ -496,7 +501,7 @@ describe('BotService', () => {
     .toThrowError(new NotFoundException('Bot does not exist!'));
   })
 
-  it('bot update calls prisma update',async () => {
+  it('bot update calls prisma update', async () => {
     fetchMock.getOnce(`${configService.get<string>('MINIO_GET_SIGNED_FILE_URL')}/?fileName=testImageFile`,
       'testImageUrl'
     );
@@ -517,5 +522,19 @@ describe('BotService', () => {
     .rejects
     .toThrowError(new BadRequestException(`Bad date format. Please provide date in 'yyyy-mm-dd' format.`));
     fetchMock.restore();
+  })
+
+  it('bot update passes orderBy parameter to search', async () => {
+    const resp = await botService.search(
+      1,
+      1,
+      '',
+      '',
+      true,
+      '',
+      '',
+      'sortParameter'
+    );
+    expect(resp).toEqual({"data": "sortedBots", "totalCount": 10});
   })
 });
