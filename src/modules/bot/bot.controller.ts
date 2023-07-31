@@ -125,6 +125,7 @@ export class BotController {
     @Query('startingMessage') startingMessage: string,
     @Query('match') match: 'true' | 'false',
     @Query('sortBy') sortBy: string | undefined,
+    @Query('orderBy') orderBy: string | undefined,
     @Body() body: any,
   ) {
     if (!perPage) {
@@ -139,7 +140,7 @@ export class BotController {
       "startingMessage",
       "name",
       "status",
-      "createdDate",
+      "createdAt",
       "endDate",
       "ownerid",
       "ownerorgid",
@@ -148,6 +149,16 @@ export class BotController {
       this.logger.error(`sorting by '${sortBy}' is not supported!`);
       throw new BadRequestException(`sorting by '${sortBy}' is not supported!`);
     }
+
+    const allowedOrderingFields = ['asc', 'desc'];
+
+    if (orderBy && !allowedOrderingFields.includes(orderBy)) {
+      this.logger.error(`ordering in '${orderBy}' is not supported!`);
+      throw new BadRequestException(
+        `ordering in '${orderBy}' is not supported!`,
+      );
+    }
+
     return await this.botService.search(
       parseInt(perPage),
       parseInt(page),
@@ -157,6 +168,7 @@ export class BotController {
       body.ownerId,
       body.ownerOrgId,
       sortBy,
+      orderBy
     );
   }
 
