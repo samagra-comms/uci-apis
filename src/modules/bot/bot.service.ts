@@ -380,6 +380,7 @@ export class BotService {
     ownerID: string,
     ownerOrgID: string,
     sortBy: string | undefined,
+    orderBy: string | undefined,
   ): Promise<{ data: Bot[]; totalCount: number } | null> {
     const startTime = performance.now();
     let filterQuery: any = {};
@@ -402,17 +403,21 @@ export class BotService {
     if (!sortBy) {
       sortBy = 'id';
     }
+    if (!orderBy) {
+      orderBy = 'asc';
+    }
+    const count = await this.prisma.bot.count({ where: filterQuery });
     const data = await this.prisma.bot.findMany({
       skip: perPage * (page - 1),
       take: perPage,
       where: filterQuery,
       include: this.include,
       orderBy: {
-        [sortBy]: 'asc'
+        [sortBy]: orderBy
       }
     });
     this.logger.log(`BotService::find: Returning response of find query. Time taken: ${performance.now() - startTime} milliseconds.`);
-    return { data: data, totalCount: data.length };
+    return { data: data, totalCount: count };
   }
 
   async update(id: string, updateBotDto: any) {
