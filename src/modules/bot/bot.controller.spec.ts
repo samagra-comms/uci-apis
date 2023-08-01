@@ -276,9 +276,26 @@ describe('BotController', () => {
       '',
       'true',
       'nonExistent',
+      'desc',
       {}
     ))
     .rejects
     .toThrowError(new BadRequestException(`sorting by 'nonExistent' is not supported!`));
+  });
+
+  it('search throws error on unknown orderBy value', async () => {
+    expect(botController.search(
+      '1',
+      '1',
+      '',
+      '',
+      'true',
+      'name',
+      //@ts-ignore
+      'nonExistent',
+      {}
+    ))
+    .rejects
+    .toThrowError(new BadRequestException(`Only asc | desc values are supported in 'orderBy' field!`));
   });
 });
