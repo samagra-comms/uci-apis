@@ -125,7 +125,7 @@ export class BotController {
     @Query('startingMessage') startingMessage: string,
     @Query('match') match: 'true' | 'false',
     @Query('sortBy') sortBy: string | undefined,
-    @Query('orderBy') orderBy: string | undefined,
+    @Query('orderBy') orderBy: 'asc' | 'desc' | undefined,
     @Body() body: any,
   ) {
     if (!perPage) {
@@ -153,7 +153,7 @@ export class BotController {
     const allowedOrderingFields = ['asc', 'desc'];
 
     if (orderBy && !allowedOrderingFields.includes(orderBy)) {
-      this.logger.error(`ordering in '${orderBy}' is not supported!`);
+      this.logger.error(`Only  asc|desc values are supported!`);
       throw new BadRequestException(
         `ordering in '${orderBy}' is not supported!`,
       );
