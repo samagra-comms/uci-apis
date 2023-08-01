@@ -153,10 +153,8 @@ export class BotController {
     const allowedOrderingFields = ['asc', 'desc'];
 
     if (orderBy && !allowedOrderingFields.includes(orderBy)) {
-      this.logger.error(`Only  asc|desc values are supported!`);
-      throw new BadRequestException(
-        `ordering in '${orderBy}' is not supported!`,
-      );
+      this.logger.error(`Received invalid orderBy value: ${orderBy}!`);
+      throw new BadRequestException(`Only asc | desc values are supported in 'orderBy' field!`);
     }
 
     return await this.botService.search(

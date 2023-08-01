@@ -43,6 +43,7 @@ const MockPrismaService = {
         return JSON.parse(JSON.stringify(mockBotsDb));
       }
     },
+    count: () => 10,
     update: jest.fn()
   }
 }
@@ -524,7 +525,7 @@ describe('BotService', () => {
     fetchMock.restore();
   })
 
-  it('bot update passes orderBy parameter to search', async () => {
+  it('bot search passes sortBy parameter to prisma', async () => {
     const resp = await botService.search(
       1,
       1,
@@ -533,7 +534,8 @@ describe('BotService', () => {
       true,
       '',
       '',
-      'sortParameter'
+      'sortParameter',
+      'desc'
     );
     expect(resp).toEqual({"data": "sortedBots", "totalCount": 10});
   })
