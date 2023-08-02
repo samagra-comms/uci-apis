@@ -56,6 +56,8 @@ class MockConfigService {
       case 'ODK_BASE_URL': return 'http://odk_form_upload_url';
       case 'TRANSFORMER_BASE_URL': return 'http://transformer_base_url';
       case 'UCI_CORE_BASE_URL': return 'http://uci_core_base_url';
+      case 'CAFFINE_INVALIDATE_ENDPOINT': return '/testcaffineendpoint';
+      case 'AUTHORIZATION_KEY_TRANSACTION_LAYER': return 'testAuthToken';
       default: return '';
     }
   }
@@ -495,16 +497,23 @@ describe('BotService', () => {
   });
 
   it('bot update throws NotFoundException when non existent bot is updated',async () => {
+    fetchMock.getOnce(`${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
+      true
+    );
     expect(botService.update('testBotIdNotExisting', {
       'status': 'DISABLED'
     }))
     .rejects
     .toThrowError(new NotFoundException('Bot does not exist!'));
+    fetchMock.restore();
   })
 
   it('bot update calls prisma update', async () => {
     fetchMock.getOnce(`${configService.get<string>('MINIO_GET_SIGNED_FILE_URL')}/?fileName=testImageFile`,
       'testImageUrl'
+    );
+    fetchMock.deleteOnce(`${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
+      true
     );
     await botService.update('testBotIdExisting', {
       'status': 'DISABLED'
@@ -516,6 +525,9 @@ describe('BotService', () => {
   it('bot update throws on invalid date format',async () => {
     fetchMock.getOnce(`${configService.get<string>('MINIO_GET_SIGNED_FILE_URL')}/?fileName=testImageFile`,
       'testImageUrl'
+    );
+    fetchMock.deleteOnce(`${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
+      true
     );
     await expect(botService.update('testBotIdExisting', {
       'endDate': '1129-299-092'
@@ -538,5 +550,20 @@ describe('BotService', () => {
       'desc'
     );
     expect(resp).toEqual({"data": "sortedBots", "totalCount": 10});
+  })
+
+  it('bot update throws on inbound cache invalidate error',async () => {
+    fetchMock.getOnce(`${configService.get<string>('MINIO_GET_SIGNED_FILE_URL')}/?fileName=testImageFile`,
+      'testImageUrl'
+    );
+    fetchMock.deleteOnce(`${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`, () => {
+      throw new InternalServerErrorException();
+    });
+    await expect(botService.update('testBotIdExisting', {
+      'endDate': '2023-10-12'
+    }))
+    .rejects
+    .toThrowError(new ServiceUnavailableException('Could not invalidate cache after update!'));
+    fetchMock.restore();
   })
 });
