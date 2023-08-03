@@ -421,6 +421,14 @@ export class BotService {
   }
 
   async update(id: string, updateBotDto: any) {
+    const inbound_base = this.configService.get<string>('UCI_CORE_BASE_URL');
+    const caffine_invalidate_endpoint = this.configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT');
+    const transaction_layer_auth_token = this.configService.get<string>('AUTHORIZATION_KEY_TRANSACTION_LAYER');
+    if (!inbound_base || !caffine_invalidate_endpoint || !transaction_layer_auth_token) {
+      this.logger.error(`Missing configuration: inbound endpoint: ${inbound_base}, caffine endpoint: ${caffine_invalidate_endpoint} or transaction layer auth token.`);
+      throw new InternalServerErrorException();
+    }
+    const caffine_reset_url = `${inbound_base}${caffine_invalidate_endpoint}`;
     const existingBot = await this.findOne(id);
     if (!existingBot) {
       throw new NotFoundException("Bot does not exist!")
@@ -457,6 +465,20 @@ export class BotService {
       data: updateBotDto,
     });
     await this.cacheManager.reset();
+    await fetch(caffine_reset_url, {method: 'DELETE', headers: {'Authorization': transaction_layer_auth_token}})
+    .then((resp) => {
+      if (resp.ok) {
+        return resp.json();
+      }
+      else {
+        throw new ServiceUnavailableException(resp);
+      }
+    })
+    .then()
+    .catch((err) => {
+      this.logger.error(`Got failure response from inbound on cache invalidation endpoint ${caffine_reset_url}. Error: ${err}`);
+      throw new ServiceUnavailableException('Could not invalidate cache after update!');
+    });
     return updatedBot;
   }
 
