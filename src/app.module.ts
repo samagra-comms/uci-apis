@@ -26,6 +26,7 @@ import { PostRequestResolverService } from './modules/service/http-post.resolver
 import { HealthModule } from './health/health.module';
 import { FusionAuthClientProvider } from './modules/user-segment/fusionauth/fusionauthClientProvider';
 import { VaultClientProvider } from './modules/secrets/secrets.service.provider';
+import { MonitoringModule } from './monitoring/monitoring.module';
 
 import * as redisStore from 'cache-manager-redis-store';
 
@@ -57,6 +58,7 @@ import * as redisStore from 'cache-manager-redis-store';
       ttl: 1800, //seconds
     }
     ),
+    MonitoringModule,
   ],
   controllers: [AppController, ServiceController],
   providers: [
