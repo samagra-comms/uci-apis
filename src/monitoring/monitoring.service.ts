@@ -186,11 +186,12 @@ export class MonitoringService {
         while (file) {
             if (file.isFile() && file.name.startsWith('analysis')) {
                 // get only ss_mi_hh_dd_mm_yyyy
-                analysis_files.push(file.name.substring(9, 25));
+                analysis_files.push(file.name.substring(9, 28));
             }
             file = await logsFolder.read();
         }
         this.logger.log(`Found ${analysis_files.length} analysis files. [${analysis_files}]`);
+        logsFolder.close();
         return analysis_files;
     }
 
