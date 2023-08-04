@@ -168,6 +168,10 @@ const mockBotsDb = [{
             "body": "Hello ${name}-${phoneNo}, Test Notification",
             "type": "broadcast",
             "title": "Firebase Test Notification",
+            "data": {
+              "botId": "testConversationBotId"
+            },
+            "formID": "testFormId",
             "params": [
               "name",
               "phoneNo"
@@ -266,6 +270,10 @@ const mockBotsResolved = [{
             "body": "Hello ${name}-${phoneNo}, Test Notification",
             "type": "broadcast",
             "title": "Firebase Test Notification",
+            "data": {
+              "botId": "testConversationBotId"
+            },
+            "formID": "testFormId",
             "params": [
               "name",
               "phoneNo"
@@ -506,7 +514,7 @@ describe('BotService', () => {
     .rejects
     .toThrowError(new NotFoundException('Bot does not exist!'));
     fetchMock.restore();
-  })
+  });
 
   it('bot update calls prisma update', async () => {
     fetchMock.getOnce(`${configService.get<string>('MINIO_GET_SIGNED_FILE_URL')}/?fileName=testImageFile`,
@@ -520,7 +528,7 @@ describe('BotService', () => {
     });
     expect(MockPrismaService.bot.update).toHaveBeenCalled();
     fetchMock.restore();
-  })
+  });
 
   it('bot update throws on invalid date format',async () => {
     fetchMock.getOnce(`${configService.get<string>('MINIO_GET_SIGNED_FILE_URL')}/?fileName=testImageFile`,
@@ -535,7 +543,7 @@ describe('BotService', () => {
     .rejects
     .toThrowError(new BadRequestException(`Bad date format. Please provide date in 'yyyy-mm-dd' format.`));
     fetchMock.restore();
-  })
+  });
 
   it('bot search passes sortBy parameter to prisma', async () => {
     const resp = await botService.search(
@@ -550,7 +558,7 @@ describe('BotService', () => {
       'desc'
     );
     expect(resp).toEqual({"data": "sortedBots", "totalCount": 10});
-  })
+  });
 
   it('bot update throws on inbound cache invalidate error',async () => {
     fetchMock.getOnce(`${configService.get<string>('MINIO_GET_SIGNED_FILE_URL')}/?fileName=testImageFile`,
@@ -565,5 +573,17 @@ describe('BotService', () => {
     .rejects
     .toThrowError(new ServiceUnavailableException('Could not invalidate cache after update!'));
     fetchMock.restore();
-  })
+  });
+
+  it('getBotBroadcastConfig returns correct data', async () => {
+    expect(await botService.getBotBroadcastConfig('testConversationBotId'))
+    .toEqual({
+      "bot": {
+        "id": "testId",
+        "name": "TestName",
+        "segment_url": "http://testSegmentUrl/segments/1/mentors?deepLink=nipunlakshya://chatbot",
+        "form_id": "testFormId",
+      }
+    })
+  });
 });

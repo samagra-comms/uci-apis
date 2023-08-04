@@ -97,7 +97,7 @@ export class BotController {
     AddROToResponseInterceptor,
   )
   findAll() {
-    return this.botService.findAll();
+    return this.botService.findAllUnresolved();
   }
 
   @Get('/allContextual')
@@ -179,6 +179,17 @@ export class BotController {
   )
   findOne(@Param('id') id: string, @Headers() headers, @Body() body) {
     return this.botService.findOne(id);
+  }
+
+  @Get(':id/config')
+  @UseInterceptors(
+    AddResponseObjectInterceptor,
+    AddAdminHeaderInterceptor,
+    AddOwnerInfoInterceptor,
+    AddROToResponseInterceptor,
+  )
+  async getBotConfig(@Param('id') id: string) {
+    return await this.botService.getBotBroadcastConfig(id);
   }
 
   @Get('/start/:id')

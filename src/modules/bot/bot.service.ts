@@ -237,11 +237,34 @@ export class BotService {
     }
   }
 
-  async findAll(): Promise<Bot[]> {
+  async findAllUnresolved(): Promise<Promise<Prisma.BotGetPayload<{
+    include: {
+      users: {
+        include: {
+          all: true;
+        };
+      };
+      logicIDs: {
+        include: {
+          transformers: true;
+          adapter: true;
+        };
+      };
+    };
+  }>[] | null>> {
     const startTime = performance.now();
-    const prismaResult = await this.prisma.bot.findMany();
-    this.logger.log(`BotService::findAll: Returning result of all bots. Time taken: ${performance.now() - startTime} milliseconds.`);
-    return prismaResult;
+    const cacheKey = `unresolved_bots_data`;
+    const cachedBots = await this.cacheManager.get(cacheKey);
+    if (cachedBots) {
+      this.logger.log(`BotService::findAll: Returning result of all unresolved bots. Time taken: ${performance.now() - startTime} milliseconds.`);
+      return cachedBots;
+    }
+    const unresolvedBotsData = await this.prisma.bot.findMany({
+      include: this.include,
+    });
+    this.cacheManager.set(cacheKey, unresolvedBotsData);
+    this.logger.log(`BotService::findAll: Returning result of all unresolved bots. Time taken: ${performance.now() - startTime} milliseconds.`);
+    return unresolvedBotsData;
   }
 
   async findAllContextual(ownerID: string | null, ownerOrgID: string | null): Promise<Bot[]> {
@@ -369,6 +392,61 @@ export class BotService {
       this.logger.log(`BotService::findOne: Bot image resolution failed, returning response of find one query. Time taken: ${performance.now() - startTime} milliseconds.`);
       return botData;
     });
+  }
+
+  /// Gets config data of bot
+  /// Current Data format:
+  /// {
+  ///   "bot": {
+  ///     "id"
+  ///     "name"
+  ///     "segment_url"
+  ///     "form_id"
+  ///   }
+  /// }
+  async getBotBroadcastConfig(id: string) {
+    const allBots = await this.findAllUnresolved();
+    if (!allBots) {
+      this.logger.error(`Object data for bot ${id} is incomplete.`);
+      throw new ServiceUnavailableException(`Object data for bot ${id} is incomplete.`);
+    }
+    let requiredBot;
+    for (let i = 0; i < allBots.length; i++) {
+      if (
+        allBots[i].users.length != 0 &&
+        allBots[i].users[0].all &&
+        allBots[i].users[0].all!.config &&
+        allBots[i].users[0].all!.config!['url'] &&
+        allBots[i].logicIDs.length != 0 &&
+        allBots[i].logicIDs[0].transformers &&
+        allBots[i].logicIDs[0].transformers.length != 0 &&
+        allBots[i].logicIDs[0].transformers[0].meta &&
+        allBots[i].logicIDs[0].transformers[0].meta!['formID'] &&
+        allBots[i].logicIDs[0].transformers[0].meta!['data'] &&
+        allBots[i].logicIDs[0].transformers[0].meta!['data']['botId']
+      ) {
+        if (allBots[i].logicIDs[0].transformers[0].meta!['data']['botId'] == id) {
+          requiredBot = allBots[i];
+        }
+      }
+    }
+
+    const requiredData: {
+      'bot': {
+        'id': string,
+        'name': string,
+        'segment_url': string,
+        'form_id': string
+      }
+    } = {
+      bot: {
+        id: requiredBot.id,
+        name: requiredBot.name,
+        segment_url: requiredBot.users[0].all.config['url'],
+        form_id: requiredBot.logicIDs[0].transformers[0].meta['formID'],
+      }
+    };
+    return requiredData;
   }
 
   async search(
