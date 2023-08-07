@@ -345,4 +345,18 @@ export class BotController {
   remove(@Param('id') id: string) {
     return this.botService.remove(id);
   }
+
+  @Get(':botId/broadcastReport')
+  @UseInterceptors(
+    AddResponseObjectInterceptor,
+    AddAdminHeaderInterceptor,
+    AddOwnerInfoInterceptor,
+    AddROToResponseInterceptor,
+  )
+  async getBroadcastReport(@Param('botId') botId: string, @Query('limit') limit: number, @Query('nextPage') nextPage: string) {
+    if (!botId) {
+      throw new BadRequestException(`'botId' is required!`);
+    }
+    return await this.botService.getBroadcastReport(botId, limit, nextPage);
+  }
 }

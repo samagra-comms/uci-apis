@@ -58,6 +58,7 @@ class MockConfigService {
       case 'UCI_CORE_BASE_URL': return 'http://uci_core_base_url';
       case 'CAFFINE_INVALIDATE_ENDPOINT': return '/testcaffineendpoint';
       case 'AUTHORIZATION_KEY_TRANSACTION_LAYER': return 'testAuthToken';
+      case 'BROADCAST_BOT_REPORT_ENDPOINT': return 'testBotReportEndpoint';
       default: return '';
     }
   }
@@ -585,5 +586,19 @@ describe('BotService', () => {
         "form_id": "testFormId",
       }
     })
+  })
+
+  it('bot report fetches data correctly', async () => {
+    fetchMock.getOnce(
+      `${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('BROADCAST_BOT_REPORT_ENDPOINT')}?botId=testBotId&limit=10&nextPage=testNextPage`,
+      true
+    );
+    await botService.getBroadcastReport('testBotId', 10, 'testNextPage');
+    expect(
+      fetchMock.called(
+        `${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('BROADCAST_BOT_REPORT_ENDPOINT')}?botId=testBotId&limit=10&nextPage=testNextPage`
+      )
+    ).toBe(true);
+    fetchMock.restore();
   });
 });

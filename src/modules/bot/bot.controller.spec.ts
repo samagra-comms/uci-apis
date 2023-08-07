@@ -48,7 +48,7 @@ class MockConfigService {
   }
 }
 
-const MockBotService = {
+const mockBotService = {
   findOne: jest.fn((id: string) => {
     if (id === 'testBotIdNotExisting') {
       return null;
@@ -83,7 +83,9 @@ const MockBotService = {
         "form_id": "form_id",
       }
     };
-  })
+  }),
+
+  getBroadcastReport: jest.fn()
 }
 
 const mockBotData: Prisma.BotGetPayload<{
@@ -242,7 +244,7 @@ describe('BotController', () => {
         },
         BotService, {
           provide: BotService,
-          useValue: MockBotService,
+          useValue: mockBotService,
         }
       ],
     }).compile();
@@ -319,6 +321,25 @@ describe('BotController', () => {
         "form_id": "form_id",
       }
     });
-    expect(MockBotService.getBotBroadcastConfig).toHaveBeenCalled();
+    expect(mockBotService.getBotBroadcastConfig).toHaveBeenCalled();
+  });
+
+  it('bot report calls getBroadcastReport', async () => {
+    await botController.getBroadcastReport(
+      'testId',
+      10,
+      'next'
+    );
+    expect(mockBotService.getBroadcastReport).toHaveBeenCalled();
+  })
+
+  it('bot report throws on undefined botId', async () => {
+    expect(botController.getBroadcastReport(
+      '',
+      10,
+      ''
+    ))
+    .rejects
+    .toThrowError(new BadRequestException(`'botId' is required!`));
   });
 });
