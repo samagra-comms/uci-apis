@@ -563,4 +563,24 @@ export class BotService {
   remove(id: string) {
     return `This action removes a #${id} adapter`;
   }
+
+  async getBroadcastReport(botId: string, limit: number, nextPage: string) {
+    const inbound_base = this.configService.get<string>('UCI_CORE_BASE_URL');
+    const broadcast_bot_report_endpoint = this.configService.get<string>('BROADCAST_BOT_REPORT_ENDPOINT');
+    if (!inbound_base || !broadcast_bot_report_endpoint) {
+      this.logger.error(`Config data missing. UCI_CORE_BASE_URL: ${inbound_base}, BROADCAST_BOT_REPORT_ENDPOINT: ${broadcast_bot_report_endpoint}`)
+      throw new InternalServerErrorException('Config data missing!');
+    }
+    let report_endpoint = `${inbound_base}${broadcast_bot_report_endpoint}?botId=${botId}`;
+    if (limit) {
+      report_endpoint += `&limit=${limit}`;
+    }
+    if (nextPage) {
+      report_endpoint += `&nextPage=${nextPage}`;
+    }
+    this.logger.log(`Calling inbound for report with link: ${report_endpoint}`);
+    return await fetch(report_endpoint)
+    .then(resp => resp.json())
+    .then(resp => resp);
+  }
 }
