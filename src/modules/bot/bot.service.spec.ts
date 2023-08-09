@@ -35,9 +35,15 @@ const MockPrismaService = {
       }
       return JSON.parse(JSON.stringify(mockBotsDb[0]));
     },
-    findMany: () => {
-      return JSON.parse(JSON.stringify(mockBotsDb));
+    findMany: (filter) => {
+      if (filter.orderBy && filter.orderBy.sortParameter) {
+        return 'sortedBots';
+      }
+      else {
+        return JSON.parse(JSON.stringify(mockBotsDb));
+      }
     },
+    count: () => 10,
     update: jest.fn()
   }
 }
@@ -50,6 +56,9 @@ class MockConfigService {
       case 'ODK_BASE_URL': return 'http://odk_form_upload_url';
       case 'TRANSFORMER_BASE_URL': return 'http://transformer_base_url';
       case 'UCI_CORE_BASE_URL': return 'http://uci_core_base_url';
+      case 'CAFFINE_INVALIDATE_ENDPOINT': return '/testcaffineendpoint';
+      case 'AUTHORIZATION_KEY_TRANSACTION_LAYER': return 'testAuthToken';
+      case 'BROADCAST_BOT_REPORT_ENDPOINT': return 'testBotReportEndpoint';
       default: return '';
     }
   }
@@ -160,6 +169,10 @@ const mockBotsDb = [{
             "body": "Hello ${name}-${phoneNo}, Test Notification",
             "type": "broadcast",
             "title": "Firebase Test Notification",
+            "data": {
+              "botId": "testConversationBotId"
+            },
+            "formID": "testFormId",
             "params": [
               "name",
               "phoneNo"
@@ -258,6 +271,10 @@ const mockBotsResolved = [{
             "body": "Hello ${name}-${phoneNo}, Test Notification",
             "type": "broadcast",
             "title": "Firebase Test Notification",
+            "data": {
+              "botId": "testConversationBotId"
+            },
+            "formID": "testFormId",
             "params": [
               "name",
               "phoneNo"
@@ -489,33 +506,99 @@ describe('BotService', () => {
   });
 
   it('bot update throws NotFoundException when non existent bot is updated',async () => {
+    fetchMock.getOnce(`${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
+      true
+    );
     expect(botService.update('testBotIdNotExisting', {
       'status': 'DISABLED'
     }))
     .rejects
     .toThrowError(new NotFoundException('Bot does not exist!'));
-  })
+    fetchMock.restore();
+  });
 
-  it('bot update calls prisma update',async () => {
+  it('bot update calls prisma update', async () => {
     fetchMock.getOnce(`${configService.get<string>('MINIO_GET_SIGNED_FILE_URL')}/?fileName=testImageFile`,
       'testImageUrl'
+    );
+    fetchMock.deleteOnce(`${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
+      true
     );
     await botService.update('testBotIdExisting', {
       'status': 'DISABLED'
     });
     expect(MockPrismaService.bot.update).toHaveBeenCalled();
     fetchMock.restore();
-  })
+  });
 
   it('bot update throws on invalid date format',async () => {
     fetchMock.getOnce(`${configService.get<string>('MINIO_GET_SIGNED_FILE_URL')}/?fileName=testImageFile`,
       'testImageUrl'
     );
+    fetchMock.deleteOnce(`${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
+      true
+    );
     await expect(botService.update('testBotIdExisting', {
       'endDate': '1129-299-092'
     }))
     .rejects
-    .toThrowError(new BadRequestException(`Bad date format. Please provide date in 'yyyy-mm-yy' format.`));
+    .toThrowError(new BadRequestException(`Bad date format. Please provide date in 'yyyy-mm-dd' format.`));
     fetchMock.restore();
+  });
+
+  it('bot search passes sortBy parameter to prisma', async () => {
+    const resp = await botService.search(
+      1,
+      1,
+      '',
+      '',
+      true,
+      '',
+      '',
+      'sortParameter',
+      'desc'
+    );
+    expect(resp).toEqual({"data": "sortedBots", "totalCount": 10});
+  });
+
+  it('bot update throws on inbound cache invalidate error',async () => {
+    fetchMock.getOnce(`${configService.get<string>('MINIO_GET_SIGNED_FILE_URL')}/?fileName=testImageFile`,
+      'testImageUrl'
+    );
+    fetchMock.deleteOnce(`${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`, () => {
+      throw new InternalServerErrorException();
+    });
+    await expect(botService.update('testBotIdExisting', {
+      'endDate': '2023-10-12'
+    }))
+    .rejects
+    .toThrowError(new ServiceUnavailableException('Could not invalidate cache after update!'));
+    fetchMock.restore();
+  });
+
+  it('getBotBroadcastConfig returns correct data', async () => {
+    expect(await botService.getBotBroadcastConfig('testConversationBotId'))
+    .toEqual({
+      "bot": {
+        "id": "testId",
+        "name": "TestName",
+        "segment_url": "http://testSegmentUrl/segments/1/mentors?deepLink=nipunlakshya://chatbot",
+        "form_id": "testFormId",
+      }
+    })
   })
+
+  it('bot report fetches data correctly', async () => {
+    fetchMock.getOnce(
+      `${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('BROADCAST_BOT_REPORT_ENDPOINT')}?botId=testBotId&limit=10&nextPage=testNextPage`,
+      true
+    );
+    await botService.getBroadcastReport('testBotId', 10, 'testNextPage');
+    expect(
+      fetchMock.called(
+        `${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('BROADCAST_BOT_REPORT_ENDPOINT')}?botId=testBotId&limit=10&nextPage=testNextPage`
+      )
+    ).toBe(true);
+    fetchMock.restore();
+  });
 });

@@ -97,7 +97,7 @@ export class BotController {
     AddROToResponseInterceptor,
   )
   findAll() {
-    return this.botService.findAll();
+    return this.botService.findAllUnresolved();
   }
 
   @Get('/allContextual')
@@ -118,43 +118,46 @@ export class BotController {
     AddOwnerInfoInterceptor,
     AddROToResponseInterceptor,
   )
-  find(
-    @Query('perPage') perPage: string,
-    @Query('page') page: string,
+  async search(
+    @Query('perPage') perPage: string | undefined,
+    @Query('page') page: string | undefined,
     @Query('name') name: string,
     @Query('startingMessage') startingMessage: string,
     @Query('match') match: 'true' | 'false',
+    @Query('sortBy') sortBy: string | undefined,
+    @Query('orderBy') orderBy: 'asc' | 'desc' | undefined,
     @Body() body: any,
   ) {
-    if (!perPage) perPage = '10';
-    if (!page) page = '1';
-    return this.botService.find(
-      parseInt(perPage),
-      parseInt(page),
-      name,
-      startingMessage,
-      match === 'true',
-      body.ownerId,
-      body.ownerOrgId,
-    );
-  }
+    if (!perPage) {
+      this.logger.log('perPage not provided, defaulting to 10.');
+      perPage = '10';
+    }
+    if (!page) {
+      this.logger.log('page not provided, defaulting to 1.');
+      page = '1';
+    }
+    const allowedSortingFields = [
+      "startingMessage",
+      "name",
+      "status",
+      "createdAt",
+      "endDate",
+      "ownerid",
+      "ownerorgid",
+    ];
+    if (sortBy && !allowedSortingFields.includes(sortBy)) {
+      this.logger.error(`sorting by '${sortBy}' is not supported!`);
+      throw new BadRequestException(`sorting by '${sortBy}' is not supported!`);
+    }
 
-  @Get('/search/internal')
-  @UseInterceptors(
-    AddResponseObjectInterceptor,
-    AddAdminHeaderInterceptor,
-    AddOwnerInfoInterceptor,
-    AddROToResponseInterceptor,
-  )
-  findForAdmin(
-    @Query('perPage') perPage: string,
-    @Query('page') page: string,
-    @Query('name') name: string,
-    @Query('startingMessage') startingMessage: string,
-    @Query('match') match: 'true' | 'false',
-    @Body() body: any,
-  ) {
-    return this.botService.findForAdmin(
+    const allowedOrderingFields = ['asc', 'desc'];
+
+    if (orderBy && !allowedOrderingFields.includes(orderBy)) {
+      this.logger.error(`Received invalid orderBy value: ${orderBy}!`);
+      throw new BadRequestException(`Only asc | desc values are supported in 'orderBy' field!`);
+    }
+
+    return await this.botService.search(
       parseInt(perPage),
       parseInt(page),
       name,
@@ -162,6 +165,8 @@ export class BotController {
       match === 'true',
       body.ownerId,
       body.ownerOrgId,
+      sortBy,
+      orderBy
     );
   }
 
@@ -174,6 +179,17 @@ export class BotController {
   )
   findOne(@Param('id') id: string, @Headers() headers, @Body() body) {
     return this.botService.findOne(id);
+  }
+
+  @Get(':id/config')
+  @UseInterceptors(
+    AddResponseObjectInterceptor,
+    AddAdminHeaderInterceptor,
+    AddOwnerInfoInterceptor,
+    AddROToResponseInterceptor,
+  )
+  async getBotConfig(@Param('id') id: string) {
+    return await this.botService.getBotBroadcastConfig(id);
   }
 
   @Get('/start/:id')
@@ -328,5 +344,19 @@ export class BotController {
   )
   remove(@Param('id') id: string) {
     return this.botService.remove(id);
+  }
+
+  @Get(':botId/broadcastReport')
+  @UseInterceptors(
+    AddResponseObjectInterceptor,
+    AddAdminHeaderInterceptor,
+    AddOwnerInfoInterceptor,
+    AddROToResponseInterceptor,
+  )
+  async getBroadcastReport(@Param('botId') botId: string, @Query('limit') limit: number, @Query('nextPage') nextPage: string) {
+    if (!botId) {
+      throw new BadRequestException(`'botId' is required!`);
+    }
+    return await this.botService.getBroadcastReport(botId, limit, nextPage);
   }
 }

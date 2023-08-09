@@ -237,11 +237,34 @@ export class BotService {
     }
   }
 
-  async findAll(): Promise<Bot[]> {
+  async findAllUnresolved(): Promise<Promise<Prisma.BotGetPayload<{
+    include: {
+      users: {
+        include: {
+          all: true;
+        };
+      };
+      logicIDs: {
+        include: {
+          transformers: true;
+          adapter: true;
+        };
+      };
+    };
+  }>[] | null>> {
     const startTime = performance.now();
-    const prismaResult = await this.prisma.bot.findMany();
-    this.logger.log(`BotService::findAll: Returning result of all bots. Time taken: ${performance.now() - startTime} milliseconds.`);
-    return prismaResult;
+    const cacheKey = `unresolved_bots_data`;
+    const cachedBots = await this.cacheManager.get(cacheKey);
+    if (cachedBots) {
+      this.logger.log(`BotService::findAll: Returning result of all unresolved bots. Time taken: ${performance.now() - startTime} milliseconds.`);
+      return cachedBots;
+    }
+    const unresolvedBotsData = await this.prisma.bot.findMany({
+      include: this.include,
+    });
+    this.cacheManager.set(cacheKey, unresolvedBotsData);
+    this.logger.log(`BotService::findAll: Returning result of all unresolved bots. Time taken: ${performance.now() - startTime} milliseconds.`);
+    return unresolvedBotsData;
   }
 
   async findAllContextual(ownerID: string | null, ownerOrgID: string | null): Promise<Bot[]> {
@@ -371,7 +394,62 @@ export class BotService {
     });
   }
 
-  async find(
+  /// Gets config data of bot
+  /// Current Data format:
+  /// {
+  ///   "bot": {
+  ///     "id"
+  ///     "name"
+  ///     "segment_url"
+  ///     "form_id"
+  ///   }
+  /// }
+  async getBotBroadcastConfig(id: string) {
+    const allBots = await this.findAllUnresolved();
+    if (!allBots) {
+      this.logger.error(`Object data for bot ${id} is incomplete.`);
+      throw new ServiceUnavailableException(`Object data for bot ${id} is incomplete.`);
+    }
+    let requiredBot;
+    for (let i = 0; i < allBots.length; i++) {
+      if (
+        allBots[i].users.length != 0 &&
+        allBots[i].users[0].all &&
+        allBots[i].users[0].all!.config &&
+        allBots[i].users[0].all!.config!['url'] &&
+        allBots[i].logicIDs.length != 0 &&
+        allBots[i].logicIDs[0].transformers &&
+        allBots[i].logicIDs[0].transformers.length != 0 &&
+        allBots[i].logicIDs[0].transformers[0].meta &&
+        allBots[i].logicIDs[0].transformers[0].meta!['formID'] &&
+        allBots[i].logicIDs[0].transformers[0].meta!['data'] &&
+        allBots[i].logicIDs[0].transformers[0].meta!['data']['botId']
+      ) {
+        if (allBots[i].logicIDs[0].transformers[0].meta!['data']['botId'] == id) {
+          requiredBot = allBots[i];
+        }
+      }
+    }
+
+    const requiredData: {
+      'bot': {
+        'id': string,
+        'name': string,
+        'segment_url': string,
+        'form_id': string
+      }
+    } = {
+      bot: {
+        id: requiredBot.id,
+        name: requiredBot.name,
+        segment_url: requiredBot.users[0].all.config['url'],
+        form_id: requiredBot.logicIDs[0].transformers[0].meta['formID'],
+      }
+    };
+    return requiredData;
+  }
+
+  async search(
     perPage: number,
     page: number,
     name: string,
@@ -379,12 +457,11 @@ export class BotService {
     match: boolean,
     ownerID: string,
     ownerOrgID: string,
+    sortBy: string | undefined,
+    orderBy: string | undefined,
   ): Promise<{ data: Bot[]; totalCount: number } | null> {
     const startTime = performance.now();
-    let filterQuery: any = {
-      ownerID: ownerID,
-      ownerOrgID: ownerOrgID,
-    };
+    let filterQuery: any = {};
     if (name || startingMessage) {
       filterQuery.OR = [
         {
@@ -397,19 +474,15 @@ export class BotService {
         },
       ];
     }
-    if (!ownerID || !ownerOrgID) {
-      delete filterQuery.ownerID;
-      delete filterQuery.ownerOrgID;
-      filterQuery.OR = [
-        {
-          name: match ? name : caseInsensitiveQueryBuilder(name),
-        },
-        {
-          startingMessage: match
-            ? startingMessage
-            : caseInsensitiveQueryBuilder(startingMessage),
-        },
-      ];
+    if (ownerID || ownerOrgID) {
+      filterQuery.ownerID = ownerID;
+      filterQuery.ownerOrgID = ownerOrgID;
+    }
+    if (!sortBy) {
+      sortBy = 'id';
+    }
+    if (!orderBy) {
+      orderBy = 'asc';
     }
     const count = await this.prisma.bot.count({ where: filterQuery });
     const data = await this.prisma.bot.findMany({
@@ -417,43 +490,23 @@ export class BotService {
       take: perPage,
       where: filterQuery,
       include: this.include,
+      orderBy: {
+        [sortBy]: orderBy
+      }
     });
     this.logger.log(`BotService::find: Returning response of find query. Time taken: ${performance.now() - startTime} milliseconds.`);
     return { data: data, totalCount: count };
   }
 
-  async findForAdmin(
-    perPage: number,
-    page: number,
-    name: string,
-    startingMessage: string,
-    match: boolean,
-    ownerID: string,
-    ownerOrgID: string,
-  ): Promise<Bot[] | null> {
-    let filterQuery: any = {
-      ownerID: ownerID,
-      ownerOrgID: ownerOrgID,
-      OR: [
-        {
-          name: match ? name : caseInsensitiveQueryBuilder(name),
-        },
-        {
-          startingMessage: match
-            ? startingMessage
-            : caseInsensitiveQueryBuilder(startingMessage),
-        },
-      ],
-    };
-    return this.prisma.bot.findMany({
-      skip: perPage * (page - 1),
-      take: perPage,
-      where: filterQuery,
-      include: this.include,
-    });
-  }
-
   async update(id: string, updateBotDto: any) {
+    const inbound_base = this.configService.get<string>('UCI_CORE_BASE_URL');
+    const caffine_invalidate_endpoint = this.configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT');
+    const transaction_layer_auth_token = this.configService.get<string>('AUTHORIZATION_KEY_TRANSACTION_LAYER');
+    if (!inbound_base || !caffine_invalidate_endpoint || !transaction_layer_auth_token) {
+      this.logger.error(`Missing configuration: inbound endpoint: ${inbound_base}, caffine endpoint: ${caffine_invalidate_endpoint} or transaction layer auth token.`);
+      throw new InternalServerErrorException();
+    }
+    const caffine_reset_url = `${inbound_base}${caffine_invalidate_endpoint}`;
     const existingBot = await this.findOne(id);
     if (!existingBot) {
       throw new NotFoundException("Bot does not exist!")
@@ -479,7 +532,7 @@ export class BotService {
     if (updateBotDto.endDate) {
       const dateRegex: RegExp = /^\d{4}-\d{2}-\d{2}$/;
       if (!dateRegex.test(updateBotDto.endDate)) {
-        throw new BadRequestException(`Bad date format. Please provide date in 'yyyy-mm-yy' format.`)
+        throw new BadRequestException(`Bad date format. Please provide date in 'yyyy-mm-dd' format.`)
       }
       updateBotDto.endDate = new Date(updateBotDto.endDate);
     }
@@ -490,10 +543,44 @@ export class BotService {
       data: updateBotDto,
     });
     await this.cacheManager.reset();
+    await fetch(caffine_reset_url, {method: 'DELETE', headers: {'Authorization': transaction_layer_auth_token}})
+    .then((resp) => {
+      if (resp.ok) {
+        return resp.json();
+      }
+      else {
+        throw new ServiceUnavailableException(resp);
+      }
+    })
+    .then()
+    .catch((err) => {
+      this.logger.error(`Got failure response from inbound on cache invalidation endpoint ${caffine_reset_url}. Error: ${err}`);
+      throw new ServiceUnavailableException('Could not invalidate cache after update!');
+    });
     return updatedBot;
   }
 
   remove(id: string) {
     return `This action removes a #${id} adapter`;
+  }
+
+  async getBroadcastReport(botId: string, limit: number, nextPage: string) {
+    const inbound_base = this.configService.get<string>('UCI_CORE_BASE_URL');
+    const broadcast_bot_report_endpoint = this.configService.get<string>('BROADCAST_BOT_REPORT_ENDPOINT');
+    if (!inbound_base || !broadcast_bot_report_endpoint) {
+      this.logger.error(`Config data missing. UCI_CORE_BASE_URL: ${inbound_base}, BROADCAST_BOT_REPORT_ENDPOINT: ${broadcast_bot_report_endpoint}`)
+      throw new InternalServerErrorException('Config data missing!');
+    }
+    let report_endpoint = `${inbound_base}${broadcast_bot_report_endpoint}?botId=${botId}`;
+    if (limit) {
+      report_endpoint += `&limit=${limit}`;
+    }
+    if (nextPage) {
+      report_endpoint += `&nextPage=${nextPage}`;
+    }
+    this.logger.log(`Calling inbound for report with link: ${report_endpoint}`);
+    return await fetch(report_endpoint)
+    .then(resp => resp.json())
+    .then(resp => resp);
   }
 }

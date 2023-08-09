@@ -48,8 +48,8 @@ class MockConfigService {
   }
 }
 
-class MockBotService {
-  findOne(id: string) {
+const mockBotService = {
+  findOne: jest.fn((id: string) => {
     if (id === 'testBotIdNotExisting') {
       return null;
     }
@@ -61,9 +61,9 @@ class MockBotService {
       mockBotDataCopy['users'] = []
     }
     return mockBotDataCopy;
-  }
+  }),
 
-  update(id: string, updateBotDto: any) {
+  update: jest.fn((id: string, updateBotDto: any) => {
     let resp: boolean = true;
     Object.entries(updateBotDto).reduce((acc, [key, value]) => {
       if (!updateParametersPassed.includes(key)) {
@@ -72,7 +72,20 @@ class MockBotService {
       return acc;
     }, {});
     return resp;
-  }
+  }),
+
+  getBotBroadcastConfig: jest.fn(() => {
+    return {
+      "bot": {
+        "id": "23293u42309423eacsdfsdf",
+        "name": "bot name",
+        "segment_url": "segment_url",
+        "form_id": "form_id",
+      }
+    };
+  }),
+
+  getBroadcastReport: jest.fn()
 }
 
 const mockBotData: Prisma.BotGetPayload<{
@@ -231,7 +244,7 @@ describe('BotController', () => {
         },
         BotService, {
           provide: BotService,
-          useClass: MockBotService,
+          useValue: mockBotService,
         }
       ],
     }).compile();
@@ -250,7 +263,7 @@ describe('BotController', () => {
 
   it('disabled bot returns unavailable error',async () => {
     await expect(() => botController.startOne('disabled', {})).rejects.toThrowError(ServiceUnavailableException);
-  })
+  });
 
   it('update only passes relevant bot data to bot service', async () => {
     updateParametersPassed = [
@@ -266,5 +279,67 @@ describe('BotController', () => {
     });
     expect(resp).toBeTruthy();
     updateParametersPassed = [];
+  });
+
+  it('search throws error on unknown search fields', async () => {
+    expect(botController.search(
+      '1',
+      '1',
+      '',
+      '',
+      'true',
+      'nonExistent',
+      'desc',
+      {}
+    ))
+    .rejects
+    .toThrowError(new BadRequestException(`sorting by 'nonExistent' is not supported!`));
+  });
+
+  it('search throws error on unknown orderBy value', async () => {
+    expect(botController.search(
+      '1',
+      '1',
+      '',
+      '',
+      'true',
+      'name',
+      //@ts-ignore
+      'nonExistent',
+      {}
+    ))
+    .rejects
+    .toThrowError(new BadRequestException(`Only asc | desc values are supported in 'orderBy' field!`));
+  });
+
+  it('bot config calls getBotBroadcastConfig',async () => {
+    expect(await botController.getBotConfig('testId')).toEqual({
+      "bot": {
+        "id": "23293u42309423eacsdfsdf",
+        "name": "bot name",
+        "segment_url": "segment_url",
+        "form_id": "form_id",
+      }
+    });
+    expect(mockBotService.getBotBroadcastConfig).toHaveBeenCalled();
+  });
+
+  it('bot report calls getBroadcastReport', async () => {
+    await botController.getBroadcastReport(
+      'testId',
+      10,
+      'next'
+    );
+    expect(mockBotService.getBroadcastReport).toHaveBeenCalled();
   })
+
+  it('bot report throws on undefined botId', async () => {
+    expect(botController.getBroadcastReport(
+      '',
+      10,
+      ''
+    ))
+    .rejects
+    .toThrowError(new BadRequestException(`'botId' is required!`));
+  });
 });
