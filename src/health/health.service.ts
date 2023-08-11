@@ -87,7 +87,7 @@ export class HealthService extends HealthIndicator{
     
             const socket = io(`${this.configService.get('SOCKET_URL')}`, connOptions);
     
-            const timeout = this.configService.get('SOCKET_TIMEOUT_TIME') || 10000;
+            const timeout = this.configService.get('SOCKET_TIMEOUT_TIME') || 15000;
     
             const timeoutPromise = new Promise((_, reject) => {
                 setTimeout(() => {
