@@ -10,7 +10,7 @@ import {
 } from '@nestjs/terminus';
 import { PrismaService } from '../global-services/prisma.service';
 import { FormService } from '../modules/form/form.service';
-
+import { io } from "socket.io-client";
 @Injectable()
 export class HealthService extends HealthIndicator{
     constructor(
@@ -28,6 +28,7 @@ export class HealthService extends HealthIndicator{
             () => this.checkUciCoreHealth(),
             () => this.checkDatabaseHealth(),
             () => this.checkFormServiceHealth(),
+            () => this.checkTransportSocketHealth(),
         ]);
     }
 
@@ -53,4 +54,107 @@ export class HealthService extends HealthIndicator{
             throw new HealthCheckError("FormService failed to connect!", this.getStatus('FormService', false, {message: e.message}));
         });
     }
+
+
+    checkTransportSocketHealth(): Promise<HealthIndicatorResult> {
+        return new Promise((resolve, reject) => {
+            const payload: any = {
+                content: {
+                    text: '*',
+                    appId: this.configService.get('SOCKET_APP_ID'),
+                    channel: this.configService.get('SOCKET_CHANNEL'),
+                    context: null,
+                    accessToken: null,
+                },
+                to: this.configService.get('SOCKET_TO'),
+            };
+    
+            const connOptions = {
+                transportOptions: {
+                    polling: {
+                        extraHeaders: {
+                            Authorization: `Bearer ${this.configService.get('AUTH_TOKEN')}`,
+                            channel: this.configService.get('SOCKET_CONNECTION_CHANNEL'),
+                        },
+                    },
+                },
+                query: {
+                    deviceId: this.configService.get('SOCKET_TO'),
+                },
+                autoConnect: false,
+            };
+    
+    
+            const socket = io(`${this.configService.get('SOCKET_URL')}`, connOptions);
+    
+            const timeout = this.configService.get('SOCKET_TIMEOUT_TIME') || 10000;
+    
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => {
+                    socket.disconnect();
+                    reject(new Error('Socket response timed out'));
+                }, timeout);
+            });
+    
+            const connectionTimeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => {
+                    socket.disconnect();
+                    reject(new Error('Socket connection timed out'));
+                }, timeout);
+            });
+    
+            const botResponsePromise = new Promise((resolve, reject) => {
+                socket.on('botResponse', (data) => {
+                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                    //@ts-ignore
+                    clearTimeout(timeoutPromise);
+                    console.log('RESPONSE::::');
+                    console.dir(data, { depth: null });
+                    resolve('Socket response received');
+                });
+            });
+    
+            socket.on('session', (session) => {
+                const socketID = session.socketID;
+                const userID = session.userID;
+    
+                payload.from = socketID;
+                payload.userId = userID;
+            });
+    
+            socket.on('connect', () => {
+                console.log('SOCKET ID', socket.id);
+                console.log('Connected....');
+                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                    //@ts-ignore
+                clearTimeout(connectionTimeoutPromise);
+                setTimeout(() => {
+                    console.log('Payload', payload);
+                    socket.emit('botRequest', payload);
+                }, 3000);
+            });
+    
+            socket.on('disconnect', () => {
+                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                    //@ts-ignore
+                clearTimeout(timeoutPromise);
+                console.log('Disconnecting::::');
+                console.log(socket.id); // undefined
+                reject('Socket disconnected');
+            });
+    
+            Promise.race([timeoutPromise, connectionTimeoutPromise, botResponsePromise])
+                .then(() => {
+                    resolve(this.getStatus('TransportSocketService', true));
+                })
+                .catch((error) => {
+                    reject(new HealthCheckError(error.message, this.getStatus('TransportSocketService', false, { message: error.message })));
+                });
+    
+            socket.connect();
+        });
+    }
+    
 }
+
+
