@@ -92,14 +92,14 @@ export class HealthService extends HealthIndicator{
             const timeoutPromise = new Promise((_, reject) => {
                 setTimeout(() => {
                     socket.disconnect();
-                    reject(new Error('Socket response timed out'));
+                    reject('Socket response timed out');
                 }, timeout);
             });
     
             const connectionTimeoutPromise = new Promise((_, reject) => {
                 setTimeout(() => {
                     socket.disconnect();
-                    reject(new Error('Socket connection timed out'));
+                    reject('Socket connection timed out');
                 }, timeout);
             });
     
@@ -108,8 +108,6 @@ export class HealthService extends HealthIndicator{
                     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                     //@ts-ignore
                     clearTimeout(timeoutPromise);
-                    console.log('RESPONSE::::');
-                    console.dir(data, { depth: null });
                     resolve('Socket response received');
                 });
             });
@@ -123,13 +121,10 @@ export class HealthService extends HealthIndicator{
             });
     
             socket.on('connect', () => {
-                console.log('SOCKET ID', socket.id);
-                console.log('Connected....');
                  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                     //@ts-ignore
                 clearTimeout(connectionTimeoutPromise);
                 setTimeout(() => {
-                    console.log('Payload', payload);
                     socket.emit('botRequest', payload);
                 }, 3000);
             });
@@ -138,8 +133,6 @@ export class HealthService extends HealthIndicator{
                  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                     //@ts-ignore
                 clearTimeout(timeoutPromise);
-                console.log('Disconnecting::::');
-                console.log(socket.id); // undefined
                 reject('Socket disconnected');
             });
     
