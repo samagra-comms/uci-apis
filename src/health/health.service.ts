@@ -66,115 +66,15 @@ export class HealthService extends HealthIndicator {
       });
   }
 
-  // async checkTransportSocketHealth(): Promise<HealthIndicatorResult> {
-
-  //   const respone:Promise<HealthIndicatorResult> = new Promise((resolve, reject) => {
-  // const payload: any = {
-  //   content: {
-  //     text: '*',
-  //     appId: this.configService.get('SOCKET_APP_ID'),
-  //     channel: this.configService.get('SOCKET_CHANNEL'),
-  //     context: null,
-  //     accessToken: null,
-  //   },
-  //   to: this.configService.get('SOCKET_TO'),
-  // };
-
-  // const connOptions = {
-  //   transportOptions: {
-  //     polling: {
-  //       extraHeaders: {
-  //         Authorization: `Bearer ${this.configService.get('AUTH_TOKEN')}`,
-  //         channel: this.configService.get('SOCKET_CONNECTION_CHANNEL'),
-  //       },
-  //     },
-  //   },
-  //   query: {
-  //     deviceId: this.configService.get('SOCKET_TO'),
-  //   },
-  //   autoConnect: false,
-  // };
-
-  //     const socket = io(`${this.configService.get('SOCKET_URL')}`, connOptions);
-
-  //     const timeout = this.configService.get('SOCKET_TIMEOUT_TIME') || 20000;
-
-  //     const timeoutPromise: NodeJS.Timeout | any = new Promise((_, reject) => {
-  //       setTimeout(() => {
-  //         socket.disconnect();
-  //         reject('Socket response timed out');
-  //       }, timeout);
-  //     });
-
-  //     const connectionTimeoutPromise: NodeJS.Timeout | any = new Promise(
-  //       (_, reject) => {
-  //         console.log('connectionTimeoutPromise');
-  //         setTimeout(() => {
-  //           socket.disconnect();
-  //           reject('Socket connection timed out');
-  //         }, timeout);
-  //       },
-  //     );
-
-  //     const botResponsePromise: any = new Promise((resolve, reject) => {
-  //       socket.on('botResponse', (data) => {
-  //         clearTimeout(timeoutPromise);
-  //         resolve('Socket response received');
-  //       });
-  //     });
-  //     // socket.on('botResponse', (data) => {
-  //     //   clearTimeout(timeoutPromise);
-  //     //   resolve('Socket response received');
-  //     // });
-  // socket.on('session', (session) => {
-  //   const socketID = session.socketID;
-  //   const userID = session.userID;
-
-  //   payload.from = socketID;
-  //   payload.userId = userID;
-  //   socket.emit('botRequest', payload);
-  // });
-
-  //     socket.on('connect', () => {
-  //       clearTimeout(connectionTimeoutPromise);
-  //     });
-
-  //     socket.on('disconnect', () => {
-  //       clearTimeout(timeoutPromise);
-  //       reject('Socket disconnected');
-  //     });
-  //     socket.connect();
-  //     Promise.all([
-  //       timeoutPromise,
-  //       connectionTimeoutPromise,
-  //       botResponsePromise,
-  //     ])
-  //       .then((dd: any) => {
-  //         console.log({ dd });
-  //         resolve(this.getStatus('TransportSocketService', true));
-  //       })
-  //       .catch((error) => {
-  //         console.log('error:', { error });
-  // return  new HealthCheckError(
-  //     error,
-  //     this.getStatus('TransportSocketService', false, {
-  //       message: error,
-  //     }),
-  //   );
-  //       });
-
-  //   });
-  //   console.log({respone})
-  //   return respone
-  // }
-
   async checkTransportSocketHealth(): Promise<any> {
     const baseUrl = this.configService.get('SOCKET_URL');
     const connOptions = {
       transportOptions: {
         polling: {
           extraHeaders: {
-            Authorization: `Bearer ${this.configService.get('AUTH_TOKEN')}`,
+            Authorization: `Bearer ${this.configService.get(
+              'SOCKET_AUTH_TOKEN',
+            )}`,
             channel: this.configService.get('SOCKET_CONNECTION_CHANNEL'),
           },
         },
@@ -206,17 +106,10 @@ export class HealthService extends HealthIndicator {
         );
       }
 
-      socket.on('session', async (session) => {
-        console.log({ session });
-        const socketID = session.socketID;
-        const userID = session.userID;
-        payload.from = socketID;
-        payload.userId = userID;
-      });
-
       const responseReceived = await this.sendBotRequest(socket, payload);
-      socket.disconnect();
+
       if (responseReceived) {
+        socket.disconnect();
         return this.getStatus('TransportSocketService', true);
       } else {
         return new HealthCheckError(
@@ -225,7 +118,6 @@ export class HealthService extends HealthIndicator {
             message: 'Bot response timed out',
           }),
         );
-        // return { status: 'Error', message: 'Bot response timed out' };
       }
     } catch (error) {
       return new HealthCheckError(
@@ -250,30 +142,27 @@ export class HealthService extends HealthIndicator {
       });
       setTimeout(async () => {
         resolve(false);
-      }, 15000);
+      }, this.configService.get('SOCKET_TIMEOUT_TIME') || 20000);
     });
   }
 
   private async sendBotRequest(socket: any, payload: any): Promise<boolean> {
     const newPayload = { ...payload };
     return new Promise(async (resolve) => {
-        socket.on('session', async (session) => {
+      socket.on('session', async (session) => {
         const socketID = session.socketID;
         const userID = session.userID;
-
         newPayload.content.from = socketID;
         newPayload.content.userId = userID;
-        console.log({ socket, newPayload });
         socket.emit('botRequest', newPayload);
       });
-  
+
       socket.on('botResponse', (data) => {
         resolve(true);
       });
       setTimeout(() => {
-        console.log('reject');
         resolve(false);
-      }, 40000); // Wait for 15 seconds for bot response
+      }, this.configService.get('SOCKET_TIMEOUT_TIME') || 20000); // Wait for 15 seconds for bot response
     });
   }
 }
