@@ -125,7 +125,6 @@ export class BotController {
     @Query('startingMessage') startingMessage: string,
     @Query('match') match: 'true' | 'false',
     @Query('sortBy') sortBy: string | undefined,
-    @Query('orderBy') orderBy: 'asc' | 'desc' | undefined,
     @Body() body: any,
   ) {
     if (!perPage) {
@@ -140,7 +139,7 @@ export class BotController {
       "startingMessage",
       "name",
       "status",
-      "createdAt",
+      "createdDate",
       "endDate",
       "ownerid",
       "ownerorgid",
@@ -148,13 +147,6 @@ export class BotController {
     if (sortBy && !allowedSortingFields.includes(sortBy)) {
       this.logger.error(`sorting by '${sortBy}' is not supported!`);
       throw new BadRequestException(`sorting by '${sortBy}' is not supported!`);
-    }
-
-    const allowedOrderingFields = ['asc', 'desc'];
-
-    if (orderBy && !allowedOrderingFields.includes(orderBy)) {
-      this.logger.error(`Received invalid orderBy value: ${orderBy}!`);
-      throw new BadRequestException(`Only asc | desc values are supported in 'orderBy' field!`);
     }
 
     return await this.botService.search(
@@ -165,8 +157,7 @@ export class BotController {
       match === 'true',
       body.ownerId,
       body.ownerOrgId,
-      sortBy,
-      orderBy
+      sortBy
     );
   }
 
