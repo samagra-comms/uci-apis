@@ -10,6 +10,7 @@ import {
 } from '@nestjs/terminus';
 import { PrismaService } from '../global-services/prisma.service';
 import { FormService } from '../modules/form/form.service';
+import { io } from 'socket.io-client';
 
 @Injectable()
 export class HealthService extends HealthIndicator{
@@ -28,6 +29,7 @@ export class HealthService extends HealthIndicator{
             () => this.checkUciCoreHealth(),
             () => this.checkDatabaseHealth(),
             () => this.checkFormServiceHealth(),
+            () => this.checkTransportSocketHealth(),
         ]);
     }
 
@@ -53,4 +55,103 @@ export class HealthService extends HealthIndicator{
             throw new HealthCheckError("FormService failed to connect!", this.getStatus('FormService', false, {message: e.message}));
         });
     }
+    async checkTransportSocketHealth(): Promise<any> {
+        const baseUrl = this.configService.get('SOCKET_URL');
+        const connOptions = {
+          transportOptions: {
+            polling: {
+              extraHeaders: {
+                Authorization: `Bearer ${this.configService.get(
+                  'SOCKET_AUTH_TOKEN',
+                )}`,
+                channel: this.configService.get('SOCKET_CONNECTION_CHANNEL'),
+              },
+            },
+          },
+          query: {
+            deviceId: this.configService.get('SOCKET_TO'),
+          },
+          autoConnect: false,
+        };
+    
+        const payload: any = {
+          content: {
+            text: '*',
+            appId: this.configService.get('SOCKET_APP_ID'),
+            channel: this.configService.get('SOCKET_CHANNEL'),
+            context: null,
+            accessToken: null,
+          },
+          to: this.configService.get('SOCKET_TO'),
+        };
+        try {
+          const socket = await this.connectSocket(baseUrl, connOptions);
+          if (!socket) {
+            return new HealthCheckError(
+              'Socket connection timed out',
+              this.getStatus('TransportSocketService', false, {
+                message: 'Socket connection timed out',
+              }),
+            );
+          }
+    
+          const responseReceived = await this.sendBotRequest(socket, payload);
+    
+          if (responseReceived) {
+            socket.disconnect();
+            return this.getStatus('TransportSocketService', true);
+          } else {
+            return new HealthCheckError(
+              'Bot response timed out',
+              this.getStatus('TransportSocketService', false, {
+                message: 'Bot response timed out',
+              }),
+            );
+          }
+        } catch (error) {
+          return new HealthCheckError(
+            'An error occurred',
+            this.getStatus('TransportSocketService', false, {
+              message: 'An error occurred',
+            }),
+          );
+        }
+      }
+    
+      private async connectSocket(baseUrl: string, connOptions: any): Promise<any> {
+        return new Promise(async (resolve) => {
+          const socket = await io(baseUrl, connOptions);
+    
+          socket.connect();
+          socket.on('connect', function () {
+            resolve(socket);
+          });
+          socket.on('connect_error', () => {
+            resolve(false);
+          });
+          setTimeout(async () => {
+            resolve(false);
+          }, this.configService.get('SOCKET_TIMEOUT_TIME') || 20000);
+        });
+      }
+    
+      private async sendBotRequest(socket: any, payload: any): Promise<boolean> {
+        const newPayload = { ...payload };
+        return new Promise(async (resolve) => {
+          socket.on('session', async (session) => {
+            const socketID = session.socketID;
+            const userID = session.userID;
+            newPayload.content.from = socketID;
+            newPayload.content.userId = userID;
+            socket.emit('botRequest', newPayload);
+          });
+    
+          socket.on('botResponse', (data) => {
+            resolve(true);
+          });
+          setTimeout(() => {
+            resolve(false);
+          }, this.configService.get('SOCKET_TIMEOUT_TIME') || 20000); // Wait for 20 seconds for bot response
+        });
+      }
 }
