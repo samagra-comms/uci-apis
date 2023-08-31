@@ -431,6 +431,10 @@ export class BotService {
       }
     }
 
+    if (!requiredBot) {
+      throw new NotFoundException('Bot does not exist!');
+    }
+
     const requiredData: {
       'bot': {
         'id': string,
@@ -571,7 +575,11 @@ export class BotService {
       this.logger.error(`Config data missing. UCI_CORE_BASE_URL: ${inbound_base}, BROADCAST_BOT_REPORT_ENDPOINT: ${broadcast_bot_report_endpoint}`)
       throw new InternalServerErrorException('Config data missing!');
     }
-    let report_endpoint = `${inbound_base}${broadcast_bot_report_endpoint}?botId=${botId}`;
+    const broadcastBotData = await this.findOne(botId);
+    if (!broadcastBotData) {
+      throw new NotFoundException('Bot does not exist!');
+    }
+    let report_endpoint = `${inbound_base}${broadcast_bot_report_endpoint}?botId=${botId}&createdAt=${new Date(broadcastBotData.createdAt).getTime()}`;
     if (limit) {
       report_endpoint += `&limit=${limit}`;
     }
@@ -580,7 +588,15 @@ export class BotService {
     }
     this.logger.log(`Calling inbound for report with link: ${report_endpoint}`);
     return await fetch(report_endpoint)
-    .then(resp => resp.json())
-    .then(resp => resp);
+    .then(resp => {
+      if (!resp.ok) {
+        throw new ServiceUnavailableException('Could not pull data from database!');
+      }
+      return resp.json();
+    })
+    .then(resp => resp)
+    .catch(err => {
+      throw new ServiceUnavailableException('Could not pull data from database!');
+    });
   }
 }

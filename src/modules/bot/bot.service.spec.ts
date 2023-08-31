@@ -589,14 +589,18 @@ describe('BotService', () => {
   })
 
   it('bot report fetches data correctly', async () => {
+    const urlRegex = /^http:\/\/uci_core_base_urltestbotreportendpoint\/\?botId=testBotId&createdAt=\d+&limit=10&nextPage=testNextPage$/;
+    fetchMock.getOnce(`${configService.get<string>('MINIO_GET_SIGNED_FILE_URL')}/?fileName=testImageFile`,
+      'testImageUrl'
+    );
     fetchMock.getOnce(
-      `${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('BROADCAST_BOT_REPORT_ENDPOINT')}?botId=testBotId&limit=10&nextPage=testNextPage`,
+      urlRegex,
       true
     );
     await botService.getBroadcastReport('testBotId', 10, 'testNextPage');
     expect(
       fetchMock.called(
-        `${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('BROADCAST_BOT_REPORT_ENDPOINT')}?botId=testBotId&limit=10&nextPage=testNextPage`
+        urlRegex
       )
     ).toBe(true);
     fetchMock.restore();
