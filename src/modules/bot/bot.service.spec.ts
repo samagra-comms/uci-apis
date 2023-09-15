@@ -393,6 +393,17 @@ describe('BotService', () => {
     .toThrowError(new ConflictException("Bot already exists with the following name or starting message!"));
   });
 
+  it('create bot trims bot name properly', async () => {
+    const mockCreateBotDtoCopy: CreateBotDto & { ownerID: string; ownerOrgID: string } = JSON.parse(JSON.stringify(mockCreateBotDto));
+    mockCreateBotDtoCopy.name = ' testBotExistingName ';
+    expect(botService.create(mockCreateBotDtoCopy, mockFile)).rejects
+    .toThrowError(new ConflictException("Bot already exists with the following name or starting message!"));
+    const mockCreateBotDtoCopy2: CreateBotDto & { ownerID: string; ownerOrgID: string } = JSON.parse(JSON.stringify(mockCreateBotDto));
+    mockCreateBotDtoCopy2.startingMessage = '  testBotExistingStartingMessage';
+    expect(botService.create(mockCreateBotDtoCopy2, mockFile)).rejects
+    .toThrowError(new ConflictException("Bot already exists with the following name or starting message!"));
+  });
+
   it('get bot all data test', async () => {
     fetchMock.getOnce(`${configService.get<string>('MINIO_GET_SIGNED_FILE_URL')}?fileName=testImageFile`,
       'testImageUrl'
