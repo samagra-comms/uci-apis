@@ -44,8 +44,31 @@ const MockPrismaService = {
       }
     },
     count: () => 10,
-    update: jest.fn()
-  }
+    update: jest.fn(),
+    deleteMany: (filter) => {
+      deletedIds.push({'bot': filter.where.id.in});
+    }
+  },
+  service: {
+    deleteMany: (filter) => {
+      deletedIds.push({'service': filter.where.id.in});
+    }
+  },
+  userSegment: {
+    deleteMany: (filter) => {
+      deletedIds.push({'userSegment': filter.where.id.in});
+    }
+  },
+  transformerConfig: {
+    deleteMany: (filter) => {
+      deletedIds.push({'transformerConfig': filter.where.id.in});
+    }
+  },
+  conversationLogic: {
+    deleteMany: (filter) => {
+      deletedIds.push({'conversationLogic': filter.where.id.in});
+    }
+  },
 }
 
 class MockConfigService {
@@ -320,6 +343,9 @@ const mockConfig = {
   "totalRecords": 1
 };
 
+// Used for delete bot testing
+let deletedIds: any[] = []
+
 describe('BotService', () => {
   let botService: BotService;
   let configService: ConfigService;
@@ -363,6 +389,17 @@ describe('BotService', () => {
     .toThrowError(new ConflictException("Bot already exists with the following name or starting message!"));
     const mockCreateBotDtoCopy2: CreateBotDto & { ownerID: string; ownerOrgID: string } = JSON.parse(JSON.stringify(mockCreateBotDto));
     mockCreateBotDtoCopy2.startingMessage = 'testBotExistingStartingMessage';
+    expect(botService.create(mockCreateBotDtoCopy2, mockFile)).rejects
+    .toThrowError(new ConflictException("Bot already exists with the following name or starting message!"));
+  });
+
+  it('create bot trims bot name properly', async () => {
+    const mockCreateBotDtoCopy: CreateBotDto & { ownerID: string; ownerOrgID: string } = JSON.parse(JSON.stringify(mockCreateBotDto));
+    mockCreateBotDtoCopy.name = ' testBotExistingName ';
+    expect(botService.create(mockCreateBotDtoCopy, mockFile)).rejects
+    .toThrowError(new ConflictException("Bot already exists with the following name or starting message!"));
+    const mockCreateBotDtoCopy2: CreateBotDto & { ownerID: string; ownerOrgID: string } = JSON.parse(JSON.stringify(mockCreateBotDto));
+    mockCreateBotDtoCopy2.startingMessage = '  testBotExistingStartingMessage';
     expect(botService.create(mockCreateBotDtoCopy2, mockFile)).rejects
     .toThrowError(new ConflictException("Bot already exists with the following name or starting message!"));
   });
@@ -506,7 +543,7 @@ describe('BotService', () => {
   });
 
   it('bot update throws NotFoundException when non existent bot is updated',async () => {
-    fetchMock.getOnce(`${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
+    fetchMock.deleteOnce(`${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
       true
     );
     expect(botService.update('testBotIdNotExisting', {
@@ -603,6 +640,99 @@ describe('BotService', () => {
         urlRegex
       )
     ).toBe(true);
+    fetchMock.restore();
+  });
+
+  it('bot delete with bot id list works as expected', async () => {
+    fetchMock.delete(`${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
+      true
+    );
+    mockBotsDb[0].status = BotStatus.DISABLED;
+    await botService.remove({ids: ['testId'], endDate: null});
+    expect(deletedIds).toEqual(
+      [
+        {'service': ['testId']},
+        {'userSegment': ['testUserId']},
+        {'transformerConfig': ['testTransformerId']},
+        {'conversationLogic': ['testLogicId']},
+        {'bot': ['testId']},
+      ]
+    );
+    deletedIds = [];
+    await botService.remove({ids: ['nonExisting'], endDate: null});
+    expect(deletedIds).toEqual(
+      [
+        {'service': []},
+        {'userSegment': []},
+        {'transformerConfig': []},
+        {'conversationLogic': []},
+        {'bot': []},
+      ]
+    );
+    deletedIds = [];
+    expect(fetchMock.called(
+      `${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`
+    ))
+    .toBe(true);
+    mockBotsDb[0].status = BotStatus.ENABLED;
+    fetchMock.restore();
+  });
+
+  it('bot delete with endDate works as expected', async () => {
+    fetchMock.delete(`${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
+      true
+    );
+    mockBotsDb[0].status = BotStatus.DISABLED;
+    await botService.remove({ids: null, endDate: '2025-12-01'});
+    expect(deletedIds).toEqual(
+      [
+        {'service': ['testId']},
+        {'userSegment': ['testUserId']},
+        {'transformerConfig': ['testTransformerId']},
+        {'conversationLogic': ['testLogicId']},
+        {'bot': ['testId']},
+      ]
+    );
+    deletedIds = [];
+    await botService.remove({ids: null, endDate: '2023-12-01'});
+    expect(deletedIds).toEqual(
+      [
+        {'service': []},
+        {'userSegment': []},
+        {'transformerConfig': []},
+        {'conversationLogic': []},
+        {'bot': []},
+      ]
+    );
+    expect(fetchMock.called(
+      `${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`
+    ))
+    .toBe(true);
+    deletedIds = [];
+    mockBotsDb[0].status = BotStatus.ENABLED;
+    fetchMock.restore();
+  });
+
+  it('bot delete only deletes disabled bots', async () => {
+    fetchMock.delete(`${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
+      true
+    );
+    mockBotsDb[0].status = BotStatus.ENABLED;
+    await botService.remove({ids: ['testId'], endDate: null});
+    expect(deletedIds).toEqual(
+      [
+        {'service': []},
+        {'userSegment': []},
+        {'transformerConfig': []},
+        {'conversationLogic': []},
+        {'bot': []},
+      ]
+    );
+    expect(fetchMock.called(
+      `${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`
+    ))
+    .toBe(true);
+    deletedIds = [];
     fetchMock.restore();
   });
 });

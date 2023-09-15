@@ -14,6 +14,7 @@ const limit = pLimit(1);
 import fs from 'fs';
 import FormData from 'form-data';
 import { Cache } from 'cache-manager';
+import { DeleteBotsDTO } from './dto/delete-bot-dto';
 
 @Injectable()
 export class BotService {
@@ -158,8 +159,11 @@ export class BotService {
     const startTime = performance.now();
     this.logger.log(`BotService::create: Called with bot name ${data.name}.`);
     // Check for unique name
-    const name = data.name;
-    const startingMessage = data.startingMessage;
+    if (!data.name || !data.startingMessage) {
+      throw new BadRequestException('Bot name is required!');
+    }
+    const name = data.name.trim();
+    const startingMessage = data.startingMessage.trim();
     const alreadyExists = await this.prisma.bot.findFirst({
       where: {
         OR: [
@@ -237,7 +241,7 @@ export class BotService {
     }
   }
 
-  async findAllUnresolved(): Promise<Promise<Prisma.BotGetPayload<{
+  async findAllUnresolved(): Promise<Prisma.BotGetPayload<{
     include: {
       users: {
         include: {
@@ -251,7 +255,7 @@ export class BotService {
         };
       };
     };
-  }>[] | null>> {
+  }>[]> {
     const startTime = performance.now();
     const cacheKey = `unresolved_bots_data`;
     const cachedBots = await this.cacheManager.get(cacheKey);
@@ -503,14 +507,6 @@ export class BotService {
   }
 
   async update(id: string, updateBotDto: any) {
-    const inbound_base = this.configService.get<string>('UCI_CORE_BASE_URL');
-    const caffine_invalidate_endpoint = this.configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT');
-    const transaction_layer_auth_token = this.configService.get<string>('AUTHORIZATION_KEY_TRANSACTION_LAYER');
-    if (!inbound_base || !caffine_invalidate_endpoint || !transaction_layer_auth_token) {
-      this.logger.error(`Missing configuration: inbound endpoint: ${inbound_base}, caffine endpoint: ${caffine_invalidate_endpoint} or transaction layer auth token.`);
-      throw new InternalServerErrorException();
-    }
-    const caffine_reset_url = `${inbound_base}${caffine_invalidate_endpoint}`;
     const existingBot = await this.findOne(id);
     if (!existingBot) {
       throw new NotFoundException("Bot does not exist!")
@@ -547,7 +543,20 @@ export class BotService {
       data: updateBotDto,
     });
     await this.cacheManager.reset();
-    await fetch(caffine_reset_url, {method: 'DELETE', headers: {'Authorization': transaction_layer_auth_token}})
+    await this.invalidateTransactionLayerCache();
+    return updatedBot;
+  }
+
+  async invalidateTransactionLayerCache() {
+    const inbound_base = this.configService.get<string>('UCI_CORE_BASE_URL');
+    const caffine_invalidate_endpoint = this.configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT');
+    const transaction_layer_auth_token = this.configService.get<string>('AUTHORIZATION_KEY_TRANSACTION_LAYER');
+    if (!inbound_base || !caffine_invalidate_endpoint || !transaction_layer_auth_token) {
+      this.logger.error(`Missing configuration: inbound endpoint: ${inbound_base}, caffine reset endpoint: ${caffine_invalidate_endpoint} or transaction layer auth token.`);
+      throw new InternalServerErrorException();
+    }
+    const caffine_reset_url = `${inbound_base}${caffine_invalidate_endpoint}`;
+    return fetch(caffine_reset_url, {method: 'DELETE', headers: {'Authorization': transaction_layer_auth_token}})
     .then((resp) => {
       if (resp.ok) {
         return resp.json();
@@ -561,11 +570,108 @@ export class BotService {
       this.logger.error(`Got failure response from inbound on cache invalidation endpoint ${caffine_reset_url}. Error: ${err}`);
       throw new ServiceUnavailableException('Could not invalidate cache after update!');
     });
-    return updatedBot;
   }
 
-  remove(id: string) {
-    return `This action removes a #${id} adapter`;
+  async remove(deleteBotsDTO: DeleteBotsDTO) {
+    let botIds = new Set();
+    if (deleteBotsDTO.ids) {
+      botIds = new Set(deleteBotsDTO.ids);
+    }
+    const endDate = deleteBotsDTO.endDate;
+    if ((!botIds || botIds.size == 0) && !endDate) {
+      throw new BadRequestException('Bot ids or endDate need to be provided!');
+    }
+    let parsedEndDate: Date;
+    if (endDate) {
+      const dateRegex: RegExp = /^\d{4}-\d{2}-\d{2}$/;
+      if (!dateRegex.test(endDate)) {
+        throw new BadRequestException(`Bad date format! Please provide date in 'yyyy-mm-dd' format.`)
+      }
+      try {
+        parsedEndDate = new Date(endDate);
+      }
+      catch (err) {
+        throw new BadRequestException(`Invalid date! Please enter a valid date.`)
+      }
+    }
+
+    const allBots = await this.findAllUnresolved();
+    const requiredBotIds: string[] = [], requiredServiceIds: string[] = [],
+    requiredUserIds: string[] = [], requiredLogicIds: string[] = [],
+    requiredTransformerConfigIds: string[] = [];
+    allBots.forEach(bot => {
+      if (bot.status == BotStatus.DISABLED) {
+        const currentParsedEndDate = new Date(bot.endDate!);
+        if (
+          (botIds.has(bot.id) && !endDate) ||
+          (endDate && (parsedEndDate.getTime() >= currentParsedEndDate.getTime()) && botIds.size == 0) ||
+          (botIds.has(bot.id) && (endDate && (parsedEndDate.getTime() >= currentParsedEndDate.getTime())))
+        ) {
+          requiredBotIds.push(bot.id);
+          if (bot.logicIDs.length > 0) {
+            requiredLogicIds.push(bot.logicIDs[0].id);
+            if (bot.logicIDs[0].transformers.length > 0) {
+              requiredTransformerConfigIds.push(bot.logicIDs[0].transformers[0].id);
+            }
+          }
+          if (bot.users.length > 0) {
+            requiredUserIds.push(bot.users[0].id);
+            if (bot.users[0].all != null) {
+              requiredServiceIds.push(bot.users[0].all.id);
+            }
+          }
+        }
+      }
+    });
+    const deletePromises = [
+      this.prisma.service.deleteMany({
+        where: {
+          id: {
+            in: requiredServiceIds,
+          }
+        }
+      }),
+      this.prisma.userSegment.deleteMany({
+        where: {
+          id: {
+            in: requiredUserIds,
+          }
+        }
+      }),
+      this.prisma.transformerConfig.deleteMany({
+        where: {
+          id: {
+            in: requiredTransformerConfigIds,
+          }
+        }
+      }),
+      this.prisma.conversationLogic.deleteMany({
+        where: {
+          id: {
+            in: requiredLogicIds,
+          }
+        }
+      }),
+      this.prisma.bot.deleteMany({
+        where: {
+          id: {
+            in: requiredBotIds,
+          }
+        }
+      }),
+    ];
+
+    return Promise.all(deletePromises)
+    .then(() => {
+      return this.invalidateTransactionLayerCache();
+    })
+    .catch((err) => {
+      throw err;
+    });
+  }
+
+  async removeOne(botId: string) {
+    return this.remove({ids: [botId], endDate: null});
   }
 
   async getBroadcastReport(botId: string, limit: number, nextPage: string) {

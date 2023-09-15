@@ -30,6 +30,7 @@ import { diskStorage } from 'multer';
 import { Request } from 'express';
 import { extname } from 'path';
 import fs from 'fs';
+import { DeleteBotsDTO } from './dto/delete-bot-dto';
 
 
 const editFileName = (req: Request, file: Express.Multer.File, callback) => {
@@ -335,15 +336,26 @@ export class BotController {
     return this.botService.update(id, updateBotDto);
   }
 
-  @Delete(':id')
+  @Delete()
   @UseInterceptors(
     AddResponseObjectInterceptor,
     AddAdminHeaderInterceptor,
     AddOwnerInfoInterceptor,
     AddROToResponseInterceptor,
   )
-  remove(@Param('id') id: string) {
-    return this.botService.remove(id);
+  async remove(@Body() body: DeleteBotsDTO) {
+    return await this.botService.remove(body);
+  }
+
+  @Delete(':botId')
+  @UseInterceptors(
+    AddResponseObjectInterceptor,
+    AddAdminHeaderInterceptor,
+    AddOwnerInfoInterceptor,
+    AddROToResponseInterceptor,
+  )
+  async removeOne(@Param('botId') botId: string) {
+    return await this.botService.removeOne(botId);
   }
 
   @Get(':botId/broadcastReport')
