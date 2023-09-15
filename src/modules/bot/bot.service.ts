@@ -159,8 +159,11 @@ export class BotService {
     const startTime = performance.now();
     this.logger.log(`BotService::create: Called with bot name ${data.name}.`);
     // Check for unique name
-    const name = data.name;
-    const startingMessage = data.startingMessage;
+    if (!data.name || !data.startingMessage) {
+      throw new BadRequestException('Bot name is required!');
+    }
+    const name = data.name.trim();
+    const startingMessage = data.startingMessage.trim();
     const alreadyExists = await this.prisma.bot.findFirst({
       where: {
         OR: [
