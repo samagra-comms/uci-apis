@@ -596,6 +596,7 @@ export class BotService {
     }
 
     const allBots = await this.findAllUnresolved();
+    const deletedBots: string[] = [];
     const requiredBotIds: string[] = [], requiredServiceIds: string[] = [],
     requiredUserIds: string[] = [], requiredLogicIds: string[] = [],
     requiredTransformerConfigIds: string[] = [];
@@ -607,6 +608,7 @@ export class BotService {
           (endDate && (parsedEndDate.getTime() >= currentParsedEndDate.getTime()) && botIds.size == 0) ||
           (botIds.has(bot.id) && (endDate && (parsedEndDate.getTime() >= currentParsedEndDate.getTime())))
         ) {
+          deletedBots.push(bot.id);
           requiredBotIds.push(bot.id);
           if (bot.logicIDs.length > 0) {
             requiredLogicIds.push(bot.logicIDs[0].id);
@@ -663,7 +665,8 @@ export class BotService {
 
     return Promise.all(deletePromises)
     .then(() => {
-      return this.invalidateTransactionLayerCache();
+      this.invalidateTransactionLayerCache();
+      return deletedBots;
     })
     .catch((err) => {
       throw err;
