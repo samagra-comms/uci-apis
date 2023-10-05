@@ -735,12 +735,13 @@ describe('BotService', () => {
     deletedIds = [];
     fetchMock.restore();
   });
-  it('should delete bots by IDs and return the deleted bot IDs', async () => {
-    jest.spyOn(botService, 'remove').mockResolvedValue(['id1', 'id2'])
+  it('should return bot IDs in the response', async () => {
     fetchMock.delete(`${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
-      true
+    true
     );
-    deletedIds = await botService.remove({ids: ['id1','id2'], endDate: null});
-    expect(deletedIds).toEqual(['id1','id2']);
+    mockBotsDb[0].status = BotStatus.DISABLED;
+    const response = await botService.remove({ids: ['testId'], endDate: null});
+    const expectedBotIds = ['testId'];
+    expect(response).toEqual(expectedBotIds);
   });
 });
