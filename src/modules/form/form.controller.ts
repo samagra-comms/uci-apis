@@ -66,7 +66,7 @@ export class FormController {
   async single(
     @UploadedFiles() files: {form: Express.Multer.File[], mediaFiles: Express.Multer.File[]},
   ) {
-    if (!files.form[0]) {
+    if (!files.form || !files.form[0]) {
       throw new BadRequestException('Form file is required!');
     }
     const response = await this.formService.uploadForm(files.form[0], files.mediaFiles);

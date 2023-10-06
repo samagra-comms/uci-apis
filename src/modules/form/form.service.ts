@@ -81,7 +81,7 @@ export class FormService {
       const mediaUploadResult = await this.uploadFormMediaFiles(mediaFiles);
       if (mediaUploadResult.error || !mediaUploadResult.data) {
         this.logger.error(`FormService::uploadForm: Media Files upload failed!`);
-        throw new ServiceUnavailableException('Media upload failed!');
+        throw new ServiceUnavailableException(`Media upload failed! Reason: ${mediaUploadResult.error}`);
       }
       const xmlModificationError = this.replaceMediaFileName(formFile, mediaUploadResult.data);
       if (xmlModificationError != '') {
