@@ -8,7 +8,7 @@ import {
   PROGRAM as ProgramMessages,
 } from '../../common/messages';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const fs = require('fs');
+import fs from 'fs';
 import parser from 'xml2json';
 import { FormMediaUploadStatus, FormUploadStatus } from './form.types';
 
@@ -164,6 +164,7 @@ export class FormService {
     const promises: any = [];
 
     mediaFiles.forEach((mediaFile: Express.Multer.File) => {
+      fs.renameSync(mediaFile.path, `${mediaFile.destination}/${mediaFile.originalname}`)
       const formData = new FormData();
       const fileToUpload = fs.createReadStream(mediaFile.path);
       formData.append('file', fileToUpload, mediaFile.originalname);
@@ -222,7 +223,7 @@ export class FormService {
     try {
       let data = fs.readFileSync(formFile.path, 'utf-8');
       uploadedMediaNames.forEach((value: string, key: string) => {
-        data = data.replaceAll(`{${key}}`, value);
+        data = data.replace(`{${key}}`, value);
       });
       fs.writeFileSync(formFile.path, data);
       return '';
