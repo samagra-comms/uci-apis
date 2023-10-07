@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, InternalServerErrorException, Logger, ServiceUnavailableException } from '@nestjs/common';
+import { BadRequestException, HttpStatus, Injectable, InternalServerErrorException, Logger, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import digestAuthRequest from '../../common/digestAuthRequest';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -8,7 +8,7 @@ import {
   PROGRAM as ProgramMessages,
 } from '../../common/messages';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const fs = require('fs');
+import fs from 'fs';
 import parser from 'xml2json';
 import { FormMediaUploadStatus, FormUploadStatus } from './form.types';
 
@@ -79,6 +79,7 @@ export class FormService {
     await this.login();
     if (mediaFiles && mediaFiles.length > 0) {
       const mediaUploadResult = await this.uploadFormMediaFiles(mediaFiles);
+      this.logger.log(`Uploaded media files data: ${JSON.stringify(mediaUploadResult.data)}`);
       if (mediaUploadResult.error || !mediaUploadResult.data) {
         this.logger.error(`FormService::uploadForm: Media Files upload failed!`);
         throw new ServiceUnavailableException(`Media upload failed! Reason: ${mediaUploadResult.error}`);
@@ -164,8 +165,9 @@ export class FormService {
     const promises: any = [];
 
     mediaFiles.forEach((mediaFile: Express.Multer.File) => {
+      fs.copyFileSync(mediaFile.path, `${mediaFile.destination}/${mediaFile.originalname}`);
       const formData = new FormData();
-      const fileToUpload = fs.createReadStream(mediaFile.path);
+      const fileToUpload = fs.createReadStream(`${mediaFile.destination}/${mediaFile.originalname}`);
       formData.append('file', fileToUpload, mediaFile.originalname);
 
       const requestOptions = {
@@ -178,6 +180,12 @@ export class FormService {
         this.MINIO_MEDIA_UPLOAD_URL,
         requestOptions
       )
+      .then(resp => {
+        if (resp.status == HttpStatus.CONFLICT) {
+          throw new BadRequestException(`Media File with same name ${mediaFile.originalname} already exists!`);
+        }
+        return resp;
+      })
       .then((response) => response.json());
 
       promises.push(promise);
@@ -222,7 +230,7 @@ export class FormService {
     try {
       let data = fs.readFileSync(formFile.path, 'utf-8');
       uploadedMediaNames.forEach((value: string, key: string) => {
-        data = data.replaceAll(`{${key}}`, value);
+        data = data.replace(`{${key}}`, value);
       });
       fs.writeFileSync(formFile.path, data);
       return '';
