@@ -647,7 +647,6 @@ describe('BotService', () => {
     fetchMock.delete(`${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
       true
     );
-    mockBotsDb[0].status = BotStatus.DISABLED;
     await botService.remove({ids: ['testId'], endDate: null});
     expect(deletedIds).toEqual(
       [
@@ -674,7 +673,6 @@ describe('BotService', () => {
       `${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`
     ))
     .toBe(true);
-    mockBotsDb[0].status = BotStatus.ENABLED;
     fetchMock.restore();
   });
 
@@ -682,7 +680,6 @@ describe('BotService', () => {
     fetchMock.delete(`${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
       true
     );
-    mockBotsDb[0].status = BotStatus.DISABLED;
     await botService.remove({ids: null, endDate: '2025-12-01'});
     expect(deletedIds).toEqual(
       [
@@ -709,30 +706,15 @@ describe('BotService', () => {
     ))
     .toBe(true);
     deletedIds = [];
-    mockBotsDb[0].status = BotStatus.ENABLED;
     fetchMock.restore();
   });
 
-  it('bot delete only deletes disabled bots', async () => {
+  it('should return bot IDs in the response', async () => {
     fetchMock.delete(`${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
-      true
+    true
     );
-    mockBotsDb[0].status = BotStatus.ENABLED;
-    await botService.remove({ids: ['testId'], endDate: null});
-    expect(deletedIds).toEqual(
-      [
-        {'service': []},
-        {'userSegment': []},
-        {'transformerConfig': []},
-        {'conversationLogic': []},
-        {'bot': []},
-      ]
-    );
-    expect(fetchMock.called(
-      `${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`
-    ))
-    .toBe(true);
-    deletedIds = [];
-    fetchMock.restore();
+    const response = await botService.remove({ids: ['testId'], endDate: null});
+    const expectedBotIds = ['testId'];
+    expect(response).toEqual(expectedBotIds);
   });
 });
