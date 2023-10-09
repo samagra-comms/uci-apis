@@ -600,7 +600,6 @@ export class BotService {
     requiredUserIds: string[] = [], requiredLogicIds: string[] = [],
     requiredTransformerConfigIds: string[] = [];
     allBots.forEach(bot => {
-      if (bot.status == BotStatus.DISABLED) {
         const currentParsedEndDate = new Date(bot.endDate!);
         if (
           (botIds.has(bot.id) && !endDate) ||
@@ -621,7 +620,6 @@ export class BotService {
             }
           }
         }
-      }
     });
     const deletePromises = [
       this.prisma.service.deleteMany({
