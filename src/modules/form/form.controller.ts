@@ -76,8 +76,13 @@ export class FormController {
       }
     });
     if (files.mediaFiles && files.mediaFiles.length > 0) {
-      files.mediaFiles.forEach((formFile) => {
-        fs.unlink(formFile.path, (err) => {
+      files.mediaFiles.forEach((mediaFile) => {
+        fs.unlink(mediaFile.path, (err) => {
+          if (err) {
+            console.log(err);
+          }
+        });
+        fs.unlink(`${mediaFile.destination}/${mediaFile.originalname}`, (err) => {
           if (err) {
             console.log(err);
           }
