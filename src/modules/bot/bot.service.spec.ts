@@ -508,12 +508,12 @@ describe('BotService', () => {
 
   it('bot service returns proper error message on minio image upload failure', async () => {
     fetchMock.postOnce(`${configService.get<string>('MINIO_MEDIA_UPLOAD_URL')}`, () => {
-      throw new InternalServerErrorException();
+      throw new ConflictException();
     });
     const mockCreateBotDtoCopy: CreateBotDto & { ownerID: string; ownerOrgID: string } = JSON.parse(JSON.stringify(mockCreateBotDto));
     mockCreateBotDtoCopy.name = 'testBotNotExisting';
     mockCreateBotDtoCopy.startingMessage = 'testBotStartingMessageNotExisting';
-    expect(botService.create(mockCreateBotDtoCopy, mockFile)).rejects.toThrowError(new ServiceUnavailableException('Bot image upload failed!'));
+    expect(botService.create(mockCreateBotDtoCopy, mockFile)).rejects.toThrowError(new ConflictException('Conflict'));
   });
 
   it('bot start passes admin token to segment url', async () => {

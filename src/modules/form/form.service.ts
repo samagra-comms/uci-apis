@@ -165,9 +165,8 @@ export class FormService {
     const promises: any = [];
 
     mediaFiles.forEach((mediaFile: Express.Multer.File) => {
-      fs.copyFileSync(mediaFile.path, `${mediaFile.destination}/${mediaFile.originalname}`);
       const formData = new FormData();
-      const fileToUpload = fs.createReadStream(`${mediaFile.destination}/${mediaFile.originalname}`);
+      const fileToUpload = fs.createReadStream(mediaFile.path);
       formData.append('file', fileToUpload, mediaFile.originalname);
 
       const requestOptions = {
@@ -230,7 +229,8 @@ export class FormService {
     try {
       let data = fs.readFileSync(formFile.path, 'utf-8');
       uploadedMediaNames.forEach((value: string, key: string) => {
-        data = data.replace(`{${key}}`, value);
+        //@ts-ignore
+        data = data.replaceAll(`{${key}}`, value);
       });
       fs.writeFileSync(formFile.path, data);
       return '';
