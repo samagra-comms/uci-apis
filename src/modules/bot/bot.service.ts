@@ -158,6 +158,9 @@ export class BotService {
   ): Promise<Bot | null> {
     const startTime = performance.now();
     this.logger.log(`BotService::create: Called with bot name ${data.name}.`);
+    if (!botImage || !botImage.path) {
+      throw new BadRequestException('Bot Image is required!');
+    }
     // Check for unique name
     if (!data.name || !data.startingMessage) {
       throw new BadRequestException('Bot name is required!');
