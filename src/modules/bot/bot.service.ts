@@ -175,7 +175,7 @@ export class BotService {
     if (!alreadyExists) {
       const formData = new FormData();
       const fileToUpload = fs.createReadStream(botImage.path);
-      formData.append('file', fileToUpload, botImage.originalname);
+      formData.append('file', fileToUpload, botImage.filename);
 
       const requestOptions = {
         method: 'POST',
@@ -190,7 +190,15 @@ export class BotService {
         //@ts-ignore
         requestOptions
       )
-      .then(resp => resp.json())
+      .then(resp => {
+        if (resp.status != HttpStatus.OK) {
+          throw new HttpException(
+            resp.json(),
+            resp.status
+          );
+        }
+        return resp.json();
+      })
       .then(async resp => {
         if (!resp.fileName) {
           this.logger.error("BotService::create: Bot image upload failed! Reason: Did not receive filename of uploaded file.");
@@ -228,9 +236,9 @@ export class BotService {
         this.logger.log(`BotService::create: Bot created successfully. Time taken: ${performance.now() - startTime} milliseconds.`)
         return prismaResult;
       })
-      .catch(err => {
+      .catch((err) => {
         this.logger.error(`BotService::create: Bot image upload failed! Reason: ${err}`);
-        throw new ServiceUnavailableException('Bot image upload failed!');
+        throw err;
       });
     } else {
       this.logger.error(`Failed to create Bot. Reason: Bot with name '${data.name}' or starting message '${data.startingMessage}' already exists!`)
