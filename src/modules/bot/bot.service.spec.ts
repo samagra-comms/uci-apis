@@ -8,6 +8,8 @@ import fetchMock from 'fetch-mock';
 import {BadRequestException, ConflictException, InternalServerErrorException, NotFoundException, ServiceUnavailableException} from "@nestjs/common";
 import { CacheModule } from '@nestjs/common';
 import { BotStatus } from '../../../prisma/generated/prisma-client-js';
+import { UserSegmentService } from '../user-segment/user-segment.service';
+import { ConversationLogicService } from '../conversation-logic/conversation-logic.service';
 
 
 const MockPrismaService = {
@@ -57,7 +59,15 @@ const MockPrismaService = {
   userSegment: {
     deleteMany: (filter) => {
       deletedIds.push({'userSegment': filter.where.id.in});
-    }
+    },
+    findUnique: (filter) => {
+      if (filter.where.id === 'NonExisting') {
+        return null;
+      }
+      else {
+        return mockBotsDb["users"][0];
+      }
+    },
   },
   transformerConfig: {
     deleteMany: (filter) => {
@@ -67,7 +77,15 @@ const MockPrismaService = {
   conversationLogic: {
     deleteMany: (filter) => {
       deletedIds.push({'conversationLogic': filter.where.id.in});
-    }
+    },
+    findUnique: (filter) => {
+      if (filter.where.id === 'NonExisting') {
+        return null;
+      }
+      else {
+        return mockBotsDb["logicIDs"][0];
+      }
+    },
   },
 }
 
@@ -362,7 +380,9 @@ describe('BotService', () => {
         PrismaService, {
           provide: PrismaService,
           useValue: MockPrismaService,
-        }
+        },
+        UserSegmentService,
+        ConversationLogicService,
       ],
     }).compile();
 
@@ -716,5 +736,26 @@ describe('BotService', () => {
     const response = await botService.remove({ids: ['testId'], endDate: null});
     const expectedBotIds = ['testId'];
     expect(response).toEqual(expectedBotIds);
+  });
+
+  it('bot create updates purpose and description in database test', async () => {
+    const mockCreateBotDtoCopy: CreateBotDto & { ownerID: string; ownerOrgID: string } = JSON.parse(JSON.stringify(mockCreateBotDto));
+    mockCreateBotDtoCopy.name = 'testBotNotExisting';
+    mockCreateBotDtoCopy.startingMessage = 'testBotStartingMessageNotExisting';
+    mockCreateBotDtoCopy.purpose = 'testPurposeUpdate';
+    mockCreateBotDtoCopy.description = 'testDescriptionUpdate';
+    mockCreateBotDtoCopy.users = ['NonExisting'];
+    expect(botService.create(mockCreateBotDtoCopy, mockFile)).rejects.toThrowError('User Segment does not exist!');
+    fetchMock.restore();
+  });
+
+  it('bot create throws error on non existent conversation logic', async () => {
+    const mockCreateBotDtoCopy: CreateBotDto & { ownerID: string; ownerOrgID: string } = JSON.parse(JSON.stringify(mockCreateBotDto));
+    mockCreateBotDtoCopy.name = 'testBotNotExisting';
+    mockCreateBotDtoCopy.startingMessage = 'testBotStartingMessageNotExisting';
+    mockCreateBotDtoCopy.purpose = 'testPurposeUpdate';
+    mockCreateBotDtoCopy.description = 'testDescriptionUpdate';
+    mockCreateBotDtoCopy.logic = ['NonExisting'];
+    expect(botService.create(mockCreateBotDtoCopy, mockFile)).rejects.toThrowError('Converstaion Logic does not exist!');
   });
 });

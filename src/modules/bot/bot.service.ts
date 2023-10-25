@@ -15,6 +15,8 @@ import fs from 'fs';
 import FormData from 'form-data';
 import { Cache } from 'cache-manager';
 import { DeleteBotsDTO } from './dto/delete-bot-dto';
+import { UserSegmentService } from '../user-segment/user-segment.service';
+import { ConversationLogicService } from '../conversation-logic/conversation-logic.service';
 
 @Injectable()
 export class BotService {
@@ -23,6 +25,8 @@ export class BotService {
   constructor(
     private prisma: PrismaService,
     private configService: ConfigService,
+    private userSegmentService: UserSegmentService,
+    private conversationLogicService: ConversationLogicService,
     //@ts-ignore
     @Inject(CACHE_MANAGER) public cacheManager: Cache,
   ) {
@@ -176,6 +180,18 @@ export class BotService {
       },
     });
     if (!alreadyExists) {
+      if (data.users && data.users.length > 0) {
+        const userSegment = await this.userSegmentService.findOne(data.users[0]);
+        if (!userSegment) {
+          throw new BadRequestException('User Segment does not exist!');
+        }
+      }
+      if (data.logic && data.logic.length > 0) {
+        const logic = await this.conversationLogicService.findOne(data.logic[0]);
+        if (!logic) {
+          throw new BadRequestException('Converstaion Logic does not exist!');
+        }
+      }
       const formData = new FormData();
       const fileToUpload = fs.createReadStream(botImage.path);
       formData.append('file', fileToUpload, botImage.filename);
