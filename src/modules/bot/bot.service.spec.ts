@@ -8,6 +8,8 @@ import fetchMock from 'fetch-mock';
 import {BadRequestException, ConflictException, InternalServerErrorException, NotFoundException, ServiceUnavailableException} from "@nestjs/common";
 import { CacheModule } from '@nestjs/common';
 import { BotStatus } from '../../../prisma/generated/prisma-client-js';
+import { UserSegmentService } from '../user-segment/user-segment.service';
+import { ConversationLogicService } from '../conversation-logic/conversation-logic.service';
 
 
 const MockPrismaService = {
@@ -57,7 +59,15 @@ const MockPrismaService = {
   userSegment: {
     deleteMany: (filter) => {
       deletedIds.push({'userSegment': filter.where.id.in});
-    }
+    },
+    findUnique: (filter) => {
+      if (filter.where.id === 'NonExisting') {
+        return null;
+      }
+      else {
+        return mockBotsDb["users"][0];
+      }
+    },
   },
   transformerConfig: {
     deleteMany: (filter) => {
@@ -67,7 +77,15 @@ const MockPrismaService = {
   conversationLogic: {
     deleteMany: (filter) => {
       deletedIds.push({'conversationLogic': filter.where.id.in});
-    }
+    },
+    findUnique: (filter) => {
+      if (filter.where.id === 'NonExisting') {
+        return null;
+      }
+      else {
+        return mockBotsDb["logicIDs"][0];
+      }
+    },
   },
 }
 
@@ -362,7 +380,9 @@ describe('BotService', () => {
         PrismaService, {
           provide: PrismaService,
           useValue: MockPrismaService,
-        }
+        },
+        UserSegmentService,
+        ConversationLogicService,
       ],
     }).compile();
 
@@ -508,12 +528,12 @@ describe('BotService', () => {
 
   it('bot service returns proper error message on minio image upload failure', async () => {
     fetchMock.postOnce(`${configService.get<string>('MINIO_MEDIA_UPLOAD_URL')}`, () => {
-      throw new InternalServerErrorException();
+      throw new ConflictException();
     });
     const mockCreateBotDtoCopy: CreateBotDto & { ownerID: string; ownerOrgID: string } = JSON.parse(JSON.stringify(mockCreateBotDto));
     mockCreateBotDtoCopy.name = 'testBotNotExisting';
     mockCreateBotDtoCopy.startingMessage = 'testBotStartingMessageNotExisting';
-    expect(botService.create(mockCreateBotDtoCopy, mockFile)).rejects.toThrowError(new ServiceUnavailableException('Bot image upload failed!'));
+    expect(botService.create(mockCreateBotDtoCopy, mockFile)).rejects.toThrowError(new ConflictException('Conflict'));
   });
 
   it('bot start passes admin token to segment url', async () => {
@@ -647,7 +667,6 @@ describe('BotService', () => {
     fetchMock.delete(`${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
       true
     );
-    mockBotsDb[0].status = BotStatus.DISABLED;
     await botService.remove({ids: ['testId'], endDate: null});
     expect(deletedIds).toEqual(
       [
@@ -674,7 +693,6 @@ describe('BotService', () => {
       `${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`
     ))
     .toBe(true);
-    mockBotsDb[0].status = BotStatus.ENABLED;
     fetchMock.restore();
   });
 
@@ -682,7 +700,6 @@ describe('BotService', () => {
     fetchMock.delete(`${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
       true
     );
-    mockBotsDb[0].status = BotStatus.DISABLED;
     await botService.remove({ids: null, endDate: '2025-12-01'});
     expect(deletedIds).toEqual(
       [
@@ -709,30 +726,36 @@ describe('BotService', () => {
     ))
     .toBe(true);
     deletedIds = [];
-    mockBotsDb[0].status = BotStatus.ENABLED;
     fetchMock.restore();
   });
 
-  it('bot delete only deletes disabled bots', async () => {
+  it('should return bot IDs in the response', async () => {
     fetchMock.delete(`${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
-      true
+    true
     );
-    mockBotsDb[0].status = BotStatus.ENABLED;
-    await botService.remove({ids: ['testId'], endDate: null});
-    expect(deletedIds).toEqual(
-      [
-        {'service': []},
-        {'userSegment': []},
-        {'transformerConfig': []},
-        {'conversationLogic': []},
-        {'bot': []},
-      ]
-    );
-    expect(fetchMock.called(
-      `${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`
-    ))
-    .toBe(true);
-    deletedIds = [];
+    const response = await botService.remove({ids: ['testId'], endDate: null});
+    const expectedBotIds = ['testId'];
+    expect(response).toEqual(expectedBotIds);
+  });
+
+  it('bot create updates purpose and description in database test', async () => {
+    const mockCreateBotDtoCopy: CreateBotDto & { ownerID: string; ownerOrgID: string } = JSON.parse(JSON.stringify(mockCreateBotDto));
+    mockCreateBotDtoCopy.name = 'testBotNotExisting';
+    mockCreateBotDtoCopy.startingMessage = 'testBotStartingMessageNotExisting';
+    mockCreateBotDtoCopy.purpose = 'testPurposeUpdate';
+    mockCreateBotDtoCopy.description = 'testDescriptionUpdate';
+    mockCreateBotDtoCopy.users = ['NonExisting'];
+    expect(botService.create(mockCreateBotDtoCopy, mockFile)).rejects.toThrowError('User Segment does not exist!');
     fetchMock.restore();
+  });
+
+  it('bot create throws error on non existent conversation logic', async () => {
+    const mockCreateBotDtoCopy: CreateBotDto & { ownerID: string; ownerOrgID: string } = JSON.parse(JSON.stringify(mockCreateBotDto));
+    mockCreateBotDtoCopy.name = 'testBotNotExisting';
+    mockCreateBotDtoCopy.startingMessage = 'testBotStartingMessageNotExisting';
+    mockCreateBotDtoCopy.purpose = 'testPurposeUpdate';
+    mockCreateBotDtoCopy.description = 'testDescriptionUpdate';
+    mockCreateBotDtoCopy.logic = ['NonExisting'];
+    expect(botService.create(mockCreateBotDtoCopy, mockFile)).rejects.toThrowError('Converstaion Logic does not exist!');
   });
 });

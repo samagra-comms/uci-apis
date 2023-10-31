@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, InternalServerErrorException, Logger, ServiceUnavailableException } from '@nestjs/common';
+import { BadRequestException, HttpStatus, Injectable, InternalServerErrorException, Logger, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import digestAuthRequest from '../../common/digestAuthRequest';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -8,7 +8,7 @@ import {
   PROGRAM as ProgramMessages,
 } from '../../common/messages';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const fs = require('fs');
+import fs from 'fs';
 import parser from 'xml2json';
 import { FormMediaUploadStatus, FormUploadStatus } from './form.types';
 
@@ -79,9 +79,10 @@ export class FormService {
     await this.login();
     if (mediaFiles && mediaFiles.length > 0) {
       const mediaUploadResult = await this.uploadFormMediaFiles(mediaFiles);
+      this.logger.log(`Uploaded media files data: ${JSON.stringify(mediaUploadResult.data)}`);
       if (mediaUploadResult.error || !mediaUploadResult.data) {
         this.logger.error(`FormService::uploadForm: Media Files upload failed!`);
-        throw new ServiceUnavailableException('Media upload failed!');
+        throw new ServiceUnavailableException(`Media upload failed! Reason: ${mediaUploadResult.error}`);
       }
       const xmlModificationError = this.replaceMediaFileName(formFile, mediaUploadResult.data);
       if (xmlModificationError != '') {
@@ -178,6 +179,12 @@ export class FormService {
         this.MINIO_MEDIA_UPLOAD_URL,
         requestOptions
       )
+      .then(resp => {
+        if (resp.status == HttpStatus.CONFLICT) {
+          throw new BadRequestException(`Media File with same name ${mediaFile.originalname} already exists!`);
+        }
+        return resp;
+      })
       .then((response) => response.json());
 
       promises.push(promise);
@@ -222,6 +229,7 @@ export class FormService {
     try {
       let data = fs.readFileSync(formFile.path, 'utf-8');
       uploadedMediaNames.forEach((value: string, key: string) => {
+        //@ts-ignore
         data = data.replaceAll(`{${key}}`, value);
       });
       fs.writeFileSync(formFile.path, data);

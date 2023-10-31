@@ -127,7 +127,7 @@ describe('FormService', () => {
 
     expect(formService.uploadForm(mockXmlFile, mockMediaFiles))
     .rejects
-    .toThrowError(new ServiceUnavailableException('Media upload failed!'));
+    .toThrowError(new ServiceUnavailableException('Media upload failed! Reason: Error'));
   });
 
   it('form upload throws service unavailable exception when ODK server is unavailable', async () => {

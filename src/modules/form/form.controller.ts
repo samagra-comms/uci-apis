@@ -66,7 +66,7 @@ export class FormController {
   async single(
     @UploadedFiles() files: {form: Express.Multer.File[], mediaFiles: Express.Multer.File[]},
   ) {
-    if (!files.form[0]) {
+    if (!files.form || !files.form[0]) {
       throw new BadRequestException('Form file is required!');
     }
     const response = await this.formService.uploadForm(files.form[0], files.mediaFiles);
@@ -76,8 +76,13 @@ export class FormController {
       }
     });
     if (files.mediaFiles && files.mediaFiles.length > 0) {
-      files.mediaFiles.forEach((formFile) => {
-        fs.unlink(formFile.path, (err) => {
+      files.mediaFiles.forEach((mediaFile) => {
+        fs.unlink(mediaFile.path, (err) => {
+          if (err) {
+            console.log(err);
+          }
+        });
+        fs.unlink(`${mediaFile.destination}/${mediaFile.originalname}`, (err) => {
           if (err) {
             console.log(err);
           }

@@ -12,6 +12,8 @@ import { GetRequestResolverService } from '../service/http-get.resolver';
 import { PostRequestResolverService } from '../service/http-post.resolver';
 import { FusionAuthClientProvider } from '../user-segment/fusionauth/fusionauthClientProvider';
 import { VaultClientProvider } from '../secrets/secrets.service.provider';
+import { UserSegmentService } from '../user-segment/user-segment.service';
+import { ConversationLogicService } from '../conversation-logic/conversation-logic.service';
 
 @Module({
   controllers: [BotController],
@@ -28,6 +30,8 @@ import { VaultClientProvider } from '../secrets/secrets.service.provider';
     FusionAuthClientProvider,
     DeviceManagerService,
     VaultClientProvider,
+    UserSegmentService,
+    ConversationLogicService,
   ],
 })
 export class BotModule {}

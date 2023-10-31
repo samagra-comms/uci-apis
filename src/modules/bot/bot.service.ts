@@ -15,6 +15,8 @@ import fs from 'fs';
 import FormData from 'form-data';
 import { Cache } from 'cache-manager';
 import { DeleteBotsDTO } from './dto/delete-bot-dto';
+import { UserSegmentService } from '../user-segment/user-segment.service';
+import { ConversationLogicService } from '../conversation-logic/conversation-logic.service';
 
 @Injectable()
 export class BotService {
@@ -23,6 +25,8 @@ export class BotService {
   constructor(
     private prisma: PrismaService,
     private configService: ConfigService,
+    private userSegmentService: UserSegmentService,
+    private conversationLogicService: ConversationLogicService,
     //@ts-ignore
     @Inject(CACHE_MANAGER) public cacheManager: Cache,
   ) {
@@ -158,6 +162,9 @@ export class BotService {
   ): Promise<Bot | null> {
     const startTime = performance.now();
     this.logger.log(`BotService::create: Called with bot name ${data.name}.`);
+    if (!botImage || !botImage.path) {
+      throw new BadRequestException('Bot Image is required!');
+    }
     // Check for unique name
     if (!data.name || !data.startingMessage) {
       throw new BadRequestException('Bot name is required!');
@@ -173,9 +180,21 @@ export class BotService {
       },
     });
     if (!alreadyExists) {
+      if (data.users && data.users.length > 0) {
+        const userSegment = await this.userSegmentService.findOne(data.users[0]);
+        if (!userSegment) {
+          throw new BadRequestException('User Segment does not exist!');
+        }
+      }
+      if (data.logic && data.logic.length > 0) {
+        const logic = await this.conversationLogicService.findOne(data.logic[0]);
+        if (!logic) {
+          throw new BadRequestException('Converstaion Logic does not exist!');
+        }
+      }
       const formData = new FormData();
       const fileToUpload = fs.createReadStream(botImage.path);
-      formData.append('file', fileToUpload, botImage.originalname);
+      formData.append('file', fileToUpload, botImage.filename);
 
       const requestOptions = {
         method: 'POST',
@@ -190,7 +209,15 @@ export class BotService {
         //@ts-ignore
         requestOptions
       )
-      .then(resp => resp.json())
+      .then(resp => {
+        if (resp.status != HttpStatus.OK) {
+          throw new HttpException(
+            resp.json(),
+            resp.status
+          );
+        }
+        return resp.json();
+      })
       .then(async resp => {
         if (!resp.fileName) {
           this.logger.error("BotService::create: Bot image upload failed! Reason: Did not receive filename of uploaded file.");
@@ -228,9 +255,9 @@ export class BotService {
         this.logger.log(`BotService::create: Bot created successfully. Time taken: ${performance.now() - startTime} milliseconds.`)
         return prismaResult;
       })
-      .catch(err => {
+      .catch((err) => {
         this.logger.error(`BotService::create: Bot image upload failed! Reason: ${err}`);
-        throw new ServiceUnavailableException('Bot image upload failed!');
+        throw err;
       });
     } else {
       this.logger.error(`Failed to create Bot. Reason: Bot with name '${data.name}' or starting message '${data.startingMessage}' already exists!`)
@@ -600,7 +627,6 @@ export class BotService {
     requiredUserIds: string[] = [], requiredLogicIds: string[] = [],
     requiredTransformerConfigIds: string[] = [];
     allBots.forEach(bot => {
-      if (bot.status == BotStatus.DISABLED) {
         const currentParsedEndDate = new Date(bot.endDate!);
         if (
           (botIds.has(bot.id) && !endDate) ||
@@ -621,7 +647,6 @@ export class BotService {
             }
           }
         }
-      }
     });
     const deletePromises = [
       this.prisma.service.deleteMany({
@@ -663,7 +688,9 @@ export class BotService {
 
     return Promise.all(deletePromises)
     .then(() => {
-      return this.invalidateTransactionLayerCache();
+      return this.invalidateTransactionLayerCache().then(() => {
+        return requiredBotIds;
+      });
     })
     .catch((err) => {
       throw err;
