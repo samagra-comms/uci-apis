@@ -685,7 +685,7 @@ export class BotService {
         }
       }),
     ];
-
+    await this.cacheManager.reset();
     return Promise.all(deletePromises)
     .then(() => {
       return this.invalidateTransactionLayerCache().then(() => {

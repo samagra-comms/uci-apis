@@ -252,7 +252,7 @@ export class DeviceManagerService {
         type: deviceName.split(':')[0],
       },
     };
-    const resp = this.addDeviceToRegistry(botId, user);
+    const resp = await this.addDeviceToRegistry(botId, user);
     this.logger.log(`DeviceManagerService::addDevicenameToRegistry: Added device to registry. Time taken: ${performance.now() - startTime}`)
     return resp;
   };
