@@ -304,7 +304,7 @@ export class BotService {
     const cacheKey = `bots_${ownerID}_${ownerOrgID}`;
     const cachedBots = await this.cacheManager.get(cacheKey);
     if (cachedBots) {
-      this.logger.log(`BotService::findAllContextual: Returning bot data. Time taken: ${performance.now() - startTime} milliseconds.`);
+      this.logger.log(`BotService::findAllContextual: Returning bot data from cache. Time taken: ${performance.now() - startTime} milliseconds.`);
       return cachedBots;
     }
 
@@ -351,7 +351,7 @@ export class BotService {
         }
       });
 
-        this.logger.log(`BotService::findAllContextual: Returning bot data. Time taken: ${performance.now() - startTime} milliseconds.`);
+        this.logger.log(`BotService::findAllContextual: Returning bot data after resolving. Time taken: ${performance.now() - startTime} milliseconds.`);
         this.cacheManager.set(cacheKey, botData);
         return botData;
       });

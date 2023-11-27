@@ -49,15 +49,14 @@ import * as redisStore from 'cache-manager-redis-store';
     AuthModule,
     FormModule,
     HealthModule,
-    CacheModule.register(
-      {
+    CacheModule.register({
       isGlobal: true,
       store: redisStore,
       host: process.env.REDIS_HOST,
       port: process.env.REDIS_PORT,
       ttl: 1800, //seconds
-    }
-    ),
+      max: 1000
+    }),
     MonitoringModule,
   ],
   controllers: [AppController, ServiceController],
