@@ -17,6 +17,7 @@ import { Cache } from 'cache-manager';
 import { DeleteBotsDTO } from './dto/delete-bot-dto';
 import { UserSegmentService } from '../user-segment/user-segment.service';
 import { ConversationLogicService } from '../conversation-logic/conversation-logic.service';
+import { createHash } from 'crypto';
 
 @Injectable()
 export class BotService {
@@ -519,6 +520,13 @@ export class BotService {
     if (!orderBy) {
       orderBy = 'asc';
     }
+    const cacheKeyContent = `findQuery_${JSON.stringify(filterQuery)}_${perPage}_${page}_${orderBy}`;
+    const cacheKey = `${createHash('md5').update(cacheKeyContent).digest('hex')}`;
+    const cachedData = await this.cacheManager.get(cacheKey);
+    if (cachedData) {
+      this.logger.log(`BotService::find: Returning response of find query. Time taken: ${performance.now() - startTime} milliseconds.`);
+      return cachedData;
+    }
     const count = await this.prisma.bot.count({ where: filterQuery });
     const data = await this.prisma.bot.findMany({
       skip: perPage * (page - 1),
@@ -530,6 +538,9 @@ export class BotService {
       }
     });
     this.logger.log(`BotService::find: Returning response of find query. Time taken: ${performance.now() - startTime} milliseconds.`);
+    if (data && data.length > 0 && count > 0) {
+      this.cacheManager.set(cacheKey, { data: data, totalCount: count });
+    }
     return { data: data, totalCount: count };
   }
 
