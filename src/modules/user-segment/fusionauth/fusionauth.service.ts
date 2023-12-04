@@ -4,7 +4,7 @@ import FusionAuthClient, {
 } from '@fusionauth/typescript-client';
 
 import ClientResponse from '@fusionauth/typescript-client/build/src/ClientResponse';
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { retryPromiseWithDelay } from '../../../common/retry';
 import { FusionAuthClientProvider } from './fusionauthClientProvider';
@@ -174,7 +174,7 @@ export class DeviceManagerService {
 
       return await retryPromiseWithDelay(
           () => this.client.register("", userRequestJSON),
-          2,
+          3,
           2000
         )
         .then((response: ClientResponse<RegistrationResponse>) => {
@@ -186,14 +186,10 @@ export class DeviceManagerService {
         .catch((e: Error) => {
           this.logger.error(
             `Error Registering Device in Registry: BotId - ${botId}, device - ${deviceString}. Error: ${JSON.stringify(
-              e.message,
+              e,
             )}`,
           );
-          return {
-            userId: null,
-            status: FAStatus.ERROR,
-            error: e.message,
-          };
+          throw new ServiceUnavailableException("Could not add device to registry!");
         });
     } else {
       //Register user to existing bot
@@ -217,7 +213,7 @@ export class DeviceManagerService {
                 applicationId: botId,
               },
             }),
-            2,
+            3,
             2000
           )
           .then((response) => {
@@ -231,13 +227,9 @@ export class DeviceManagerService {
           })
           .catch((e) => {
             this.logger.error(
-              `Error Registering Device in Registry: BotId - ${botId}, device - ${deviceString}`,
+              `Error Registering Device in Registry: BotId - ${botId}, device - ${deviceString}. Error ${JSON.stringify(e)}`,
             );
-            return {
-              userId: null,
-              status: FAStatus.ERROR,
-              error: e.message,
-            };
+            throw new ServiceUnavailableException();
           });
       }
     }
