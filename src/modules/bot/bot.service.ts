@@ -137,11 +137,11 @@ export class BotService {
     let promises = promisesFunc.map((url) => {
       return limit(() =>
         fetch(url, { headers: { 'conversation-authorization': conversationToken } }).then((s) => {
-          this.sleep(1000);
+          return new Promise((resolve) => setTimeout(resolve, 1000));
         }),
       );
     });
-    return await Promise.all(promises)
+    return await Promise.allSettled(promises)
       .then((res) => {
         this.logger.log(`BotService::start: Successfully pushed all pages to campaign. Time taken: ${performance.now() - startTime} milliseconds.`);
         return true;
