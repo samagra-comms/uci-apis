@@ -10,6 +10,7 @@ import { CacheModule } from '@nestjs/common';
 import { BotStatus } from '../../../prisma/generated/prisma-client-js';
 import { UserSegmentService } from '../user-segment/user-segment.service';
 import { ConversationLogicService } from '../conversation-logic/conversation-logic.service';
+import { assert } from 'console';
 
 
 const MockPrismaService = {
@@ -20,6 +21,8 @@ const MockPrismaService = {
         mockBotsDbCopy.purpose = createData.data.purpose;
       if (createData.data.description)
         mockBotsDbCopy.description = createData.data.description;
+      if (createData.data.status)
+        mockBotsDbCopy.status = createData.data.status;
       return mockBotsDbCopy;
     },
     findUnique: (filter) => {
@@ -367,6 +370,7 @@ let deletedIds: any[] = []
 describe('BotService', () => {
   let botService: BotService;
   let configService: ConfigService;
+  jest.setTimeout(15000);
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -757,5 +761,19 @@ describe('BotService', () => {
     mockCreateBotDtoCopy.description = 'testDescriptionUpdate';
     mockCreateBotDtoCopy.logic = ['NonExisting'];
     expect(botService.create(mockCreateBotDtoCopy, mockFile)).rejects.toThrowError('Converstaion Logic does not exist!');
+  });
+
+  it('bot status pinned is passed to db', async () => {
+    fetchMock.postOnce(`${configService.get<string>('MINIO_MEDIA_UPLOAD_URL')}`, {
+      fileName: 'testFileName'
+    });
+    const mockCreateBotDtoCopy: CreateBotDto & { ownerID: string; ownerOrgID: string } = { ...mockCreateBotDto };
+    mockCreateBotDtoCopy.status = 'PINNED';
+    mockCreateBotDtoCopy.name = 'testBotNotExisting';
+    mockCreateBotDtoCopy.startingMessage = 'testBotStartingMessageNotExisting';
+    const response = await botService.create(mockCreateBotDtoCopy, mockFile);
+    assert(response != null);
+    expect(response!['status']).toStrictEqual('PINNED');
+    fetchMock.restore();
   });
 });

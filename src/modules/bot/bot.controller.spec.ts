@@ -57,6 +57,12 @@ const mockBotService = {
     if (id == 'disabled') {
       mockBotDataCopy['status'] = BotStatus.DISABLED;
     }
+    else if (id == 'enabled') {
+      mockBotDataCopy['status'] = BotStatus.ENABLED;
+    }
+    else if (id == 'pinned') {
+      mockBotDataCopy['status'] = BotStatus.PINNED;
+    }
     if (id == 'noUser') {
       mockBotDataCopy['users'] = []
     }
@@ -85,7 +91,9 @@ const mockBotService = {
     };
   }),
 
-  getBroadcastReport: jest.fn()
+  getBroadcastReport: jest.fn(),
+
+  start: jest.fn(),
 }
 
 const mockBotData: Prisma.BotGetPayload<{
@@ -263,6 +271,11 @@ describe('BotController', () => {
 
   it('disabled bot returns unavailable error',async () => {
     await expect(() => botController.startOne('disabled', {})).rejects.toThrowError(ServiceUnavailableException);
+  });
+
+  it('only disabled bot returns unavailable error',async () => {
+    expect(botController.startOne('pinned', {})).resolves;
+    expect(botController.startOne('enabled', {})).resolves;
   });
 
   it('update only passes relevant bot data to bot service', async () => {

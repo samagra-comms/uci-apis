@@ -15,6 +15,7 @@ enum BotStatus {
   ENABLED
   DISABLED
   DRAFT
+  PINNED
 }
 
 model Adapter {
