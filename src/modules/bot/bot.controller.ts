@@ -225,7 +225,7 @@ export class BotController {
       throw new BadRequestException('Bot does not contain user segment data');
     }
     console.log(bot?.users[0].all);
-    if (bot?.status != BotStatus.ENABLED) {
+    if (bot?.status == BotStatus.DISABLED) {
       throw new ServiceUnavailableException("Bot is not enabled!");
     }
     const res = await this.botService.start(id, bot?.users[0].all?.config, headers['conversation-authorization']);

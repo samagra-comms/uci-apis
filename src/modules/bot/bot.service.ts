@@ -229,8 +229,7 @@ export class BotService {
           name: data.name,
           ownerID: data.ownerid,
           ownerOrgID: data.ownerorgid,
-          status:
-            data.status && data.status.toLocaleLowerCase() === 'enabled' ? BotStatus.ENABLED : BotStatus.DISABLED,
+          status: this.getBotStatus(data.status),
           startDate: this.getDateFromString(data.startDate),
           endDate: this.getDateFromString(data.endDate),
           tags: data.tags,
@@ -266,6 +265,20 @@ export class BotService {
         'Bot already exists with the following name or starting message!',
         HttpStatus.CONFLICT,
       );
+    }
+  }
+
+  private getBotStatus(status: string): BotStatus {
+    status = status.toLocaleLowerCase();
+    switch (status) {
+      case 'enabled':
+        return BotStatus.ENABLED;
+      case 'disabled':
+        return BotStatus.DISABLED;
+      case 'pinned':
+        return BotStatus.PINNED;
+      default:
+        return BotStatus.ENABLED;
     }
   }
 
