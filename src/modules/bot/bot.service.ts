@@ -587,6 +587,9 @@ export class BotService {
       }
       updateBotDto.endDate = new Date(updateBotDto.endDate);
     }
+    if (updateBotDto.status) {
+      updateBotDto.status = this.getBotStatus(updateBotDto.status);
+    }
     const updatedBot = await this.prisma.bot.update({
       where: {
         id,
