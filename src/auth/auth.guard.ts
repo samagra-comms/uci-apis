@@ -3,6 +3,8 @@ import { AuthGuard, IAuthGuard } from '@nestjs/passport';
 import { User } from './user.entity';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { Reflector } from '@nestjs/core';
+import { IS_PUBLIC_KEY } from './public.decorator';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') implements IAuthGuard {
@@ -12,6 +14,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') implements IAuthGuard {
   constructor(
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
+    private readonly reflector: Reflector,
   ) {
     super();
     this.adminToken = configService.get<string>('ADMIN_TOKEN');
@@ -23,6 +26,13 @@ export class JwtAuthGuard extends AuthGuard('jwt') implements IAuthGuard {
   }
 
   public async canActivate(context: ExecutionContext): Promise<boolean> {
+    const isPublic = this.reflector.getAllAndOverride<boolean>(
+      IS_PUBLIC_KEY,
+      [context.getHandler(), context.getClass()],
+    );
+    if (isPublic) {
+      return true;
+    }
     await super.canActivate(context);
     const request: Request = context.switchToHttp().getRequest();
     let token = "";
