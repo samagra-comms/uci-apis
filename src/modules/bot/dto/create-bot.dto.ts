@@ -24,4 +24,5 @@ export class CreateBotDto {
   ownerorgid: string;
   purpose: string | undefined;
   description: string | undefined;
+  meta: Record<string, any> | undefined;
 }

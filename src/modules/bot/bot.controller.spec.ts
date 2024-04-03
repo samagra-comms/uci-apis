@@ -125,6 +125,7 @@ const mockBotData: Prisma.BotGetPayload<{
   "status": "ENABLED",
   "tags": [],
   "botImage": 'testBotImage',
+  "meta": {},
   "users": [
     {
       "id": "testUserId",
@@ -354,5 +355,16 @@ describe('BotController', () => {
     ))
     .rejects
     .toThrowError(new BadRequestException(`'botId' is required!`));
+  });
+
+  it('update passes meta', async () => {
+    updateParametersPassed = [
+      'meta',
+    ];
+    const resp = await botController.update('testBotId', {
+      'meta': {'myKey': 'myValue'}
+    });
+    expect(resp).toBeTruthy();
+    updateParametersPassed = [];
   });
 });

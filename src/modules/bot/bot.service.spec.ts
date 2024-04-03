@@ -23,6 +23,8 @@ const MockPrismaService = {
         mockBotsDbCopy.description = createData.data.description;
       if (createData.data.status)
         mockBotsDbCopy.status = createData.data.status;
+      if (createData.data.meta)
+        mockBotsDbCopy.meta = createData.data.meta;
       return mockBotsDbCopy;
     },
     findUnique: (filter) => {
@@ -123,6 +125,7 @@ const mockCreateBotDto: CreateBotDto & { ownerID: string; ownerOrgID: string } =
   tags: [],
   ownerID: "",
   ownerOrgID: "",
+  meta: undefined
 };
 
 const mockFile: Express.Multer.File = {
@@ -774,6 +777,35 @@ describe('BotService', () => {
     const response = await botService.create(mockCreateBotDtoCopy, mockFile);
     assert(response != null);
     expect(response!['status']).toStrictEqual('PINNED');
+    fetchMock.restore();
+  });
+
+  it('bot meta is passed to db', async () => {
+    fetchMock.postOnce(`${configService.get<string>('MINIO_MEDIA_UPLOAD_URL')}`, {
+      fileName: 'testFileName'
+    });
+    const mockCreateBotDtoCopy: CreateBotDto & { ownerID: string; ownerOrgID: string } = { ...mockCreateBotDto };
+    mockCreateBotDtoCopy.meta = { 'myKey': 'myValue' };
+    mockCreateBotDtoCopy.name = 'testBotNotExisting';
+    mockCreateBotDtoCopy.startingMessage = 'testBotStartingMessageNotExisting';
+    const response = await botService.create(mockCreateBotDtoCopy, mockFile);
+    assert(response != null);
+    expect(response!['meta']).toStrictEqual({ 'myKey': 'myValue' });
+    fetchMock.restore();
+  });
+
+  it('bot create throws when meta is of invalid type', async () => {
+    fetchMock.postOnce(`${configService.get<string>('MINIO_MEDIA_UPLOAD_URL')}`, {
+      fileName: 'testFileName'
+    });
+    const mockCreateBotDtoCopy: CreateBotDto & { ownerID: string; ownerOrgID: string } = { ...mockCreateBotDto };
+    //@ts-ignore
+    mockCreateBotDtoCopy.meta = "InvalidStringType";
+    mockCreateBotDtoCopy.name = 'testBotNotExisting';
+    mockCreateBotDtoCopy.startingMessage = 'testBotStartingMessageNotExisting';
+    expect(botService.create(mockCreateBotDtoCopy, mockFile))
+    .rejects
+    .toThrowError(`Required type for 'meta' is JSON, provided: 'string'`);
     fetchMock.restore();
   });
 });

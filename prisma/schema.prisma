@@ -94,6 +94,7 @@ model Bot {
   status          BotStatus           @default(DRAFT)
   tags            String[]
   botImage        String?
+  meta            Json?
 }
 
 model UserSegment {
