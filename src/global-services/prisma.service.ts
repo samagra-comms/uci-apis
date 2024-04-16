@@ -15,13 +15,6 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     await this.$connect();
   }
 
-  async enableShutdownHooks(app: INestApplication) {
-    this.$on('beforeExit', async () => {
-      await app.close();
-      this.logger.warn('DB: Graceful Shutdown 🎉');
-    });
-  }
-
   async truncate() {
     const records = await this.$queryRawUnsafe<Array<any>>(`SELECT tablename
                                                           FROM pg_tables

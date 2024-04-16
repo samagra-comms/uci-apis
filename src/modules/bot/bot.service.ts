@@ -170,6 +170,9 @@ export class BotService {
     if (!data.name || !data.startingMessage) {
       throw new BadRequestException('Bot name is required!');
     }
+    if (data.meta && typeof data.meta != 'object') {
+      throw new BadRequestException(`Required type for 'meta' is JSON, provided: '${typeof data.meta}'`);
+    }
     const name = data.name.trim();
     const startingMessage = data.startingMessage.trim();
     const alreadyExists = await this.prisma.bot.findFirst({
@@ -250,6 +253,7 @@ export class BotService {
             }),
           },
           botImage: resp.fileName,
+          meta: data.meta,
         };
         const prismaResult = await this.prisma.bot.create({ data: createData });
         this.logger.log(`BotService::create: Bot created successfully. Time taken: ${performance.now() - startTime} milliseconds.`)

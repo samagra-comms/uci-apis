@@ -325,7 +325,8 @@ export class BotController {
       "ownerID",
       "ownerOrgID",
       "purpose",
-      "description"
+      "description",
+      "meta"
     ];
     const updateBotDto = Object.entries(body).reduce((acc, [key, value]) => {
       if (value !== undefined && fieldsToInclude.includes(key)) {

@@ -42,10 +42,6 @@ async function bootstrap() {
     },
   });
 
-  /** Register Prismaservice LifeCycle hooks */
-  const prismaService: PrismaService = app.get(PrismaService);
-  prismaService.enableShutdownHooks(app);
-
   /** Global prefix: Will result in appending of keyword 'admin' at the start of all the request */
   app.setGlobalPrefix('admin');
 
