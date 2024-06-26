@@ -89,50 +89,50 @@ export class BotService {
     this.logger.log(`BotService::start: Called with id: ${id} and config: ${JSON.stringify(config)}`);
     const pageSize: number = config.cadence.perPage;
     const segmentUrl: string = config.url;
-    const userCountUrl = `${segmentUrl.substring(0, segmentUrl.indexOf('?'))}/count`;
-    this.logger.log(`BotService::start: Fetching total count from ${userCountUrl}`);
-    const userCount: number = await fetch(
-      userCountUrl,
-      {
-        //@ts-ignore
-        timeout: 5000,
-        headers: { 'conversation-authorization': conversationToken }
-      }
-    )
-    .then(resp => resp.json())
-    .then(resp => {
-      if (resp.totalCount) {
-        this.logger.log(`BotService::start: Fetched total count of users: ${resp.totalCount}`);
-        return resp.totalCount;
-      }
-      else {
-        this.logger.error(`BotService::start: Failed to fetch total count of users, reason: Response did not have 'totalCount'.`);
-        throw new HttpException(
-          'Failed to get user count',
-          HttpStatus.INTERNAL_SERVER_ERROR
-        );
-      }
-    })
-    .catch(err => {
-      this.logger.error(`BotService::start: Failed to fetch total count of users, reason: ${err}`);
-      throw new HttpException(
-        err,
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
-    });
-    let pages = Math.ceil(userCount / pageSize);
-    this.logger.log(`BotService::start: Total pages: ${pages}`);
+    const regex = /\/segments\/([\d,]+)/;
+    const matched = segmentUrl.match(regex);
+    if (!matched || !matched[1]) {
+      throw new BadRequestException('Segment Url invalid.');
+    }
+    const segments = matched[1].split(',').map(Number);
     const promisesFunc: string[] = [];
-    for (let page = 1; page <= pages; page++) {
-      this.logger.log(
-        `BotService::start: Calling endpoint: ${this.configService.get(
+    for (let segment of segments) {
+      const userCountUrl = `${segmentUrl.substring(0, segmentUrl.indexOf('/segments/'))}/segments/${segment}/mentors/count`;
+      this.logger.log(`BotService::start: Fetching total count from ${userCountUrl}`);
+      const userCount: number = await fetch(
+        userCountUrl,
+        {
+          //@ts-ignore
+          timeout: 5000,
+          headers: { 'conversation-authorization': conversationToken }
+        }
+      )
+      .then(resp => resp.json())
+      .then(resp => {
+        if (resp.totalCount) {
+          this.logger.log(`BotService::start: Fetched total count of users: ${resp.totalCount}`);
+          return resp.totalCount;
+        }
+        else {
+          this.logger.error(`BotService::start: Failed to fetch total count of users, reason: Response did not have 'totalCount'.`);
+        }
+      })
+      .catch(err => {
+        this.logger.error(`BotService::start: Failed to fetch total count of users, reason: ${err}`);
+      });
+      let pages = Math.ceil(userCount / pageSize);
+      this.logger.log(`BotService::start: Segment: ${segment} Total pages: ${pages}`);
+      for (let page = 1; page <= pages; page++) {
+        this.logger.log(
+          `BotService::start: Calling endpoint: ${this.configService.get(
+            'UCI_CORE_BASE_URL',
+          )}/campaign/start?campaignId=${id}&page=${page}`,
+        );
+        const url = `${this.configService.get(
           'UCI_CORE_BASE_URL',
-        )}/campaign/start?campaignId=${id}&page=${page}`,
-      );
-      const url = `${this.configService.get(
-        'UCI_CORE_BASE_URL',
-      )}/campaign/start?campaignId=${id}&page=${page}`;
-      promisesFunc.push(url);
+        )}/campaign/start?campaignId=${id}&page=${page}&segment=${segment}`;
+        promisesFunc.push(url);
+      }
     }
     let promises = promisesFunc.map((url) => {
       return limit(() =>

@@ -351,7 +351,7 @@ const mockBotsResolved = [{
 }];
 
 const mockConfig = {
-  "url": "http://mytesturl?",
+  "url": "http://mytesturl/segments/1/mentors?deepLink=nipunlakshya://chatbot?botId=testbotid",
   "type": "GET",
   "cadence": {
     "perPage": 20,
@@ -373,7 +373,8 @@ let deletedIds: any[] = []
 describe('BotService', () => {
   let botService: BotService;
   let configService: ConfigService;
-  jest.setTimeout(15000);
+  // Multiple segments need more time to trigger.
+  jest.setTimeout(30000);
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -441,19 +442,19 @@ describe('BotService', () => {
   });
 
   it('bot picks totalCount from config url', async () => {
-    fetchMock.getOnce('http://mytesturl/count', {
+    fetchMock.getOnce('http://mytesturl/segments/1/mentors/count', {
       totalCount: 100
     });
     for (let x = 1; x <= 5; x++) {
       fetchMock.getOnce(
-        `${configService.get('UCI_CORE_BASE_URL')}/campaign/start?campaignId=${'testId'}&page=${x}`,
+        `${configService.get('UCI_CORE_BASE_URL')}/campaign/start?campaignId=${'testId'}&page=${x}&segment=1`,
         ''
       );
     }
     await botService.start('testId', mockConfig, 'testAuthToken');
     for (let x = 1; x <= 5; x++) {
       expect(fetchMock.called(
-        `${configService.get('UCI_CORE_BASE_URL')}/campaign/start?campaignId=${'testId'}&page=${x}`
+        `${configService.get('UCI_CORE_BASE_URL')}/campaign/start?campaignId=${'testId'}&page=${x}&segment=1`
       )).toBe(true);
     }
     fetchMock.restore();
@@ -559,12 +560,12 @@ describe('BotService', () => {
     fetchMock.getOnce('http://testSegmentUrl/segments/1/mentors/count', {
       totalCount: 1
     });
-    fetchMock.getOnce(`${configService.get('UCI_CORE_BASE_URL')}/campaign/start?campaignId=testBotId&page=1`, (url, options) => {
+    fetchMock.getOnce(`${configService.get('UCI_CORE_BASE_URL')}/campaign/start?campaignId=testBotId&page=1&segment=1`, (url, options) => {
       submittedToken = options.headers ? options.headers['conversation-authorization'] : '';
       return true;
     });
     await botService.start(botId, mockBotsDb[0].users[0].all.config,'testAuthToken');
-    expect(fetchMock.called(`${configService.get('UCI_CORE_BASE_URL')}/campaign/start?campaignId=testBotId&page=1`)).toBe(true);
+    expect(fetchMock.called(`${configService.get('UCI_CORE_BASE_URL')}/campaign/start?campaignId=testBotId&page=1&segment=1`)).toBe(true);
     expect(submittedToken).toEqual('testAuthToken');
     fetchMock.restore();
   });
@@ -806,6 +807,32 @@ describe('BotService', () => {
     expect(botService.create(mockCreateBotDtoCopy, mockFile))
     .rejects
     .toThrowError(`Required type for 'meta' is JSON, provided: 'string'`);
+    fetchMock.restore();
+  });
+
+  it('bot start triggers multiple segments', async () => {
+    const segments = [1, 99, 4];
+    for (let segment of segments) {
+      fetchMock.getOnce(`http://mytesturl/segments/${segment}/mentors/count`, {
+        totalCount: 100
+      });
+      for (let x = 1; x <= 5; x++) {
+        fetchMock.getOnce(
+          `${configService.get('UCI_CORE_BASE_URL')}/campaign/start?campaignId=${'testId'}&page=${x}&segment=${segment}`,
+          ''
+        );
+      }
+    }
+    const mockConfigCopy = JSON.parse(JSON.stringify(mockConfig));
+    mockConfigCopy.url = `http://mytesturl/segments/${segments.join(",")}/mentors?deepLink=nipunlakshya://chatbot?botId=testbotid`;
+    await botService.start('testId', mockConfigCopy, 'testAuthToken');
+    for (let segment of segments) {
+      for (let x = 1; x <= 5; x++) {
+        expect(fetchMock.called(
+          `${configService.get('UCI_CORE_BASE_URL')}/campaign/start?campaignId=${'testId'}&page=${x}&segment=${segment}`
+        )).toBe(true);
+      }
+    }
     fetchMock.restore();
   });
 });

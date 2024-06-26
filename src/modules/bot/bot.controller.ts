@@ -281,8 +281,8 @@ export class BotController {
     AddOwnerInfoInterceptor,
     AddROToResponseInterceptor,
   )
-  @Get('/getAllUsers/:id/:page?')
-  async getAllUsers(@Param('id') id: string, @Headers() headers, @Param('page') page?: number) {
+  @Get('/getAllUsers/:id/:segment/:page?')
+  async getAllUsers(@Param('id') id: string, @Headers() headers, @Param('segment') segment: number, @Param('page') page?: number) {
     const bot: Prisma.BotGetPayload<{
       include: {
         users: {
@@ -300,7 +300,7 @@ export class BotController {
     }> | null = await this.botService.findOne(id);
     bot ? console.log('Users for the bot', bot['users']) : '';
     if (bot && bot.users[0].all) {
-      const users = await this.service.resolve(bot.users[0].all, page, bot.ownerID, headers['conversation-authorization']);
+      const users = await this.service.resolve(bot.users[0].all, segment, page, bot.ownerID, headers['conversation-authorization']);
       return users;
     }
     return bot;

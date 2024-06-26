@@ -15,7 +15,7 @@ export class ServiceService {
     this.logger = new Logger('ServiceService');
   }
 
-  async resolve(service: Service, page: number | undefined, owner: string | null, conversationToken: string) {
+  async resolve(service: Service, segment: number, page: number | undefined, owner: string | null, conversationToken: string) {
     const startTime = performance.now();
     this.logger.log(`ServiceService::resolve: Resolving users. Page: ${page}`);
     if (service.type === 'gql') {
@@ -33,6 +33,7 @@ export class ServiceService {
         ServiceQueryType.all,
         service.config as GqlConfig,
         owner,
+        segment,
         page,
         conversationToken
       );
