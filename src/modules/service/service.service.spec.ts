@@ -177,8 +177,26 @@ describe('ServiceService', () => {
         }
       };
     });
-    await serviceService.resolve(mockBotsDb[0].users[0].all, 1, mockBotsDb[0].ownerID, 'testAuthToken');
+    await serviceService.resolve(mockBotsDb[0].users[0].all, 1, 1, mockBotsDb[0].ownerID, 'testAuthToken');
     expect(fetchMock.called('http://testSegmentUrl/segments/1/mentors?deepLink=nipunlakshya://chatbot&limit=1&offset=0')).toBe(true);
+    expect(submittedToken).toEqual('testAuthToken');
+    fetchMock.restore();
+  });
+
+  it('service passes segment correctly', async () => {
+    let submittedToken: string | null = '';
+    fetchMock.getOnce('http://testSegmentUrl/segments/99/mentors?deepLink=nipunlakshya://chatbot&limit=1&offset=0', (url, options) => {
+      if (options.headers) {
+        submittedToken = new Headers(options.headers).get('conversation-authorization');
+      }
+      return {
+        data : {
+          users: []
+        }
+      };
+    });
+    await serviceService.resolve(mockBotsDb[0].users[0].all, 99, 1, mockBotsDb[0].ownerID, 'testAuthToken');
+    expect(fetchMock.called('http://testSegmentUrl/segments/99/mentors?deepLink=nipunlakshya://chatbot&limit=1&offset=0')).toBe(true);
     expect(submittedToken).toEqual('testAuthToken');
     fetchMock.restore();
   });

@@ -67,9 +67,12 @@ export class GetRequestResolverService {
     queryType: ServiceQueryType,
     getRequestConfig: GetRequestConfig,
     user: string | null,
+    segment: number,
     page: number | undefined,
     conversationToken: string
   ): Promise<User[]> {
+    const regex = /\/segments\/[\d,]+/;
+    let userFetchUrl = getRequestConfig.url.replace(regex, `/segments/${segment}`);
     this.logger.debug(
       `Resolving ${queryType}, ${JSON.stringify(getRequestConfig.url)}`,
     );
@@ -87,7 +90,6 @@ export class GetRequestResolverService {
     // const variables = getRequestConfig.verificationParams;
     const errorNotificationWebhook = getRequestConfig.errorNotificationWebhook;
     this.logger.debug(`Headers: ${JSON.stringify(headers)}`);
-    let userFetchUrl = getRequestConfig.url;
     if (getRequestConfig.cadence.perPage != undefined && page != undefined) {
       const pageSize = getRequestConfig.cadence.perPage;
       const offset = pageSize * (page - 1);
