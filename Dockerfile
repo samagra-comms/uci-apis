@@ -1,9 +1,10 @@
-FROM node:18 AS install
+FROM node:16 AS install
 WORKDIR /app
 COPY package.json ./
+RUN yarn config set ignore-engines true
 RUN yarn install
 
-FROM node:18 as build
+FROM node:16 as build
 WORKDIR /app
 COPY prisma ./prisma/
 RUN npx prisma generate
@@ -13,7 +14,7 @@ COPY --from=install /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
 
-FROM node:18
+FROM node:16
 WORKDIR /app
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/package*.json ./
