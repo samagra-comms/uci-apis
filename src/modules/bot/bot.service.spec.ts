@@ -104,6 +104,9 @@ const MockPrismaService = {
       }
     },
   },
+  schedules: {
+    upsert: jest.fn(),
+  }
 }
 
 class MockConfigService {
@@ -885,6 +888,17 @@ describe('BotService', () => {
       expect(id.startsWith('notification_')).toBe(true);
       expect(cron).toStrictEqual(MockCronJob);
     });
+    jest.spyOn(MockPrismaService.schedules, 'upsert').mockImplementation((filter) => {
+      expect(filter.where.id).toBeDefined();
+      expect(filter.create).toStrictEqual({
+        authToken: 'mockToken',
+        botId: 'mockBotId',
+        scheduledAt: futureDate,
+        config: {
+          'myVar': 'myVal',
+        },
+      });
+    });
     await botService.scheduleNotification(
       'mockBotId',
       futureDate,
@@ -894,5 +908,6 @@ describe('BotService', () => {
       'mockToken',
     );
     expect(MockCronJob.start).toHaveBeenCalledTimes(1);
+    expect(MockPrismaService.schedules.upsert).toHaveBeenCalledTimes(1);
   });
 });
