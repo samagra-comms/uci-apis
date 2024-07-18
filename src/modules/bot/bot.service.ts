@@ -17,7 +17,9 @@ import { Cache } from 'cache-manager';
 import { DeleteBotsDTO } from './dto/delete-bot-dto';
 import { UserSegmentService } from '../user-segment/user-segment.service';
 import { ConversationLogicService } from '../conversation-logic/conversation-logic.service';
-import { createHash } from 'crypto';
+import { createHash, randomUUID } from 'crypto';
+import { SchedulerRegistry } from '@nestjs/schedule';
+import { CronJob } from 'cron';
 
 @Injectable()
 export class BotService {
@@ -28,6 +30,7 @@ export class BotService {
     private configService: ConfigService,
     private userSegmentService: UserSegmentService,
     private conversationLogicService: ConversationLogicService,
+    private schedulerRegistry: SchedulerRegistry,
     //@ts-ignore
     @Inject(CACHE_MANAGER) public cacheManager: Cache,
   ) {
@@ -150,6 +153,15 @@ export class BotService {
         this.logger.error(`BotService::start: Error querying campaign endpoint, reason: ${err}`);
         throw new InternalServerErrorException();
       });
+  }
+
+  // Example Trigger Time: '2021-03-21T00:00:00.000Z' (This is UTC time).
+  async scheduleNotification(id: string, scheduledTime: Date, config: any, token: string) {
+    const job = new CronJob(scheduledTime, () => {
+      this.start(id, config, token);
+    });
+    this.schedulerRegistry.addCronJob(`notification_${randomUUID()}`, job);
+    job.start();
   }
 
   // dateString = '2020-01-01'

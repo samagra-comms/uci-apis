@@ -1,3 +1,13 @@
+const MockCronJob = {
+  start: jest.fn(),
+};
+
+jest.mock('cron', () => {
+  return {
+    CronJob: jest.fn().mockImplementation(() => MockCronJob),
+  }
+});
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { BotService } from './bot.service';
 import { ConfigService } from '@nestjs/config';
@@ -11,6 +21,8 @@ import { BotStatus } from '../../../prisma/generated/prisma-client-js';
 import { UserSegmentService } from '../user-segment/user-segment.service';
 import { ConversationLogicService } from '../conversation-logic/conversation-logic.service';
 import { assert } from 'console';
+import { SchedulerRegistry } from '@nestjs/schedule';
+import { CronJob } from 'cron';
 
 
 const MockPrismaService = {
@@ -145,6 +157,10 @@ const mockFile: Express.Multer.File = {
     }
   })
 };
+
+const MockSchedulerRegistry = {
+  addCronJob: jest.fn(),
+}
 
 const mockBotsDb = [{
   "id": "testId",
@@ -391,6 +407,10 @@ describe('BotService', () => {
         },
         UserSegmentService,
         ConversationLogicService,
+        SchedulerRegistry, {
+          provide: SchedulerRegistry,
+          useValue: MockSchedulerRegistry,
+        },
       ],
     }).compile();
 
@@ -834,5 +854,22 @@ describe('BotService', () => {
       }
     }
     fetchMock.restore();
+  });
+
+  it('bot scheduling works as expected', async () => {
+    const futureDate = new Date(Date.now() + 100000);
+    jest.spyOn(MockSchedulerRegistry, 'addCronJob').mockImplementation((id: string, cron) => {
+      expect(id.startsWith('notification_')).toBe(true);
+      expect(cron).toStrictEqual(MockCronJob);
+    });
+    await botService.scheduleNotification(
+      'mockBotId',
+      futureDate,
+      {
+        'myVar': 'myVal',
+      },
+      'mockToken',
+    );
+    expect(MockCronJob.start).toHaveBeenCalledTimes(1);
   });
 });

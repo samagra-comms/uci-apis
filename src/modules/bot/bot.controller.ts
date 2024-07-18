@@ -200,7 +200,7 @@ export class BotController {
     AddOwnerInfoInterceptor,
     AddROToResponseInterceptor,
   )
-  async startOne(@Param('id') id: string, @Headers() headers) {
+  async startOne(@Param('id') id: string, @Query('triggerTime') triggerTime: string | undefined, @Headers() headers) {
     const bot: Prisma.BotGetPayload<{
       include: {
         users: {
@@ -227,6 +227,14 @@ export class BotController {
     console.log(bot?.users[0].all);
     if (bot?.status == BotStatus.DISABLED) {
       throw new ServiceUnavailableException("Bot is not enabled!");
+    }
+    if (triggerTime) {
+      const currentTime = new Date();
+      const scheduledTime = new Date(triggerTime);
+      if (scheduledTime.getTime() > currentTime.getTime()) {
+        await this.botService.scheduleNotification(id, scheduledTime, bot?.users[0].all?.config, headers['conversation-authorization']);
+        return;
+      }
     }
     const res = await this.botService.start(id, bot?.users[0].all?.config, headers['conversation-authorization']);
     return res;
