@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, InternalServerErrorException, Logger, Inject,CACHE_MANAGER, ServiceUnavailableException, NotFoundException, BadRequestException} from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, InternalServerErrorException, Logger, Inject,CACHE_MANAGER, ServiceUnavailableException, NotFoundException, BadRequestException, OnModuleInit} from '@nestjs/common';
 import {
   Bot,
   BotStatus,
@@ -22,7 +22,7 @@ import { SchedulerRegistry } from '@nestjs/schedule';
 import { CronJob } from 'cron';
 
 @Injectable()
-export class BotService {
+export class BotService implements OnModuleInit {
   private readonly logger: Logger;
 
   constructor(
@@ -35,6 +35,27 @@ export class BotService {
     @Inject(CACHE_MANAGER) public cacheManager: Cache,
   ) {
     this.logger = new Logger(BotService.name);
+  }
+
+  // Reschedule all the notifications, if service restarted.
+  async onModuleInit() {
+    const pendingSchedules = await this.prisma.schedules.findMany({
+      where: {
+        scheduledAt: {
+          gte: new Date(),
+        }
+      }
+    });
+    this.logger.log(`Found ${pendingSchedules.length} pending schedules.`);
+    pendingSchedules.forEach((schedule) => {
+      this.scheduleNotification(
+        schedule.botId,
+        schedule.scheduledAt,
+        schedule.config,
+        schedule.authToken,
+        schedule.id,
+      );
+    });
   }
 
   private include = {
@@ -156,12 +177,29 @@ export class BotService {
   }
 
   // Example Trigger Time: '2021-03-21T00:00:00.000Z' (This is UTC time).
-  async scheduleNotification(id: string, scheduledTime: Date, config: any, token: string) {
+  // Note: A scheduled notification `config`(url, per page, etc.) will not be modified
+  // after scheduling even if the actual bot data is modified. Although, the `title` and
+  // `description` "will" change if the data is modified.
+  async scheduleNotification(botId: string, scheduledTime: Date, config: any, token: string, id?: string) {
+    if (!id) id = randomUUID();
+    await this.prisma.schedules.upsert({
+      where: {
+        id: id,
+      },
+      update: {},
+      create: {
+        authToken: token,
+        botId: botId,
+        scheduledAt: scheduledTime,
+        config: config,
+      }
+    });
     const job = new CronJob(scheduledTime, () => {
-      this.start(id, config, token);
+      this.start(botId, config, token);
     });
     this.schedulerRegistry.addCronJob(`notification_${randomUUID()}`, job);
     job.start();
+    this.logger.log(`Scheduled notification for: ${botId}, at: ${scheduledTime.toDateString()}`);
   }
 
   // dateString = '2020-01-01'

@@ -132,3 +132,12 @@ model ConversationLogic {
   bots         Bot[]
   transformers TransformerConfig[]
 }
+
+model Schedules {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid()
+  createdAt   DateTime  @default(now())
+  scheduledAt DateTime
+  authToken   String
+  botId       String
+  config      Json
+}
