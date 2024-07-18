@@ -619,14 +619,16 @@ export class BotService {
 
   async invalidateTransactionLayerCache() {
     const inbound_base = this.configService.get<string>('UCI_CORE_BASE_URL');
+    const orchestrator_base = this.configService.get<string>('ORCHESTRATOR_BASE_URL');
     const caffine_invalidate_endpoint = this.configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT');
     const transaction_layer_auth_token = this.configService.get<string>('AUTHORIZATION_KEY_TRANSACTION_LAYER');
     if (!inbound_base || !caffine_invalidate_endpoint || !transaction_layer_auth_token) {
       this.logger.error(`Missing configuration: inbound endpoint: ${inbound_base}, caffine reset endpoint: ${caffine_invalidate_endpoint} or transaction layer auth token.`);
       throw new InternalServerErrorException();
     }
-    const caffine_reset_url = `${inbound_base}${caffine_invalidate_endpoint}`;
-    return fetch(caffine_reset_url, {method: 'DELETE', headers: {'Authorization': transaction_layer_auth_token}})
+    const caffine_reset_url_inbound = `${inbound_base}${caffine_invalidate_endpoint}`;
+    const caffine_reset_url_orchestrator = `${orchestrator_base}${caffine_invalidate_endpoint}`;
+    await fetch(caffine_reset_url_inbound, {method: 'DELETE', headers: {'Authorization': transaction_layer_auth_token}})
     .then((resp) => {
       if (resp.ok) {
         return resp.json();
@@ -637,9 +639,23 @@ export class BotService {
     })
     .then()
     .catch((err) => {
-      this.logger.error(`Got failure response from inbound on cache invalidation endpoint ${caffine_reset_url}. Error: ${err}`);
+      this.logger.error(`Got failure response from inbound on cache invalidation endpoint ${caffine_reset_url_inbound}. Error: ${err}`);
       throw new ServiceUnavailableException('Could not invalidate cache after update!');
     });
+    await fetch(caffine_reset_url_orchestrator, {method: 'DELETE', headers: {'Authorization': transaction_layer_auth_token}})
+    .then((resp) => {
+      if (resp.ok) {
+        return resp.json();
+      }
+      else {
+        throw new ServiceUnavailableException(resp);
+      }
+    })
+    .then()
+    .catch((err) => {
+      this.logger.error(`Got failure response from inbound on cache invalidation endpoint ${caffine_reset_url_orchestrator}. Error: ${err}`);
+      throw new ServiceUnavailableException('Could not invalidate cache after update!');
+    })
   }
 
   async remove(deleteBotsDTO: DeleteBotsDTO) {
@@ -774,5 +790,33 @@ export class BotService {
     .catch(err => {
       throw new ServiceUnavailableException('Could not pull data from database!');
     });
+  }
+
+  async modifyNotification(botId: string, title?: string, description?: string) {
+    const requiredBot = await this.findOne(botId);
+    if (!botId) {
+      throw new BadRequestException(`Bot with id: ${botId} does not exist!`);
+    }
+    const requiredTransformer = requiredBot?.logicIDs?.[0]?.transformers?.[0];
+    if (!requiredTransformer) {
+      throw new BadRequestException(`Bad configuration! Bot ${botId} does not contain transformer config.`);
+    }
+    const meta = requiredTransformer.meta!;
+    if (title) {
+      meta['title'] = title;
+    }
+    if (description) {
+      meta['body'] = description;
+    }
+    await this.prisma.transformerConfig.update({
+      where: {
+        id: requiredTransformer.id,
+      },
+      data: {
+        meta: meta,
+      },
+    });
+    await this.cacheManager.reset();
+    await this.invalidateTransactionLayerCache();
   }
 }

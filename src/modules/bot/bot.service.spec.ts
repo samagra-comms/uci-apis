@@ -117,6 +117,7 @@ class MockConfigService {
       case 'CAFFINE_INVALIDATE_ENDPOINT': return '/testcaffineendpoint';
       case 'AUTHORIZATION_KEY_TRANSACTION_LAYER': return 'testAuthToken';
       case 'BROADCAST_BOT_REPORT_ENDPOINT': return 'testBotReportEndpoint';
+      case 'ORCHESTRATOR_BASE_URL': return 'http://orchestrator_url';
       default: return '';
     }
   }
@@ -418,6 +419,10 @@ describe('BotService', () => {
     configService = module.get<ConfigService>(ConfigService);
   });
 
+  afterEach(async () => {
+    fetchMock.restore();
+  });
+
   it('create bot test', async () => {
     fetchMock.postOnce(`${configService.get<string>('MINIO_MEDIA_UPLOAD_URL')}`, {
       fileName: 'testFileName'
@@ -609,6 +614,9 @@ describe('BotService', () => {
     fetchMock.deleteOnce(`${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
       true
     );
+    fetchMock.deleteOnce(`${configService.get<string>('ORCHESTRATOR_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
+      true
+    );
     await botService.update('testBotIdExisting', {
       'status': 'DISABLED'
     });
@@ -621,6 +629,9 @@ describe('BotService', () => {
       'testImageUrl'
     );
     fetchMock.deleteOnce(`${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
+      true
+    );
+    fetchMock.deleteOnce(`${configService.get<string>('ORCHESTRATOR_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
       true
     );
     await expect(botService.update('testBotIdExisting', {
@@ -653,6 +664,9 @@ describe('BotService', () => {
     fetchMock.deleteOnce(`${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`, () => {
       throw new InternalServerErrorException();
     });
+    fetchMock.deleteOnce(`${configService.get<string>('ORCHESTRATOR_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
+      true
+    );
     await expect(botService.update('testBotIdExisting', {
       'endDate': '2023-10-12'
     }))
@@ -695,6 +709,9 @@ describe('BotService', () => {
     fetchMock.delete(`${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
       true
     );
+    fetchMock.delete(`${configService.get<string>('ORCHESTRATOR_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
+      true
+    );
     await botService.remove({ids: ['testId'], endDate: null});
     expect(deletedIds).toEqual(
       [
@@ -726,6 +743,9 @@ describe('BotService', () => {
 
   it('bot delete with endDate works as expected', async () => {
     fetchMock.delete(`${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
+      true
+    );
+    fetchMock.delete(`${configService.get<string>('ORCHESTRATOR_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
       true
     );
     await botService.remove({ids: null, endDate: '2025-12-01'});
@@ -760,6 +780,9 @@ describe('BotService', () => {
   it('should return bot IDs in the response', async () => {
     fetchMock.delete(`${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
     true
+    );
+    fetchMock.deleteOnce(`${configService.get<string>('ORCHESTRATOR_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
+      true
     );
     const response = await botService.remove({ids: ['testId'], endDate: null});
     const expectedBotIds = ['testId'];

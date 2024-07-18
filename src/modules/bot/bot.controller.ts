@@ -31,6 +31,7 @@ import { Request } from 'express';
 import { extname } from 'path';
 import fs from 'fs';
 import { DeleteBotsDTO } from './dto/delete-bot-dto';
+import { ModifyNotificationDTO } from './dto/update-bot.dto';
 
 
 const editFileName = (req: Request, file: Express.Multer.File, callback) => {
@@ -379,5 +380,16 @@ export class BotController {
       throw new BadRequestException(`'botId' is required!`);
     }
     return await this.botService.getBroadcastReport(botId, limit, nextPage);
+  }
+
+  @Post('/modifyNotification/:botId')
+  @UseInterceptors(
+    AddResponseObjectInterceptor,
+    AddAdminHeaderInterceptor,
+    AddOwnerInfoInterceptor,
+    AddROToResponseInterceptor,
+  )
+  async modifyNotification(@Param('botId') botId: string, @Body() body: ModifyNotificationDTO) {
+    await this.botService.modifyNotification(botId, body.title, body.description);
   }
 }
