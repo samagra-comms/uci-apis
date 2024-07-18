@@ -794,7 +794,7 @@ export class BotService {
 
   async modifyNotification(botId: string, title?: string, description?: string) {
     const requiredBot = await this.findOne(botId);
-    if (!botId) {
+    if (!requiredBot) {
       throw new BadRequestException(`Bot with id: ${botId} does not exist!`);
     }
     const requiredTransformer = requiredBot?.logicIDs?.[0]?.transformers?.[0];

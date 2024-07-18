@@ -89,7 +89,8 @@ const MockPrismaService = {
   transformerConfig: {
     deleteMany: (filter) => {
       deletedIds.push({'transformerConfig': filter.where.id.in});
-    }
+    },
+    update: jest.fn(),
   },
   conversationLogic: {
     deleteMany: (filter) => {
@@ -877,6 +878,38 @@ describe('BotService', () => {
       }
     }
     fetchMock.restore();
+  });
+
+  it('modifyNotification works as expected', async () => {
+    fetchMock.getOnce(`${configService.get<string>('MINIO_GET_SIGNED_FILE_URL')}/?fileName=testImageFile`,
+      'testImageUrl'
+    );
+    fetchMock.deleteOnce(`${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
+      true
+    );
+    fetchMock.deleteOnce(`${configService.get<string>('ORCHESTRATOR_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
+      true
+    );
+    jest.spyOn(MockPrismaService.transformerConfig, 'update').mockImplementation((filter) => {
+      const botCopy = JSON.parse(JSON.stringify(mockBotsDb[0]));
+      botCopy.logicIDs[0].transformers[0].meta.body = 'myDescription';
+      botCopy.logicIDs[0].transformers[0].meta.title = 'myTitle';
+      expect(filter).toStrictEqual({
+        where: {
+          id: 'testTransformerId',
+        },
+        data: {
+          meta: botCopy.logicIDs[0].transformers[0].meta,
+        },
+      });
+    });
+    await botService.modifyNotification('existingBot', 'myTitle', 'myDescription');
+  });
+
+  it ('modifyNotification throws for non existing bot', () => {
+    expect(botService.modifyNotification('testBotIdNotExisting', 'myTitle', 'myDescription'))
+    .rejects
+    .toThrowError(new BadRequestException(`Bot with id: testBotIdNotExisting does not exist!`));
   });
 
   it('bot scheduling works as expected', async () => {
