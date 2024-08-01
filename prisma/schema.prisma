@@ -95,6 +95,7 @@ model Bot {
   tags            String[]
   botImage        String?
   meta            Json?
+  schedules       Schedules[]
 }
 
 model UserSegment {
@@ -134,10 +135,11 @@ model ConversationLogic {
 }
 
 model Schedules {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid()
-  createdAt   DateTime  @default(now())
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid()
+  createdAt   DateTime @default(now())
   scheduledAt DateTime
   authToken   String
-  botId       String
+  bot         Bot      @relation(fields: [botId], references: [id])
   config      Json
+  botId       String   @db.Uuid
 }

@@ -70,6 +70,7 @@ export class BotService implements OnModuleInit {
         adapter: true,
       },
     },
+    schedules: {},
   };
 
   pause(id: string) {
@@ -200,6 +201,7 @@ export class BotService implements OnModuleInit {
     this.schedulerRegistry.addCronJob(`notification_${randomUUID()}`, job);
     job.start();
     this.logger.log(`Scheduled notification for: ${botId}, at: ${scheduledTime.toDateString()}`);
+    await this.cacheManager.reset();
   }
 
   // dateString = '2020-01-01'
@@ -349,6 +351,7 @@ export class BotService implements OnModuleInit {
           adapter: true;
         };
       };
+      schedules: {},
     };
   }>[]> {
     const startTime = performance.now();
@@ -446,6 +449,7 @@ export class BotService implements OnModuleInit {
           adapter: true;
         };
       };
+      schedules: {},
     };
   }> | null> {
     const startTime = performance.now();
