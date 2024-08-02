@@ -89,8 +89,8 @@ model Bot {
   ownerOrgID      String?
   purpose         String?
   description     String?
-  startDate       DateTime?           @db.Date
-  endDate         DateTime?           @db.Date
+  startDate       DateTime?
+  endDate         DateTime?
   status          BotStatus           @default(DRAFT)
   tags            String[]
   botImage        String?
