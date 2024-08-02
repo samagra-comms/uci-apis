@@ -183,6 +183,12 @@ export class BotService implements OnModuleInit {
   // `description` "will" change if the data is modified.
   async scheduleNotification(botId: string, scheduledTime: Date, config: any, token: string, id?: string) {
     if (!id) id = randomUUID();
+    const job = new CronJob(scheduledTime, () => {
+      this.start(botId, config, token);
+    });
+    const scheduleName = `notification_${randomUUID()}`;
+    this.schedulerRegistry.addCronJob(scheduleName, job);
+    job.start();
     await this.prisma.schedules.upsert({
       where: {
         id: id,
@@ -190,18 +196,35 @@ export class BotService implements OnModuleInit {
       update: {},
       create: {
         authToken: token,
+        name: scheduleName,
         botId: botId,
         scheduledAt: scheduledTime,
         config: config,
       }
     });
-    const job = new CronJob(scheduledTime, () => {
-      this.start(botId, config, token);
-    });
-    this.schedulerRegistry.addCronJob(`notification_${randomUUID()}`, job);
-    job.start();
-    this.logger.log(`Scheduled notification for: ${botId}, at: ${scheduledTime.toDateString()}`);
+    this.logger.log(`Scheduled notification for: ${botId}, at: ${scheduledTime.toDateString()}, name: ${scheduleName}`);
     await this.cacheManager.reset();
+  }
+
+  async deleteSchedule(scheduleId: string) {
+    if (!scheduleId) {
+      throw new BadRequestException(`Schedule id is required!`);
+    }
+    const existingSchedule = await this.prisma.schedules.findUnique({
+      where: {
+        id: scheduleId,
+      }
+    });
+    if (!existingSchedule) {
+      throw new BadRequestException('Schedule does not exist!');
+    }
+    await this.prisma.schedules.delete({
+      where: {
+        id: scheduleId,
+      }
+    });
+    this.schedulerRegistry.deleteCronJob(existingSchedule.name);
+    this.logger.log(`Deleted schedule for bot: ${existingSchedule.botId}`);
   }
 
   // dateString = '2020-01-01'
