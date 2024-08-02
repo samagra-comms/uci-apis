@@ -923,6 +923,8 @@ describe('BotService', () => {
     });
     jest.spyOn(MockPrismaService.schedules, 'upsert').mockImplementation((filter) => {
       expect(filter.where.id).toBeDefined();
+      expect(filter.create.name).toBeDefined();
+      delete filter.create.name;
       expect(filter.create).toStrictEqual({
         authToken: 'mockToken',
         botId: 'mockBotId',
