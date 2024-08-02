@@ -241,6 +241,17 @@ export class BotController {
     return res;
   }
 
+  @Delete('/schedule/:id')
+  @UseInterceptors(
+    AddResponseObjectInterceptor,
+    AddAdminHeaderInterceptor,
+    AddOwnerInfoInterceptor,
+    AddROToResponseInterceptor,
+  )
+  async deleteSchedule(@Param('id') id: string) {
+    await this.botService.deleteSchedule(id);
+  }
+
   @Get('/:id/addUser/:userId')
   @UseInterceptors(
     AddResponseObjectInterceptor,

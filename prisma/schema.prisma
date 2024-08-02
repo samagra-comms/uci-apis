@@ -136,6 +136,7 @@ model ConversationLogic {
 
 model Schedules {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid()
+  name        String   @default("")
   createdAt   DateTime @default(now())
   scheduledAt DateTime
   authToken   String
