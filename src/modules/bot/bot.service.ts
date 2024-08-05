@@ -224,6 +224,7 @@ export class BotService implements OnModuleInit {
       }
     });
     this.schedulerRegistry.deleteCronJob(existingSchedule.name);
+    await this.cacheManager.reset();
     this.logger.log(`Deleted schedule for bot: ${existingSchedule.botId}`);
   }
 
