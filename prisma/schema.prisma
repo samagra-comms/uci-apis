@@ -89,12 +89,13 @@ model Bot {
   ownerOrgID      String?
   purpose         String?
   description     String?
-  startDate       DateTime?           @db.Date
-  endDate         DateTime?           @db.Date
+  startDate       DateTime?
+  endDate         DateTime?
   status          BotStatus           @default(DRAFT)
   tags            String[]
   botImage        String?
   meta            Json?
+  schedules       Schedules[]
 }
 
 model UserSegment {
@@ -131,4 +132,15 @@ model ConversationLogic {
   adapterId    String              @db.Uuid
   bots         Bot[]
   transformers TransformerConfig[]
+}
+
+model Schedules {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid()
+  name        String   @default("")
+  createdAt   DateTime @default(now())
+  scheduledAt DateTime
+  authToken   String
+  bot         Bot      @relation(fields: [botId], references: [id])
+  config      Json
+  botId       String   @db.Uuid
 }

@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, InternalServerErrorException, Logger, Inject,CACHE_MANAGER, ServiceUnavailableException, NotFoundException, BadRequestException} from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, InternalServerErrorException, Logger, Inject,CACHE_MANAGER, ServiceUnavailableException, NotFoundException, BadRequestException, OnModuleInit} from '@nestjs/common';
 import {
   Bot,
   BotStatus,
@@ -17,10 +17,12 @@ import { Cache } from 'cache-manager';
 import { DeleteBotsDTO } from './dto/delete-bot-dto';
 import { UserSegmentService } from '../user-segment/user-segment.service';
 import { ConversationLogicService } from '../conversation-logic/conversation-logic.service';
-import { createHash } from 'crypto';
+import { createHash, randomUUID } from 'crypto';
+import { SchedulerRegistry } from '@nestjs/schedule';
+import { CronJob } from 'cron';
 
 @Injectable()
-export class BotService {
+export class BotService implements OnModuleInit {
   private readonly logger: Logger;
 
   constructor(
@@ -28,10 +30,32 @@ export class BotService {
     private configService: ConfigService,
     private userSegmentService: UserSegmentService,
     private conversationLogicService: ConversationLogicService,
+    private schedulerRegistry: SchedulerRegistry,
     //@ts-ignore
     @Inject(CACHE_MANAGER) public cacheManager: Cache,
   ) {
     this.logger = new Logger(BotService.name);
+  }
+
+  // Reschedule all the notifications, if service restarted.
+  async onModuleInit() {
+    const pendingSchedules = await this.prisma.schedules.findMany({
+      where: {
+        scheduledAt: {
+          gte: new Date(),
+        }
+      }
+    });
+    this.logger.log(`Found ${pendingSchedules.length} pending schedules.`);
+    pendingSchedules.forEach((schedule) => {
+      this.scheduleNotification(
+        schedule.botId,
+        schedule.scheduledAt,
+        schedule.config,
+        schedule.authToken,
+        schedule.id,
+      );
+    });
   }
 
   private include = {
@@ -46,6 +70,7 @@ export class BotService {
         adapter: true,
       },
     },
+    schedules: {},
   };
 
   pause(id: string) {
@@ -89,50 +114,50 @@ export class BotService {
     this.logger.log(`BotService::start: Called with id: ${id} and config: ${JSON.stringify(config)}`);
     const pageSize: number = config.cadence.perPage;
     const segmentUrl: string = config.url;
-    const userCountUrl = `${segmentUrl.substring(0, segmentUrl.indexOf('?'))}/count`;
-    this.logger.log(`BotService::start: Fetching total count from ${userCountUrl}`);
-    const userCount: number = await fetch(
-      userCountUrl,
-      {
-        //@ts-ignore
-        timeout: 5000,
-        headers: { 'conversation-authorization': conversationToken }
-      }
-    )
-    .then(resp => resp.json())
-    .then(resp => {
-      if (resp.totalCount) {
-        this.logger.log(`BotService::start: Fetched total count of users: ${resp.totalCount}`);
-        return resp.totalCount;
-      }
-      else {
-        this.logger.error(`BotService::start: Failed to fetch total count of users, reason: Response did not have 'totalCount'.`);
-        throw new HttpException(
-          'Failed to get user count',
-          HttpStatus.INTERNAL_SERVER_ERROR
-        );
-      }
-    })
-    .catch(err => {
-      this.logger.error(`BotService::start: Failed to fetch total count of users, reason: ${err}`);
-      throw new HttpException(
-        err,
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
-    });
-    let pages = Math.ceil(userCount / pageSize);
-    this.logger.log(`BotService::start: Total pages: ${pages}`);
+    const regex = /\/segments\/([\d,]+)/;
+    const matched = segmentUrl.match(regex);
+    if (!matched || !matched[1]) {
+      throw new BadRequestException('Segment Url invalid.');
+    }
+    const segments = matched[1].split(',').map(Number);
     const promisesFunc: string[] = [];
-    for (let page = 1; page <= pages; page++) {
-      this.logger.log(
-        `BotService::start: Calling endpoint: ${this.configService.get(
+    for (let segment of segments) {
+      const userCountUrl = `${segmentUrl.substring(0, segmentUrl.indexOf('/segments/'))}/segments/${segment}/mentors/count`;
+      this.logger.log(`BotService::start: Fetching total count from ${userCountUrl}`);
+      const userCount: number = await fetch(
+        userCountUrl,
+        {
+          //@ts-ignore
+          timeout: 5000,
+          headers: { 'conversation-authorization': conversationToken }
+        }
+      )
+      .then(resp => resp.json())
+      .then(resp => {
+        if (resp.totalCount) {
+          this.logger.log(`BotService::start: Fetched total count of users: ${resp.totalCount}`);
+          return resp.totalCount;
+        }
+        else {
+          this.logger.error(`BotService::start: Failed to fetch total count of users, reason: Response did not have 'totalCount'.`);
+        }
+      })
+      .catch(err => {
+        this.logger.error(`BotService::start: Failed to fetch total count of users, reason: ${err}`);
+      });
+      let pages = Math.ceil(userCount / pageSize);
+      this.logger.log(`BotService::start: Segment: ${segment} Total pages: ${pages}`);
+      for (let page = 1; page <= pages; page++) {
+        this.logger.log(
+          `BotService::start: Calling endpoint: ${this.configService.get(
+            'UCI_CORE_BASE_URL',
+          )}/campaign/start?campaignId=${id}&page=${page}`,
+        );
+        const url = `${this.configService.get(
           'UCI_CORE_BASE_URL',
-        )}/campaign/start?campaignId=${id}&page=${page}`,
-      );
-      const url = `${this.configService.get(
-        'UCI_CORE_BASE_URL',
-      )}/campaign/start?campaignId=${id}&page=${page}`;
-      promisesFunc.push(url);
+        )}/campaign/start?campaignId=${id}&page=${page}&segment=${segment}`;
+        promisesFunc.push(url);
+      }
     }
     let promises = promisesFunc.map((url) => {
       return limit(() =>
@@ -150,6 +175,57 @@ export class BotService {
         this.logger.error(`BotService::start: Error querying campaign endpoint, reason: ${err}`);
         throw new InternalServerErrorException();
       });
+  }
+
+  // Example Trigger Time: '2021-03-21T00:00:00.000Z' (This is UTC time).
+  // Note: A scheduled notification `config`(url, per page, etc.) will not be modified
+  // after scheduling even if the actual bot data is modified. Although, the `title` and
+  // `description` "will" change if the data is modified.
+  async scheduleNotification(botId: string, scheduledTime: Date, config: any, token: string, id?: string) {
+    if (!id) id = randomUUID();
+    const job = new CronJob(scheduledTime, () => {
+      this.start(botId, config, token);
+    });
+    const scheduleName = `notification_${randomUUID()}`;
+    this.schedulerRegistry.addCronJob(scheduleName, job);
+    job.start();
+    await this.prisma.schedules.upsert({
+      where: {
+        id: id,
+      },
+      update: {},
+      create: {
+        authToken: token,
+        name: scheduleName,
+        botId: botId,
+        scheduledAt: scheduledTime,
+        config: config,
+      }
+    });
+    this.logger.log(`Scheduled notification for: ${botId}, at: ${scheduledTime.toDateString()}, name: ${scheduleName}`);
+    await this.cacheManager.reset();
+  }
+
+  async deleteSchedule(scheduleId: string) {
+    if (!scheduleId) {
+      throw new BadRequestException(`Schedule id is required!`);
+    }
+    const existingSchedule = await this.prisma.schedules.findUnique({
+      where: {
+        id: scheduleId,
+      }
+    });
+    if (!existingSchedule) {
+      throw new BadRequestException('Schedule does not exist!');
+    }
+    await this.prisma.schedules.delete({
+      where: {
+        id: scheduleId,
+      }
+    });
+    this.schedulerRegistry.deleteCronJob(existingSchedule.name);
+    await this.cacheManager.reset();
+    this.logger.log(`Deleted schedule for bot: ${existingSchedule.botId}`);
   }
 
   // dateString = '2020-01-01'
@@ -299,6 +375,7 @@ export class BotService {
           adapter: true;
         };
       };
+      schedules: {},
     };
   }>[]> {
     const startTime = performance.now();
@@ -396,6 +473,7 @@ export class BotService {
           adapter: true;
         };
       };
+      schedules: {},
     };
   }> | null> {
     const startTime = performance.now();
@@ -607,14 +685,16 @@ export class BotService {
 
   async invalidateTransactionLayerCache() {
     const inbound_base = this.configService.get<string>('UCI_CORE_BASE_URL');
+    const orchestrator_base = this.configService.get<string>('ORCHESTRATOR_BASE_URL');
     const caffine_invalidate_endpoint = this.configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT');
     const transaction_layer_auth_token = this.configService.get<string>('AUTHORIZATION_KEY_TRANSACTION_LAYER');
     if (!inbound_base || !caffine_invalidate_endpoint || !transaction_layer_auth_token) {
       this.logger.error(`Missing configuration: inbound endpoint: ${inbound_base}, caffine reset endpoint: ${caffine_invalidate_endpoint} or transaction layer auth token.`);
       throw new InternalServerErrorException();
     }
-    const caffine_reset_url = `${inbound_base}${caffine_invalidate_endpoint}`;
-    return fetch(caffine_reset_url, {method: 'DELETE', headers: {'Authorization': transaction_layer_auth_token}})
+    const caffine_reset_url_inbound = `${inbound_base}${caffine_invalidate_endpoint}`;
+    const caffine_reset_url_orchestrator = `${orchestrator_base}${caffine_invalidate_endpoint}`;
+    await fetch(caffine_reset_url_inbound, {method: 'DELETE', headers: {'Authorization': transaction_layer_auth_token}})
     .then((resp) => {
       if (resp.ok) {
         return resp.json();
@@ -625,9 +705,23 @@ export class BotService {
     })
     .then()
     .catch((err) => {
-      this.logger.error(`Got failure response from inbound on cache invalidation endpoint ${caffine_reset_url}. Error: ${err}`);
+      this.logger.error(`Got failure response from inbound on cache invalidation endpoint ${caffine_reset_url_inbound}. Error: ${err}`);
       throw new ServiceUnavailableException('Could not invalidate cache after update!');
     });
+    await fetch(caffine_reset_url_orchestrator, {method: 'DELETE', headers: {'Authorization': transaction_layer_auth_token}})
+    .then((resp) => {
+      if (resp.ok) {
+        return resp.json();
+      }
+      else {
+        throw new ServiceUnavailableException(resp);
+      }
+    })
+    .then()
+    .catch((err) => {
+      this.logger.error(`Got failure response from inbound on cache invalidation endpoint ${caffine_reset_url_orchestrator}. Error: ${err}`);
+      throw new ServiceUnavailableException('Could not invalidate cache after update!');
+    })
   }
 
   async remove(deleteBotsDTO: DeleteBotsDTO) {
@@ -762,5 +856,33 @@ export class BotService {
     .catch(err => {
       throw new ServiceUnavailableException('Could not pull data from database!');
     });
+  }
+
+  async modifyNotification(botId: string, title?: string, description?: string) {
+    const requiredBot = await this.findOne(botId);
+    if (!requiredBot) {
+      throw new BadRequestException(`Bot with id: ${botId} does not exist!`);
+    }
+    const requiredTransformer = requiredBot?.logicIDs?.[0]?.transformers?.[0];
+    if (!requiredTransformer) {
+      throw new BadRequestException(`Bad configuration! Bot ${botId} does not contain transformer config.`);
+    }
+    const meta = requiredTransformer.meta!;
+    if (title) {
+      meta['title'] = title;
+    }
+    if (description) {
+      meta['body'] = description;
+    }
+    await this.prisma.transformerConfig.update({
+      where: {
+        id: requiredTransformer.id,
+      },
+      data: {
+        meta: meta,
+      },
+    });
+    await this.cacheManager.reset();
+    await this.invalidateTransactionLayerCache();
   }
 }

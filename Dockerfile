@@ -1,6 +1,7 @@
 FROM node:16 AS install
 WORKDIR /app
 COPY package.json ./
+RUN yarn config set ignore-engines true
 RUN yarn install
 
 FROM node:16 as build

@@ -14,6 +14,7 @@ import { BotStatus, Prisma } from '../../../prisma/generated/prisma-client-js';
 import { FusionAuthClientProvider } from '../user-segment/fusionauth/fusionauthClientProvider';
 import { BadRequestException, CacheModule, ServiceUnavailableException } from '@nestjs/common';
 import { VaultClientProvider } from '../secrets/secrets.service.provider';
+import { SchedulerRegistry } from '@nestjs/schedule';
 
 class MockPrismaService {
   bot = {
@@ -94,6 +95,7 @@ const mockBotService = {
   getBroadcastReport: jest.fn(),
 
   start: jest.fn(),
+  scheduleNotification: jest.fn(),
 }
 
 const mockBotData: Prisma.BotGetPayload<{
@@ -254,7 +256,8 @@ describe('BotController', () => {
         BotService, {
           provide: BotService,
           useValue: mockBotService,
-        }
+        },
+        SchedulerRegistry,
       ],
     }).compile();
 
@@ -262,21 +265,25 @@ describe('BotController', () => {
     configService = module.get<ConfigService>(ConfigService);
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('bot start returns bad request on non existent bot', async () => {
-    expect(botController.startOne('testBotIdNotExisting', {})).rejects.toThrowError(new BadRequestException('Bot does not exist'));
+    expect(botController.startOne('testBotIdNotExisting', '1', {})).rejects.toThrowError(new BadRequestException('Bot does not exist'));
   });
 
   it('bot start returns bad request when bot does not have user data', async () => {
-    expect(botController.startOne('noUser', {})).rejects.toThrowError(new BadRequestException('Bot does not contain user segment data'));
+    expect(botController.startOne('noUser', '1', {})).rejects.toThrowError(new BadRequestException('Bot does not contain user segment data'));
   });
 
   it('disabled bot returns unavailable error',async () => {
-    await expect(() => botController.startOne('disabled', {})).rejects.toThrowError(ServiceUnavailableException);
+    await expect(() => botController.startOne('disabled', '1', {})).rejects.toThrowError(ServiceUnavailableException);
   });
 
   it('only disabled bot returns unavailable error',async () => {
-    expect(botController.startOne('pinned', {})).resolves;
-    expect(botController.startOne('enabled', {})).resolves;
+    expect(botController.startOne('pinned', '1', {})).resolves;
+    expect(botController.startOne('enabled', '1', {})).resolves;
   });
 
   it('update only passes relevant bot data to bot service', async () => {
@@ -366,5 +373,26 @@ describe('BotController', () => {
     });
     expect(resp).toBeTruthy();
     updateParametersPassed = [];
+  });
+
+  it('bot start schedule for future time', async () => {
+    const futureTime = new Date(Date.now() + 100000).toUTCString();
+    await botController.startOne(
+      'enabled',
+      futureTime,
+      { 'conversation-authorization': 'testToken' }
+    );
+    expect(mockBotService.scheduleNotification).toHaveBeenCalledTimes(1);
+    expect(mockBotService.start).toHaveBeenCalledTimes(0);
+  });
+
+  it('bot start triggers immediately when triggerTime is not passed', async () => {
+    await botController.startOne(
+      'enabled',
+      undefined,
+      { 'conversation-authorization': 'testToken' }
+    );
+    expect(mockBotService.scheduleNotification).toHaveBeenCalledTimes(0);
+    expect(mockBotService.start).toHaveBeenCalledTimes(1);
   });
 });

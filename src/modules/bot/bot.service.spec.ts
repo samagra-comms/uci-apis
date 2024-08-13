@@ -1,3 +1,13 @@
+const MockCronJob = {
+  start: jest.fn(),
+};
+
+jest.mock('cron', () => {
+  return {
+    CronJob: jest.fn().mockImplementation(() => MockCronJob),
+  }
+});
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { BotService } from './bot.service';
 import { ConfigService } from '@nestjs/config';
@@ -11,6 +21,8 @@ import { BotStatus } from '../../../prisma/generated/prisma-client-js';
 import { UserSegmentService } from '../user-segment/user-segment.service';
 import { ConversationLogicService } from '../conversation-logic/conversation-logic.service';
 import { assert } from 'console';
+import { SchedulerRegistry } from '@nestjs/schedule';
+import { CronJob } from 'cron';
 
 
 const MockPrismaService = {
@@ -77,7 +89,8 @@ const MockPrismaService = {
   transformerConfig: {
     deleteMany: (filter) => {
       deletedIds.push({'transformerConfig': filter.where.id.in});
-    }
+    },
+    update: jest.fn(),
   },
   conversationLogic: {
     deleteMany: (filter) => {
@@ -92,6 +105,9 @@ const MockPrismaService = {
       }
     },
   },
+  schedules: {
+    upsert: jest.fn(),
+  }
 }
 
 class MockConfigService {
@@ -105,6 +121,7 @@ class MockConfigService {
       case 'CAFFINE_INVALIDATE_ENDPOINT': return '/testcaffineendpoint';
       case 'AUTHORIZATION_KEY_TRANSACTION_LAYER': return 'testAuthToken';
       case 'BROADCAST_BOT_REPORT_ENDPOINT': return 'testBotReportEndpoint';
+      case 'ORCHESTRATOR_BASE_URL': return 'http://orchestrator_url';
       default: return '';
     }
   }
@@ -145,6 +162,10 @@ const mockFile: Express.Multer.File = {
     }
   })
 };
+
+const MockSchedulerRegistry = {
+  addCronJob: jest.fn(),
+}
 
 const mockBotsDb = [{
   "id": "testId",
@@ -351,7 +372,7 @@ const mockBotsResolved = [{
 }];
 
 const mockConfig = {
-  "url": "http://mytesturl?",
+  "url": "http://mytesturl/segments/1/mentors?deepLink=nipunlakshya://chatbot?botId=testbotid",
   "type": "GET",
   "cadence": {
     "perPage": 20,
@@ -373,7 +394,8 @@ let deletedIds: any[] = []
 describe('BotService', () => {
   let botService: BotService;
   let configService: ConfigService;
-  jest.setTimeout(15000);
+  // Multiple segments need more time to trigger.
+  jest.setTimeout(30000);
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -390,11 +412,19 @@ describe('BotService', () => {
         },
         UserSegmentService,
         ConversationLogicService,
+        SchedulerRegistry, {
+          provide: SchedulerRegistry,
+          useValue: MockSchedulerRegistry,
+        },
       ],
     }).compile();
 
     botService = module.get<BotService>(BotService);
     configService = module.get<ConfigService>(ConfigService);
+  });
+
+  afterEach(async () => {
+    fetchMock.restore();
   });
 
   it('create bot test', async () => {
@@ -441,19 +471,19 @@ describe('BotService', () => {
   });
 
   it('bot picks totalCount from config url', async () => {
-    fetchMock.getOnce('http://mytesturl/count', {
+    fetchMock.getOnce('http://mytesturl/segments/1/mentors/count', {
       totalCount: 100
     });
     for (let x = 1; x <= 5; x++) {
       fetchMock.getOnce(
-        `${configService.get('UCI_CORE_BASE_URL')}/campaign/start?campaignId=${'testId'}&page=${x}`,
+        `${configService.get('UCI_CORE_BASE_URL')}/campaign/start?campaignId=${'testId'}&page=${x}&segment=1`,
         ''
       );
     }
     await botService.start('testId', mockConfig, 'testAuthToken');
     for (let x = 1; x <= 5; x++) {
       expect(fetchMock.called(
-        `${configService.get('UCI_CORE_BASE_URL')}/campaign/start?campaignId=${'testId'}&page=${x}`
+        `${configService.get('UCI_CORE_BASE_URL')}/campaign/start?campaignId=${'testId'}&page=${x}&segment=1`
       )).toBe(true);
     }
     fetchMock.restore();
@@ -559,12 +589,12 @@ describe('BotService', () => {
     fetchMock.getOnce('http://testSegmentUrl/segments/1/mentors/count', {
       totalCount: 1
     });
-    fetchMock.getOnce(`${configService.get('UCI_CORE_BASE_URL')}/campaign/start?campaignId=testBotId&page=1`, (url, options) => {
+    fetchMock.getOnce(`${configService.get('UCI_CORE_BASE_URL')}/campaign/start?campaignId=testBotId&page=1&segment=1`, (url, options) => {
       submittedToken = options.headers ? options.headers['conversation-authorization'] : '';
       return true;
     });
     await botService.start(botId, mockBotsDb[0].users[0].all.config,'testAuthToken');
-    expect(fetchMock.called(`${configService.get('UCI_CORE_BASE_URL')}/campaign/start?campaignId=testBotId&page=1`)).toBe(true);
+    expect(fetchMock.called(`${configService.get('UCI_CORE_BASE_URL')}/campaign/start?campaignId=testBotId&page=1&segment=1`)).toBe(true);
     expect(submittedToken).toEqual('testAuthToken');
     fetchMock.restore();
   });
@@ -588,6 +618,9 @@ describe('BotService', () => {
     fetchMock.deleteOnce(`${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
       true
     );
+    fetchMock.deleteOnce(`${configService.get<string>('ORCHESTRATOR_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
+      true
+    );
     await botService.update('testBotIdExisting', {
       'status': 'DISABLED'
     });
@@ -600,6 +633,9 @@ describe('BotService', () => {
       'testImageUrl'
     );
     fetchMock.deleteOnce(`${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
+      true
+    );
+    fetchMock.deleteOnce(`${configService.get<string>('ORCHESTRATOR_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
       true
     );
     await expect(botService.update('testBotIdExisting', {
@@ -632,6 +668,9 @@ describe('BotService', () => {
     fetchMock.deleteOnce(`${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`, () => {
       throw new InternalServerErrorException();
     });
+    fetchMock.deleteOnce(`${configService.get<string>('ORCHESTRATOR_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
+      true
+    );
     await expect(botService.update('testBotIdExisting', {
       'endDate': '2023-10-12'
     }))
@@ -674,6 +713,9 @@ describe('BotService', () => {
     fetchMock.delete(`${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
       true
     );
+    fetchMock.delete(`${configService.get<string>('ORCHESTRATOR_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
+      true
+    );
     await botService.remove({ids: ['testId'], endDate: null});
     expect(deletedIds).toEqual(
       [
@@ -705,6 +747,9 @@ describe('BotService', () => {
 
   it('bot delete with endDate works as expected', async () => {
     fetchMock.delete(`${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
+      true
+    );
+    fetchMock.delete(`${configService.get<string>('ORCHESTRATOR_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
       true
     );
     await botService.remove({ids: null, endDate: '2025-12-01'});
@@ -739,6 +784,9 @@ describe('BotService', () => {
   it('should return bot IDs in the response', async () => {
     fetchMock.delete(`${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
     true
+    );
+    fetchMock.deleteOnce(`${configService.get<string>('ORCHESTRATOR_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
+      true
     );
     const response = await botService.remove({ids: ['testId'], endDate: null});
     const expectedBotIds = ['testId'];
@@ -807,5 +855,94 @@ describe('BotService', () => {
     .rejects
     .toThrowError(`Required type for 'meta' is JSON, provided: 'string'`);
     fetchMock.restore();
+  });
+
+  it('bot start triggers multiple segments', async () => {
+    const segments = [1, 99, 4];
+    for (let segment of segments) {
+      fetchMock.getOnce(`http://mytesturl/segments/${segment}/mentors/count`, {
+        totalCount: 100
+      });
+      for (let x = 1; x <= 5; x++) {
+        fetchMock.getOnce(
+          `${configService.get('UCI_CORE_BASE_URL')}/campaign/start?campaignId=${'testId'}&page=${x}&segment=${segment}`,
+          ''
+        );
+      }
+    }
+    const mockConfigCopy = JSON.parse(JSON.stringify(mockConfig));
+    mockConfigCopy.url = `http://mytesturl/segments/${segments.join(",")}/mentors?deepLink=nipunlakshya://chatbot?botId=testbotid`;
+    await botService.start('testId', mockConfigCopy, 'testAuthToken');
+    for (let segment of segments) {
+      for (let x = 1; x <= 5; x++) {
+        expect(fetchMock.called(
+          `${configService.get('UCI_CORE_BASE_URL')}/campaign/start?campaignId=${'testId'}&page=${x}&segment=${segment}`
+        )).toBe(true);
+      }
+    }
+    fetchMock.restore();
+  });
+
+  it('modifyNotification works as expected', async () => {
+    fetchMock.getOnce(`${configService.get<string>('MINIO_GET_SIGNED_FILE_URL')}/?fileName=testImageFile`,
+      'testImageUrl'
+    );
+    fetchMock.deleteOnce(`${configService.get<string>('UCI_CORE_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
+      true
+    );
+    fetchMock.deleteOnce(`${configService.get<string>('ORCHESTRATOR_BASE_URL')}${configService.get<string>('CAFFINE_INVALIDATE_ENDPOINT')}`,
+      true
+    );
+    jest.spyOn(MockPrismaService.transformerConfig, 'update').mockImplementation((filter) => {
+      const botCopy = JSON.parse(JSON.stringify(mockBotsDb[0]));
+      botCopy.logicIDs[0].transformers[0].meta.body = 'myDescription';
+      botCopy.logicIDs[0].transformers[0].meta.title = 'myTitle';
+      expect(filter).toStrictEqual({
+        where: {
+          id: 'testTransformerId',
+        },
+        data: {
+          meta: botCopy.logicIDs[0].transformers[0].meta,
+        },
+      });
+    });
+    await botService.modifyNotification('existingBot', 'myTitle', 'myDescription');
+  });
+
+  it ('modifyNotification throws for non existing bot', () => {
+    expect(botService.modifyNotification('testBotIdNotExisting', 'myTitle', 'myDescription'))
+    .rejects
+    .toThrowError(new BadRequestException(`Bot with id: testBotIdNotExisting does not exist!`));
+  });
+
+  it('bot scheduling works as expected', async () => {
+    const futureDate = new Date(Date.now() + 100000);
+    jest.spyOn(MockSchedulerRegistry, 'addCronJob').mockImplementation((id: string, cron) => {
+      expect(id.startsWith('notification_')).toBe(true);
+      expect(cron).toStrictEqual(MockCronJob);
+    });
+    jest.spyOn(MockPrismaService.schedules, 'upsert').mockImplementation((filter) => {
+      expect(filter.where.id).toBeDefined();
+      expect(filter.create.name).toBeDefined();
+      delete filter.create.name;
+      expect(filter.create).toStrictEqual({
+        authToken: 'mockToken',
+        botId: 'mockBotId',
+        scheduledAt: futureDate,
+        config: {
+          'myVar': 'myVal',
+        },
+      });
+    });
+    await botService.scheduleNotification(
+      'mockBotId',
+      futureDate,
+      {
+        'myVar': 'myVal',
+      },
+      'mockToken',
+    );
+    expect(MockCronJob.start).toHaveBeenCalledTimes(1);
+    expect(MockPrismaService.schedules.upsert).toHaveBeenCalledTimes(1);
   });
 });

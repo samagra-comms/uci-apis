@@ -27,6 +27,7 @@ import { HealthModule } from './health/health.module';
 import { FusionAuthClientProvider } from './modules/user-segment/fusionauth/fusionauthClientProvider';
 import { VaultClientProvider } from './modules/secrets/secrets.service.provider';
 import { MonitoringModule } from './monitoring/monitoring.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 import * as redisStore from 'cache-manager-redis-store';
 
@@ -58,6 +59,7 @@ import * as redisStore from 'cache-manager-redis-store';
       max: 1000
     }),
     MonitoringModule,
+    ScheduleModule.forRoot(),
   ],
   controllers: [AppController, ServiceController],
   providers: [

@@ -31,6 +31,7 @@ import { Request } from 'express';
 import { extname } from 'path';
 import fs from 'fs';
 import { DeleteBotsDTO } from './dto/delete-bot-dto';
+import { ModifyNotificationDTO } from './dto/update-bot.dto';
 
 
 const editFileName = (req: Request, file: Express.Multer.File, callback) => {
@@ -200,7 +201,7 @@ export class BotController {
     AddOwnerInfoInterceptor,
     AddROToResponseInterceptor,
   )
-  async startOne(@Param('id') id: string, @Headers() headers) {
+  async startOne(@Param('id') id: string, @Query('triggerTime') triggerTime: string | undefined, @Headers() headers) {
     const bot: Prisma.BotGetPayload<{
       include: {
         users: {
@@ -228,8 +229,27 @@ export class BotController {
     if (bot?.status == BotStatus.DISABLED) {
       throw new ServiceUnavailableException("Bot is not enabled!");
     }
+    if (triggerTime) {
+      const currentTime = new Date();
+      const scheduledTime = new Date(triggerTime);
+      if (scheduledTime.getTime() > currentTime.getTime()) {
+        await this.botService.scheduleNotification(id, scheduledTime, bot?.users[0].all?.config, headers['conversation-authorization']);
+        return;
+      }
+    }
     const res = await this.botService.start(id, bot?.users[0].all?.config, headers['conversation-authorization']);
     return res;
+  }
+
+  @Delete('/schedule/:id')
+  @UseInterceptors(
+    AddResponseObjectInterceptor,
+    AddAdminHeaderInterceptor,
+    AddOwnerInfoInterceptor,
+    AddROToResponseInterceptor,
+  )
+  async deleteSchedule(@Param('id') id: string) {
+    await this.botService.deleteSchedule(id);
   }
 
   @Get('/:id/addUser/:userId')
@@ -281,8 +301,8 @@ export class BotController {
     AddOwnerInfoInterceptor,
     AddROToResponseInterceptor,
   )
-  @Get('/getAllUsers/:id/:page?')
-  async getAllUsers(@Param('id') id: string, @Headers() headers, @Param('page') page?: number) {
+  @Get('/getAllUsers/:id/:segment/:page?')
+  async getAllUsers(@Param('id') id: string, @Headers() headers, @Param('segment') segment: number, @Param('page') page?: number) {
     const bot: Prisma.BotGetPayload<{
       include: {
         users: {
@@ -300,7 +320,7 @@ export class BotController {
     }> | null = await this.botService.findOne(id);
     bot ? console.log('Users for the bot', bot['users']) : '';
     if (bot && bot.users[0].all) {
-      const users = await this.service.resolve(bot.users[0].all, page, bot.ownerID, headers['conversation-authorization']);
+      const users = await this.service.resolve(bot.users[0].all, segment, page, bot.ownerID, headers['conversation-authorization']);
       return users;
     }
     return bot;
@@ -371,5 +391,16 @@ export class BotController {
       throw new BadRequestException(`'botId' is required!`);
     }
     return await this.botService.getBroadcastReport(botId, limit, nextPage);
+  }
+
+  @Post('/modifyNotification/:botId')
+  @UseInterceptors(
+    AddResponseObjectInterceptor,
+    AddAdminHeaderInterceptor,
+    AddOwnerInfoInterceptor,
+    AddROToResponseInterceptor,
+  )
+  async modifyNotification(@Param('botId') botId: string, @Body() body: ModifyNotificationDTO) {
+    await this.botService.modifyNotification(botId, body.title, body.description);
   }
 }

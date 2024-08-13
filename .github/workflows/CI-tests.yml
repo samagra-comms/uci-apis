@@ -15,10 +15,10 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: 16.18
+          node-version: 16
 
       - name: Install Dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn config set ignore-engines true && yarn install
 
       - name: Generate Prisma Client and Test
         run: npx prisma generate && yarn test 2>&1 | tee test-report.txt
